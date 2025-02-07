@@ -1,0 +1,18 @@
+{
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch Program",
+      "file": "${workspaceFolder}/${input:htmlFile}",
+      "webRoot": "${workspaceFolder}"
+    }
+  ],
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "htmlFile",
+      "description": "Path to your HTML file"
+    }
+  ]
+}
