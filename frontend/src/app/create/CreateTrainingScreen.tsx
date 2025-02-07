@@ -6,11 +6,21 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { TrainingPost } from '@/src/types/post';
 import { useNavigation } from '@react-navigation/native';
 import { useSkillContext } from '@/src/context/SkillContext';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+// Add type for navigation
+type RootStackParamList = {
+  Home: undefined;
+  CreateSkillScreen: undefined;
+  // Add other screens as needed
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function CreateTrainingScreen() {
   const { setFormData } = usePostForm();
   const router = useRouter();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const { skills } = useSkillContext();
   const [isGi, setIsGi] = useState(true);
   const [date, setDate] = useState(new Date());

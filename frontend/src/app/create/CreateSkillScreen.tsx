@@ -1,7 +1,7 @@
 import { View, Text, TextInput, StyleSheet, Button, Modal, ScrollView } from 'react-native'
 import React, { useReducer } from 'react'
 import { useSkillContext, SkillProvider } from '@/src/context/SkillContext';
-import { Skill, SkillInput, SequenceStep } from '@/src/types/skill'; // Import SkillInput and SequenceStep types
+import { SkillType, SkillInput, SequenceStep } from '@/src/types/skill'; // Import SkillInput and SequenceStep types
 import { Accordion, AccordionItem } from '../../components/ui/Accordion'; // Import Accordion components
 import UploadVideoAccordion from '../../components/create/skill/UploadVideoAccordion'; // Import UploadVideoAccordion
 import ChooseCategoryView from '../../components/create/skill/ChooseCategoryView'
@@ -9,6 +9,15 @@ import ChooseSkillView from '../../components/create/skill/ChooseSkillView';
 import CreateSequenceView from '../../components/create/skill/CreateSequenceView'; // Import CreateSequenceView
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 import { showAlert } from '@/src/utils/alert';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+// Add type for navigation
+type RootStackParamList = {
+  Home: undefined;
+  // Add other screens as needed
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 type ActionType =
   | { type: 'SET_NOTE'; payload: string }
@@ -117,7 +126,7 @@ const CreateSkillScreen = () => {
   });
 
   const { addSkill } = useSkillContext();
-  const navigation = useNavigation(); // Initialize navigation
+  const navigation = useNavigation<NavigationProp>(); // Initialize navigation
 
   const handleAddSkill = async () => {
 
@@ -131,7 +140,7 @@ const CreateSkillScreen = () => {
       return;
     }
 
-    const skillToAdd: Skill = {
+    const skillToAdd: SkillType = {
       id: Math.random().toString(36).substr(2, 9),
       name: newSkill.selectedSkill,
       category: newSkill.selectedCategory || 'none',
@@ -142,7 +151,7 @@ const CreateSkillScreen = () => {
 
     await addSkill(skillToAdd);
     console.log('Skill added:', skillToAdd);
-    navigation.navigate('/Profile');
+    navigation.navigate('Home'); // Changed from '/Home' to 'Home'
   };
 
   const handleSequenceAccordionOpen = () => {
@@ -222,7 +231,7 @@ const CreateSkillScreen = () => {
           </AccordionItem>
         </Accordion>
       </View>
-      <Button title="Add Skill" onPress={handleAddSkill} style={styles.addSkillButton} />
+      <Button title="Add Skill" onPress={handleAddSkill} />
       {/* For future video implementation */}
       {/* <Modal
         visible={isVideoModalVisible}

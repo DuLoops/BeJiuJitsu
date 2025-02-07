@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, Button, Text } from 'react-native';
 import { NumberInput } from '@/src/components/ui/NumberInput';
 import { ChooseTypeView } from '@/src/components/create/competition/ChooseTypeView';
-import { DetailAccordion } from '@/src/components/create/competition/DetailAccordion';
 import { SegmentedControl } from '@/src/components/ui/SegmentedControl';
 
 interface CompetitionData {
