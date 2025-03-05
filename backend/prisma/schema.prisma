@@ -1,0 +1,243 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String           @id @default(uuid())
+  email            String           @unique
+  password         String
+  profile          Profile?
+  trainings        Training[]
+  skills           UserSkill[]
+  competitions     Competition[]
+  category         Category[]
+  isVerified       Boolean          @default(false) // Email verification
+  role             UserRole         @default(PRACTITIONER)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+enum UserRole {
+  PRACTITIONER
+  INSTRUCTOR
+  ADMIN
+}
+
+model Profile {
+  id          String     @id @default(uuid())
+  userId      String     @unique
+  user        User       @relation(fields: [userId], references: [id])
+  userName    String    @unique
+  belt        Belt
+  stripes     Int       @default(0)
+  weight      Float?
+  academy     String?
+  avatar      String?
+  goals       Goal[]    // Add this line
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([userName])
+}
+
+enum Belt {
+  WHITE
+  GRAY
+  ORANGE
+  YELLOW
+  GREEN
+  BLUE
+  PURPLE
+  BROWN
+  BLACK
+}
+
+model Training {
+  id          String            @id @default(uuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id])
+  date        DateTime
+  duration    Int
+  bjjType     BjjType
+  note        String?
+  skillIds    Int[] // Array of skill IDs
+  skillUsages SkillUsage[]
+  intensity   TrainingIntensity @default(MEDIUM)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([userId])
+}
+
+enum TrainingIntensity {
+  LIGHT
+  MEDIUM
+  HARD
+}
+
+model Skill {
+  id          String      @id @default(uuid())
+  creatorId   String
+  isPublic    Boolean     @default(false)
+  name        String      @unique
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  userSkills  UserSkill[]
+  createdAt   DateTime    @default(now())
+
+  @@index([categoryId])
+}
+
+model UserSkill {
+  id         String          @id @default(uuid())
+  userId     String
+  user       User            @relation(fields: [userId], references: [id])
+  skillId    String
+  skill      Skill           @relation(fields: [skillId], references: [id])
+  note       String?
+  videoUrl   String?
+  sequences  SkillSequence[]
+  usages     SkillUsage[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@unique([userId, skillId])
+  @@index([userId])
+  @@index([skillId])
+}
+
+
+model Category {
+  id         String              @id @default(uuid())
+  userId     String? // null for predefined categories
+  user       User?               @relation(fields: [userId], references: [id])
+  name       String
+  isPredefined Boolean
+  predefined PredefinedCategory? // only for predefined categories
+  skills     Skill[]
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@index([isPredefined])
+}
+
+enum PredefinedCategory {
+  TAKEDOWN
+  PASS
+  CONTROL
+  SUBMISSION
+  ESCAPE
+  GUARD
+  SWEEP
+  SYSTEM
+}
+
+model SkillUsage {
+  id            String       @id @default(uuid())
+  skillId       String
+  userSkill     UserSkill   @relation(fields: [skillId], references: [id])
+  trainingId    String?
+  training      Training?    @relation(fields: [trainingId], references: [id])
+  competitionId String?
+  competition   Competition? @relation(fields: [competitionId], references: [id])
+  usageType     UsageType
+  quantity      Int          @default(1)
+  success       Boolean      @default(true)
+  note          String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([skillId])
+}
+
+model SkillSequence {
+  id         String           @id @default(uuid())
+  skillId    String
+  userSkill  UserSkill       @relation(fields: [skillId], references: [id])
+  stepNumber Int
+  intention  String
+  details    SequenceDetail[]
+  createdAt  DateTime         @default(now())
+
+  @@index([skillId])
+}
+
+model SequenceDetail {
+  id         String        @id @default(uuid())
+  sequenceId String
+  sequence   SkillSequence @relation(fields: [sequenceId], references: [id])
+  detail     String
+  createdAt  DateTime      @default(now())
+
+  @@index([sequenceId])
+}
+
+enum UsageType {
+  TRAINING
+  COMPETITION
+}
+
+model Competition {
+  id          String              @id @default(uuid())
+  userId      String
+  user        User                @relation(fields: [userId], references: [id])
+  name        String
+  date        DateTime
+  location    String?
+  type        BjjType
+  weightClass String
+  matchCount  Int
+  winCount    Int
+  loseCount   Int
+  skillUsages SkillUsage[]
+  details     CompetitionDetail[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([userId])
+}
+
+model CompetitionDetail {
+  id            String       @id @default(uuid())
+  competitionId String
+  competition   Competition  @relation(fields: [competitionId], references: [id])
+  isWin           Boolean
+  submissionCount Int         @default(0)
+  pointsCount     Int         @default(0)
+  overtimeCount   Int         @default(0)
+  decisionCount   Int         @default(0)
+  notes           String?
+  createdAt       DateTime    @default(now())
+
+  @@index([competitionId])
+}
+
+enum BjjType {
+  GI
+  NOGI
+  BOTH
+}
+
+model Goal {
+  id          String     @id @default(uuid())
+  profileId   String
+  profile     Profile    @relation(fields: [profileId], references: [id])
+  title       String
+  description String?
+  isCompleted Boolean    @default(false)  
+  targetDate  DateTime?
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([profileId])
+  @@index([isCompleted])  // Update index
+}
