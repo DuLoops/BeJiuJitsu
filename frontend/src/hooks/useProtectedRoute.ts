@@ -3,13 +3,15 @@ import { useEffect } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from '@/src/context/AuthContext';
 
+const isDev = process.env.EXPO_PUBLIC_DEV_MODE === 'true';
+
 export function useProtectedRoute() {
   const { isLoading, user } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || isDev) return;
 
     const inAuthGroup = segments[0] === '(auth)';
 

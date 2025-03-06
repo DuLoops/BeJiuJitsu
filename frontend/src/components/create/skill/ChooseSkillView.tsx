@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SkillType, Skills, CategorySkillMap } from '@/src/constants/Skills';
-import { SearchBar } from '@/src/components/ui/SearchBar';
-
-// Create a Skill data structure
-
+import { AutocompleteDropdown } from 'react-native-autocomplete-dropdown';
 
 // Define props interface for ChooseSkillView component
 interface ChooseSkillViewProps {
@@ -12,49 +9,49 @@ interface ChooseSkillViewProps {
   onSelectSkill: (value: string) => void;
 }
 
+const ItemSeparatorComponent = () => <View style={{ height: 1, width: '100%', backgroundColor: 'white' }} />;
+
 const ChooseSkillView: React.FC<ChooseSkillViewProps> = ({ selectedCategory, onSelectSkill }) => {
   const [skillsData, setSkillsData] = useState<SkillType[]>(Skills);
-  const [skillValue, setSkillValue] = useState<string>('');
+  const [searchText, setSearchText] = useState<string>('');
 
   useEffect(() => {
     if (selectedCategory) {
       setSkillsData(CategorySkillMap[selectedCategory].map((skill, index) => ({
         id: index.toString(),
-        name: skill,
+        title: skill,
         category: selectedCategory
-        })));
-      setSkillValue("");
+      })));
+      setSearchText("");
     } else {
       setSkillsData(Skills);
     }
   }, [selectedCategory]);
 
-  const handleSetValue = useCallback((value: string) => {
-    setSkillValue(value);
-    if (value) {
-      onSelectSkill(value);
-      if (!selectedCategory) {
-        const skill = Skills.find(s => s.name === value);
-        if (skill) {
-          onSelectSkill(skill.category);
-        }
-      }
-    }
-  }, [onSelectSkill, selectedCategory]);
-
-  const transformedSkillsData = useCallback(() => {
-    return skillsData.map((skill) => ({
-      id: skill.id,
-      title: skill.name
-    }));
-  }, [skillsData]);
 
   return (
     <View style={styles.container}>
-      <SearchBar
-        data={transformedSkillsData()}
-        value={skillValue}
-        setValue={handleSetValue}
+      <AutocompleteDropdown
+        clearOnFocus={false}
+        trimSearchText={true}
+        closeOnBlur={true}
+        showClear={false}
+        initialValue={undefined}
+        onSelectItem={item => item?.title && setSearchText(item.title)}
+        dataSet={skillsData}
+        ItemSeparatorComponent={ItemSeparatorComponent}
+        ignoreAccents
+        inputContainerStyle={styles.inputContainer}
+        textInputProps={{
+          placeholder: 'Search here',
+          style: { color: 'black' },
+          value: searchText
+        }}
+        suggestionsListTextStyle={{ color: '#000' }}
+        onChangeText={(text)=>{setSearchText(text)}}
+        suggestionsListContainerStyle={styles.suggestionsContainer}
+        containerStyle={{ flexGrow: 1, flexShrink: 1 }}
+        emptyResultText="No results found"
       />
     </View>
   );
@@ -101,5 +98,16 @@ const styles = StyleSheet.create({
   inputSearchStyle: {
     height: 40,
     fontSize: 16,
+  },
+  inputContainer: {
+    backgroundColor: 'white',
+    borderColor: '#DDDDDD',
+    borderWidth: 0.5,
+    paddingHorizontal: 8,
+    marginBottom: 8,
+    margin: 6,
+  },
+  suggestionsContainer: {
+    backgroundColor: '#fff',
   },
 });

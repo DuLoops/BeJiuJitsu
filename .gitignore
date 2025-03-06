@@ -74,3 +74,8 @@ coverage/
 # Temporary files
 *.tmp
 *~
+
+.gitignore
+.github
+*/.github/
+*/.github/*
