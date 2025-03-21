@@ -64,7 +64,7 @@ export default function CreateCompetitionScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{selectedType} Match Results</Text>
         <View style={styles.row}>
-          <NumberInput 
+          <NumberInput
             value={currentData.winCount}
             onChange={value => setFormData(prev => ({
               ...prev,
@@ -76,7 +76,7 @@ export default function CreateCompetitionScreen() {
             minValue={0}
             label="Wins"
           />
-          <NumberInput 
+          <NumberInput
             value={currentData.loseCount}
             onChange={value => setFormData(prev => ({
               ...prev,
@@ -112,6 +112,10 @@ export default function CreateCompetitionScreen() {
           }}
           type={selectedResult === 'Win' ? 'win' : 'loss'}
         />
+        <View style={styles.skillSection}>
+          <Button variant='outline' title="Create new skill" onPress={() => { }} />
+          <Button variant='outline' title="Add skill experience" onPress={() => { }} />
+        </View>
         <View style={styles.noteSection}>
           <Text style={styles.label}>Note</Text>
           <TextInput
@@ -131,6 +135,7 @@ export default function CreateCompetitionScreen() {
             style={styles.textArea}
           />
         </View>
+
       </View>
 
       <View style={styles.buttonContainer}>
@@ -148,7 +153,7 @@ export default function CreateCompetitionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding:16,
+    padding: 16,
   },
   section: {
     marginTop: 16,
@@ -182,11 +187,17 @@ const styles = StyleSheet.create({
 
 
   },
+  skillSection: {
+    marginTop: 16,
+    flexDirection: 'column',
+    gap: 8,
+    justifyContent: 'space-between',
+  },
   noteSection: {
     marginTop: 8,
   },
   buttonContainer: {
     paddingHorizontal: 16,
-    marginTop:8
+    marginTop: 8
   },
 });

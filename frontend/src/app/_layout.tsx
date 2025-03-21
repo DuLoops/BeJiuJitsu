@@ -5,18 +5,22 @@ import { AutocompleteDropdownContextProvider } from 'react-native-autocomplete-d
 import { useProtectedRoute } from '@/src/hooks/useProtectedRoute';
 import { ThemeProvider } from "@/src/context/ThemeContext";
 import { useTheme } from '@/src/context/ThemeContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export default function RootLayout() {
+  const queryClient = new QueryClient();
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <ThemeProvider>
-          <AutocompleteDropdownContextProvider>
-            <RootLayoutNav />
-          </AutocompleteDropdownContextProvider>
-        </ThemeProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <AutocompleteDropdownContextProvider>
+              <RootLayoutNav />
+            </AutocompleteDropdownContextProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </QueryClientProvider>
   );
 }
 

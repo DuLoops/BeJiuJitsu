@@ -35,7 +35,7 @@ export default function CreateTrainingScreen() {
       bjjForm: isGi ? 'gi' : 'nogi',
       note,
     };
-    setFormData(formData);
+    // setFormData(formData);
   }, [date, duration, isGi, note]);
 
   return (
@@ -73,11 +73,11 @@ export default function CreateTrainingScreen() {
         onPress={() => navigation.navigate('CreateSkillScreen')}
         size="xl"
       />
-      <FlatList
+      {/* <FlatList
         data={skills}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <Text>{item.name}</Text>}
-      />
+      /> */}
     </View>
   );
 }

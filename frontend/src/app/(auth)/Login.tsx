@@ -31,7 +31,6 @@ export default function Login() {
       setIsLoading(true);
       setErrors([]);
       const hasProfile = await signIn({ email, password });
-      console.log('hasProfile:', hasProfile);
       if (hasProfile) {
         router.replace('/(tabs)');
       } else {

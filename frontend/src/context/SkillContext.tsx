@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { Skill } from '@/src/types/skill';
+import { SkillType } from '@/src/types/skill';
 import * as skillService from '@/src/services/skillService';
 
 interface SkillContextProps {
