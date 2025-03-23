@@ -53,44 +53,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function loadStoredAuth() {
     try {
-      // First try to refresh the token
-      const newToken = await refreshAuthToken();
-      console.log('loading stored auth:', newToken);  
+      // Check if we're running in web mode
+      const isWebMode = Platform.OS === 'web' || process.env.WEB_MODE === 'true';
+      console.log('Loading stored auth in', isWebMode ? 'web mode' : 'native mode');
       
-      if (!newToken) {
-        await clearAuthData();
-        return;
-      }
+      let newToken = null;
       
-      // If we have a valid token, load user and profile data
-      const [userString, profileString] = await Promise.all([
-        AsyncStorage.getItem('@BJJApp:user'),
-        AsyncStorage.getItem('@BJJApp:profile'),
-      ]);
-  
-      if (!userString) {
-        await clearAuthData();
-        return;
-      }
-  
-      // Parse user data
-      const user = JSON.parse(userString);
-      const profile = profileString ? JSON.parse(profileString) : null;
-      
-      // Update auth state
-      setAuthState({
-        user,
-        profile,
-        token: newToken,
-        isLoading: false,
-      });
-      
-      // Redirect based on whether the user has a profile
-      if (profile != null) {
-        router.replace('/(tabs)');
-      } else {
-        router.replace('/(onboarding)/CreateProfile');
-      }
+      // Only try to refresh token in native mode
+      // if (!isWebMode) {
+        newToken = await refreshAuthToken();  
+        
+        if (!newToken) {
+          console.log("No new token");
+          await clearAuthData();
+          return;
+        }
+        
+        // Load user and profile data
+        const [userString, profileString] = await Promise.all([
+          AsyncStorage.getItem('@BJJApp:user'),
+          AsyncStorage.getItem('@BJJApp:profile'),
+        ]);
+    
+        if (!userString) {
+          await clearAuthData();
+          return;
+        }
+    
+        // Parse user data
+        const user = JSON.parse(userString);
+        const profile = profileString ? JSON.parse(profileString) : null;
+        
+        // Update auth state
+        setAuthState({
+          user,
+          profile,
+          token: newToken,
+          isLoading: false,
+        });
+        
+        // Redirect based on whether the user has a profile
+        if (profile != null) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/(onboarding)/CreateProfile');
+        }
+      // }
     } catch (error) {
       console.error('Error loading stored auth:', error);
       await clearAuthData();
@@ -98,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function clearAuthData() {
+    console.log("Clear auth data");
     await Promise.all([
       AsyncStorage.removeItem('@BJJApp:user'),
       AsyncStorage.removeItem('@BJJApp:profile'),
@@ -142,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const newRefreshToken = cookies.split(';')[0].split('=')[1];
         await storeRefreshToken(newRefreshToken);
       }
-
+      console.log("refresh token data:", data);
       return {
         accessToken: data.accessToken,
         expiresIn: Date.now() + 29 * 60 * 1000
@@ -189,7 +198,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         AsyncStorage.setItem('@BJJApp:user', JSON.stringify(user)),
         profile ? AsyncStorage.setItem('@BJJApp:profile', JSON.stringify(profile)) : Promise.resolve()
       ]);
-  
+      
+      console.log("Logged in user:", user);
       // Update auth state
       setAuthState({
         user,
@@ -236,6 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setAuthState(prev => ({ ...prev, token: newToken }));
     }
+    console.log("getAuthenticatedRequest token:", authState.token, endpoint);
 
     return fetch(endpoint, {
       ...options,

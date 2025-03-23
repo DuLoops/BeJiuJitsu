@@ -9,21 +9,43 @@ export class SkillService {
     }
 
     async createSkill(creatorId: string, data: CreateSkillDto) {
-        return this.prisma.skill.create({
-            data: {
-                name: data.name,
-                isPublic: data.isPublic ?? false,
-                creatorId,
-                category: {
-                    connect: {
-                        id: data.categoryId
-                    }
-                }
-            },
-            include: {
-                category: true
+        console.log('Creating skill with data:', JSON.stringify(data));
+        try {
+            console.log('Creating skill with data:', JSON.stringify(data));
+            console.log('Creator ID:', creatorId);
+            
+            // Validate required fields
+            if (!data.name) {
+                throw new Error('Skill name is required');
             }
-        });
+            
+            if (!data.categoryId) {
+                throw new Error('Category ID is required');
+            }
+            
+            return await this.prisma.skill.create({
+                data: {
+                    name: data.name,
+                    isPublic: data.isPublic ?? false,
+                    creatorId,
+                    category: {
+                        connect: {
+                            id: data.categoryId
+                        }
+                    }
+                },
+                include: {
+                    category: true
+                }
+            });
+        } catch (error) {
+            console.error('Error creating skill:', error);
+            // Check for specific Prisma errors and provide better messages
+            if ((error as any).code === 'P2025') {
+                throw new Error('Category not found with the provided ID');
+            }
+            throw error;
+        }
     }
 
     async getSkills(userId: string) {

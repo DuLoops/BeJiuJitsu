@@ -1,13 +1,14 @@
 This is a full-stack application for tracking Brazilian Jiu-Jitsu training progress.
 
 ## Project Structure
-- `/frontend` - React Native Expo app
+- `/frontend` - React Native Expo app 
 - `/backend` - Node.js Express API with Prisma
 
 # Frontend Instructions
 
 ## Tech Stack
 - React Native with Expo
+- Expo router
 - TypeScript
 
 ### Custom Buttom and Text

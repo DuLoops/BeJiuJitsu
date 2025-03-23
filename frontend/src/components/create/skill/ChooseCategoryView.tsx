@@ -4,7 +4,7 @@ import { Categories } from '../../../constants/Skills';
 import Octicons from '@expo/vector-icons/Octicons';
 
 interface ChooseCategoryViewProps {
-  onSelectCategory: (category: string) => void;
+  onSelectCategory: (category: string | null) => void;
   selectedCategory: string | null;
 }
 

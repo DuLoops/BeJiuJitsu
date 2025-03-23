@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Platform } from 'react-native';
 import { SkillType, Skills, CategorySkillMap } from '@/src/constants/Skills';
 import { AutocompleteDropdown } from 'react-native-autocomplete-dropdown';
 
@@ -28,6 +28,12 @@ const ChooseSkillView: React.FC<ChooseSkillViewProps> = ({ selectedCategory, onS
     }
   }, [selectedCategory]);
 
+  // Update parent component when searchText changes
+  useEffect(() => {
+    if (searchText !== '') {
+      onSelectSkill(searchText);
+    }
+  }, [searchText]);
 
   return (
     <View style={styles.container}>
@@ -43,14 +49,16 @@ const ChooseSkillView: React.FC<ChooseSkillViewProps> = ({ selectedCategory, onS
         ignoreAccents
         inputContainerStyle={styles.inputContainer}
         textInputProps={{
-          placeholder: 'Search here',
+          placeholder: 'Search or enter skill name',
           style: { color: 'black' },
-          value: searchText
+          value: searchText,
         }}
         suggestionsListTextStyle={{ color: '#000' }}
-        onChangeText={(text)=>{setSearchText(text)}}
+        onChangeText={(text) => {
+          setSearchText(text);
+        }}
         suggestionsListContainerStyle={styles.suggestionsContainer}
-        containerStyle={{ flexGrow: 1, flexShrink: 1 }}
+        containerStyle={styles.dropdownContainer}
         emptyResultText="No results found"
       />
     </View>
@@ -64,40 +72,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 16,
     position: 'relative',
-    zIndex: 0
+    zIndex: 10,
   },
-  dropdown: {
-    height: 50,
-    borderColor: 'gray',
-    borderWidth: 0.5,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-  },
-  icon: {
-    marginRight: 5,
-  },
-  label: {
-    position: 'absolute',
-    backgroundColor: 'white',
-    left: 22,
-    top: 8,
-    zIndex: 999,
-    paddingHorizontal: 8,
-    fontSize: 14,
-  },
-  placeholderStyle: {
-    fontSize: 16,
-  },
-  selectedTextStyle: {
-    fontSize: 16,
-  },
-  iconStyle: {
-    width: 20,
-    height: 20,
-  },
-  inputSearchStyle: {
-    height: 40,
-    fontSize: 16,
+  dropdownContainer: {
+    flexGrow: 1,
+    flexShrink: 1,
+    zIndex: 10,
   },
   inputContainer: {
     backgroundColor: 'white',
@@ -109,5 +89,15 @@ const styles = StyleSheet.create({
   },
   suggestionsContainer: {
     backgroundColor: '#fff',
+    zIndex: 1001,
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
+    // On Android, elevation helps with z-index
+    ...(Platform.OS === 'android' && { elevation: 5 }),
+    // iOS shadow properties
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });

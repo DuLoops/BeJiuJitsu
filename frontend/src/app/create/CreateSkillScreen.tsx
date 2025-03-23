@@ -1,35 +1,40 @@
-import { View, Text, TextInput, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import React from 'react';
-import { useSkillContext } from '@/src/context/SkillContext';
-import { SkillType } from '@/src/types/skill';
+import { useSkillContext, createSkillFromInput } from '@/src/context/SkillContext';
 import { Accordion, AccordionItem } from '../../components/ui/Accordion';
 import ChooseCategoryView from '../../components/create/skill/ChooseCategoryView';
 import ChooseSkillView from '../../components/create/skill/ChooseSkillView';
 import CreateSequenceView from '../../components/create/skill/CreateSequenceView';
-import { useNavigation } from '@react-navigation/native';
+import { useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { showAlert } from '@/src/utils/alert';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button } from '@/src/components/ui/Button';
-import { createSkillFromInput } from '@/src/reducers/skillReducer';
+import { Text } from '@/src/components/ui/Text';
+import { TextInput } from 'react-native';
+import { AutocompleteDropdownContextProvider } from 'react-native-autocomplete-dropdown';
 
-// Add type for navigation
-type RootStackParamList = {
-  Home: undefined;
-  CompetitionRecord?: { skillId?: string };
-  // Add other screens as needed
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
-
-const CreateSkillScreen = ({ route }: any) => {
-  // Get the fromScreen param to know where the user came from
-  const fromScreen = route?.params?.fromScreen || null;
+const CreateSkillScreen = () => {
+  // Get params using Expo Router's useLocalSearchParams
+  const params = useLocalSearchParams();
+  const fromScreen = params.fromScreen || null;
   
   // Use the global state and dispatch from context
   const { addSkill, newSkillState, newSkillDispatch } = useSkillContext();
-  const navigation = useNavigation<NavigationProp>();
 
   const handleAddSkill = async () => {
+    console.log('Creating skill with state:', JSON.stringify(newSkillState));
+    
+    // Validate required fields
+    if (!newSkillState.selectedCategory) {
+      showAlert('Error', 'Please select a category.');
+      return;
+    }
+    
+    if (!newSkillState.selectedSkill || newSkillState.selectedSkill.trim() === '') {
+      showAlert('Error', 'Please enter a skill name.');
+      return;
+    }
+    
     const invalidStep = newSkillState.sequence.find(
       step => step.intention.trim() === '' || step.details.some(detail => detail.trim() === '')
     );
@@ -41,17 +46,19 @@ const CreateSkillScreen = ({ route }: any) => {
 
     // Convert input state to SkillType
     const skillToAdd = createSkillFromInput(newSkillState);
+    console.log('Skill after conversion:', JSON.stringify(skillToAdd));
 
     try {
       await addSkill(skillToAdd);
-      console.log('Skill added:', skillToAdd);
+      console.log('Skill added successfully:', skillToAdd);
       
-      // If we came from CompetitionRecord screen, navigate back there with the new skill id
+      // If we came from CompetitionScreen, navigate back there with the new skill id
       if (fromScreen === 'CreateCompetitionScreen') {
-        navigation.navigate('/create/CreateCompetitionScreen', { skillId: skillToAdd.id });
+        router.back();
+        // This doesn't pass the new skill ID back, but we'll rely on the context's recentlyCreatedSkills
       } else {
         // Otherwise go to Home
-        navigation.navigate('Home');
+        router.replace("/");
       }
     } catch (error) {
       console.error('Failed to add skill:', error);
@@ -86,59 +93,61 @@ const CreateSkillScreen = ({ route }: any) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.label}>Select Category:</Text>
-      <ChooseCategoryView
-        selectedCategory={newSkillState.selectedCategory}
-        onSelectCategory={(category) => newSkillDispatch({ type: 'SET_CATEGORY', payload: category })}
-      />
-      <Text style={styles.label}>Select Skill:</Text>
-      <ChooseSkillView 
-        selectedCategory={newSkillState.selectedCategory} 
-        onSelectSkill={(skill: string) => newSkillDispatch({ type: 'SET_SKILL', payload: skill })} 
-      />
-      <View style={styles.detailsContainer}>
-        <Text style={{ textAlign: 'center', paddingTop: 20 }}>Details</Text>
-        <Accordion>
-          <AccordionItem title="Note / Tip" initialIsOpen={true}>
-            {(inputRef) => (
-              <TextInput
-                ref={inputRef}
-                value={newSkillState.note}
-                onChangeText={(text) => newSkillDispatch({ type: 'SET_NOTE', payload: text })}
-                placeholder="Note"
-                multiline
-                style={styles.textArea}
+    <AutocompleteDropdownContextProvider>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.label}>Select Category:</Text>
+        <ChooseCategoryView
+          selectedCategory={newSkillState.selectedCategory}
+          onSelectCategory={(category) => newSkillDispatch({ type: 'SET_CATEGORY', payload: category })}
+        />
+        <Text style={styles.label}>Skill name:</Text>
+        <ChooseSkillView 
+          selectedCategory={newSkillState.selectedCategory} 
+          onSelectSkill={(skill: string) => newSkillDispatch({ type: 'SET_SKILL', payload: skill })} 
+        />
+        <View style={styles.detailsContainer}>
+          <Text style={{ textAlign: 'center', paddingTop: 20 }}>Details</Text>
+          <Accordion>
+            <AccordionItem title="Note / Tip" initialIsOpen={true}>
+              {(inputRef) => (
+                <TextInput
+                  ref={inputRef}
+                  value={newSkillState.note}
+                  onChangeText={(text) => newSkillDispatch({ type: 'SET_NOTE', payload: text })}
+                  placeholder="Note"
+                  multiline
+                  style={styles.textArea}
+                />
+              )}
+            </AccordionItem>
+            <AccordionItem 
+              title="Sequence" 
+              onOpen={handleSequenceAccordionOpen}
+              onClose={handleSequenceAccordionClose}
+            >
+              <CreateSequenceView
+                sequence={newSkillState.sequence}
+                onAddStep={() => newSkillDispatch({ type: 'ADD_SEQUENCE_STEP' })}
+                onRemoveStep={(index) => newSkillDispatch({ type: 'REMOVE_SEQUENCE_STEP', payload: index })}
+                onUpdateStep={(index, field, value) =>
+                  newSkillDispatch({ type: 'UPDATE_SEQUENCE_STEP', payload: { index, field, value } })}
+                onAddDetail={(stepIndex) => newSkillDispatch({ type: 'ADD_STEP_DETAIL', payload: stepIndex })}
+                onRemoveDetail={(stepIndex, detailIndex) =>
+                  newSkillDispatch({ type: 'REMOVE_STEP_DETAIL', payload: { stepIndex, detailIndex } })}
+                onUpdateDetail={(stepIndex, detailIndex, value) =>
+                  newSkillDispatch({ type: 'UPDATE_STEP_DETAIL', payload: { stepIndex, detailIndex, value } })}
               />
-            )}
-          </AccordionItem>
-          <AccordionItem 
-            title="Sequence" 
-            onOpen={handleSequenceAccordionOpen}
-            onClose={handleSequenceAccordionClose}
-          >
-            <CreateSequenceView
-              sequence={newSkillState.sequence}
-              onAddStep={() => newSkillDispatch({ type: 'ADD_SEQUENCE_STEP' })}
-              onRemoveStep={(index) => newSkillDispatch({ type: 'REMOVE_SEQUENCE_STEP', payload: index })}
-              onUpdateStep={(index, field, value) =>
-                newSkillDispatch({ type: 'UPDATE_SEQUENCE_STEP', payload: { index, field, value } })}
-              onAddDetail={(stepIndex) => newSkillDispatch({ type: 'ADD_STEP_DETAIL', payload: stepIndex })}
-              onRemoveDetail={(stepIndex, detailIndex) =>
-                newSkillDispatch({ type: 'REMOVE_STEP_DETAIL', payload: { stepIndex, detailIndex } })}
-              onUpdateDetail={(stepIndex, detailIndex, value) =>
-                newSkillDispatch({ type: 'UPDATE_STEP_DETAIL', payload: { stepIndex, detailIndex, value } })}
-            />
-          </AccordionItem>
-        </Accordion>
-      </View>
-      <Button 
-        title="Add Skill" 
-        onPress={handleAddSkill}
-        size="xl"
-        variant="primary" 
-      />
-    </ScrollView>
+            </AccordionItem>
+          </Accordion>
+        </View>
+        <Button 
+          title="Add Skill" 
+          onPress={handleAddSkill}
+          size="xl"
+          variant="primary" 
+        />
+      </ScrollView>
+    </AutocompleteDropdownContextProvider>
   );
 }
 
@@ -174,6 +183,7 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     padding: 10,
+    zIndex: 0,
   },
 });
 

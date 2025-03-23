@@ -14,7 +14,7 @@ interface CreateProfileInput {
   belt?: 'WHITE' | 'BLUE' | 'PURPLE' | 'BROWN' | 'BLACK';
   weight?: number;
   academy?: string;
-  avatar?: string;
+  avatar?: string; 
   goals?: GoalInput[];
 }
 

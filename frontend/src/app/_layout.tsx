@@ -1,11 +1,11 @@
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/src/context/AuthContext';
-import { AutocompleteDropdownContextProvider } from 'react-native-autocomplete-dropdown';
 import { useProtectedRoute } from '@/src/hooks/useProtectedRoute';
 import { ThemeProvider } from "@/src/context/ThemeContext";
 import { useTheme } from '@/src/context/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 
 export default function RootLayout() {
   const queryClient = new QueryClient();
@@ -14,9 +14,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AuthProvider>
           <ThemeProvider>
-            <AutocompleteDropdownContextProvider>
-              <RootLayoutNav />
-            </AutocompleteDropdownContextProvider>
+            <RootLayoutNav />
           </ThemeProvider>
         </AuthProvider>
       </SafeAreaProvider>
@@ -43,17 +41,13 @@ function RootLayoutNav() {
 
       {/* Main App Stack */}
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="create/CreateSkillScreen"
-        options={{ headerShown: true, title: "New Skill" }}
-      />
-      <Stack.Screen
-        name="create/CreateCompetitionScreen"
-        options={{ headerShown: true, title: "Competition" }}
-      />
-      <Stack.Screen
-        name="create/CreateTrainingScreen"
-        options={{ headerShown: true, title: "Training" }}
+      
+      {/* Create Stack - reference only the folder, not individual screens */}
+      <Stack.Screen 
+        name="create" 
+        options={{ 
+          headerShown: false  // Let the nested layout handle headers
+        }} 
       />
 
       <Stack.Screen
