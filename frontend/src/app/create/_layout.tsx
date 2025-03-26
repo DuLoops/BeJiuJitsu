@@ -12,7 +12,6 @@ export default function CreateLayout() {
           headerShown: true,
           contentStyle: { backgroundColor: activeTheme.background.default },
           headerTintColor: activeTheme.text.primary,
-          headerStyle: { backgroundColor: activeTheme.background.paper }
         }}
       >
         <Stack.Screen 

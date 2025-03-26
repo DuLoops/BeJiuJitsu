@@ -9,43 +9,46 @@ export class SkillService {
     }
 
     async createSkill(creatorId: string, data: CreateSkillDto) {
-        console.log('Creating skill with data:', JSON.stringify(data));
-        try {
-            console.log('Creating skill with data:', JSON.stringify(data));
-            console.log('Creator ID:', creatorId);
-            
-            // Validate required fields
-            if (!data.name) {
-                throw new Error('Skill name is required');
-            }
-            
-            if (!data.categoryId) {
-                throw new Error('Category ID is required');
-            }
-            
-            return await this.prisma.skill.create({
+       try{
+        if (data.isNewSkill) {
+            data.skill.id = await this.prisma.skill.create({
                 data: {
-                    name: data.name,
-                    isPublic: data.isPublic ?? false,
+                    name: data.skill.name,
+                    categoryId: data.skill.categoryId,
                     creatorId,
-                    category: {
-                        connect: {
-                            id: data.categoryId
-                        }
-                    }
-                },
-                include: {
-                    category: true
+                    isPublic: false,
+                    createdAt: new Date()
                 }
-            });
-        } catch (error) {
-            console.error('Error creating skill:', error);
-            // Check for specific Prisma errors and provide better messages
-            if ((error as any).code === 'P2025') {
-                throw new Error('Category not found with the provided ID');
-            }
-            throw error;
+            }).then(skill => skill.id);
         }
+        if (!data.skill.id) {
+            throw new Error('Skill ID is undefined');
+        }
+
+        const createdUserSkill = await this.prisma.userSkill.create({
+            data: {
+                note: data.userSkill.note,
+                videoUrl: data.userSkill.videoUrl,
+                sequences: {
+                    create: data.userSkill.sequence.map((step, index) => ({
+                        stepNumber: index + 1,
+                        intention: step.intention,
+                        details: {
+                            create: step.details.map(detail => ({ detail }))
+                        }
+                    }))
+                },
+                skillId: data.skill.id,
+                skill: {
+                    connect: { id: data.skill.id }
+                },
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
+        });
+
+        // Optionally, you can log or use `createdUserSkill` as needed
+       }
     }
 
     async getSkills(userId: string) {

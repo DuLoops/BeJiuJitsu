@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/src/context/AuthContext';
 import { useProtectedRoute } from '@/src/hooks/useProtectedRoute';
 import { ThemeProvider } from "@/src/context/ThemeContext";
@@ -28,35 +28,35 @@ function RootLayoutNav() {
   const { activeTheme } = useTheme();
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: activeTheme.background.default } }}>
-      {/* Auth Stack */}
-      <Stack.Screen name="(auth)/Landing" />
-      <Stack.Screen name="(auth)/Login" />
-      <Stack.Screen name="(auth)/Signup" />
-      {/* <Stack.Screen name="(auth)/ForgotPassword" />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: activeTheme.background.default } }}>
+        {/* Auth Stack */}
+        <Stack.Screen name="(auth)/Landing" />
+        <Stack.Screen name="(auth)/Login" />
+        <Stack.Screen name="(auth)/Signup" />
+        {/* <Stack.Screen name="(auth)/ForgotPassword" />
       <Stack.Screen name="(auth)/CreateProfile" /> */}
-      {/* Onboarding Stack */}
-      <Stack.Screen name="(onboarding)/CreateProfile" />
-      {/* <Stack.Screen name="(onboarding)/ConfirmEmail" /> */}
+        {/* Onboarding Stack */}
+        <Stack.Screen name="(onboarding)/CreateProfile" />
+        {/* <Stack.Screen name="(onboarding)/ConfirmEmail" /> */}
 
-      {/* Main App Stack */}
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      
-      {/* Create Stack - reference only the folder, not individual screens */}
-      <Stack.Screen 
-        name="create" 
-        options={{ 
-          headerShown: false  // Let the nested layout handle headers
-        }} 
-      />
+        {/* Main App Stack */}
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
-      <Stack.Screen
-        name="+not-found"
-        options={{
-          title: 'Not Found',
-          presentation: 'modal'
-        }}
-      />
-    </Stack>
+        {/* Create Stack - reference only the folder, not individual screens */}
+        <Stack.Screen
+          name="create"
+          options={{
+            headerShown: false  // Let the nested layout handle headers
+          }}
+        />
+
+        <Stack.Screen
+          name="+not-found"
+          options={{
+            title: 'Not Found',
+            presentation: 'modal'
+          }}
+        />
+      </Stack>
   );
 }

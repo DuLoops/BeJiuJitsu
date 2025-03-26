@@ -107,12 +107,6 @@ const createProfile = async (req: Request, res: Response): Promise<void> => {
           goals: true
         }
       });
-
-      // Update user's hasProfile field
-      await tx.user.update({
-        where: { id: userId },
-        data: { hasProfile: true }
-      });
       
       return newProfile;
     });

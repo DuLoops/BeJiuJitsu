@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useReducer } from 'react';
-import { SkillType, SkillInput, SequenceStep } from '@/src/types/skill';
+import { SkillType,  SequenceStep } from '@/src/types/skill';
 import * as skillService from '../services/skillService';
 import { useSkills, useAddSkill as useAddSkillMutation } from '../services/skillService';
 
@@ -8,7 +8,7 @@ export type SkillAction =
   | { type: 'SET_NOTE'; payload: string }
   | { type: 'SET_VIDEO'; payload: string | null }
   | { type: 'SET_SEQUENCE'; payload: SequenceStep[] }
-  | { type: 'SET_CATEGORY'; payload: string | null }
+  | { type: 'SET_CATEGORY'; payload: {id:string, name:string} | null }
   | { type: 'SET_SKILL'; payload: string }
   | { type: 'ADD_SEQUENCE_STEP' }
   | { type: 'REMOVE_SEQUENCE_STEP'; payload: number }
@@ -19,15 +19,16 @@ export type SkillAction =
   | { type: 'CLEAR_SEQUENCE' }
   | { type: 'RESET_SKILL' };
 
-export const initialSkillState: SkillInput = {
+export const initialSkillState: SkillType = {
   note: '',
   video: null,
   sequence: [] as SequenceStep[],
-  selectedCategory: null,
-  selectedSkill: '',
+  category: null,
+  name: '',
+  id: ''
 };
 
-export const skillReducer = (state: SkillInput, action: SkillAction): SkillInput => {
+export const skillReducer = (state: SkillType, action: SkillAction) => {
   switch (action.type) {
     case 'SET_NOTE':
       return { ...state, note: action.payload };
@@ -113,11 +114,11 @@ export const skillReducer = (state: SkillInput, action: SkillAction): SkillInput
 };
 
 // Helper function to convert SkillInput to SkillType
-export const createSkillFromInput = (input: SkillInput): SkillType => {
+export const createSkillFromInput = (input: SkillType): SkillType => {
   return {
     id: Math.random().toString(36).substr(2, 9),
-    name: input.selectedSkill,
-    category: input.selectedCategory || 'none',
+    name: input.name,
+    category: input.category || null,
     note: input.note,
     video: input.video,
     sequence: input.sequence,

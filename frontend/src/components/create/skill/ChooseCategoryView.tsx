@@ -1,36 +1,45 @@
-import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, TextInput, StyleSheet } from 'react-native'
 import React, { useState } from 'react'
-import { Categories } from '../../../constants/Skills';
+import { Categories, CategoryType } from '../../../constants/Skills';
 import Octicons from '@expo/vector-icons/Octicons';
-
+import { Text } from '@/src/components/ui/Text';
+import {colors} from '@/src/theme/theme';
 interface ChooseCategoryViewProps {
-  onSelectCategory: (category: string | null) => void;
-  selectedCategory: string | null;
+  onSelectCategory?: (category: {id: string, name:string} | null) => void;
+  selectedCategory: {id: string, name:string} | null;
 }
 
-const ChooseCategoryView: React.FC<ChooseCategoryViewProps> = ({ onSelectCategory, selectedCategory }) => {
-  const [tags, setTags] = useState<string[]>(Categories);
+const ChooseCategoryView: React.FC<ChooseCategoryViewProps> = ({ 
+  onSelectCategory = () => {}, 
+  selectedCategory 
+}) => {
+  const [categories, setCategories] = useState<CategoryType[]>(Categories);
   const [newTag, setNewTag] = useState<string>('');
   const [isAddingTag, setIsAddingTag] = useState<boolean>(false);
   const inputRef = React.useRef<TextInput>(null);
 
   const addTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
+    if (newTag.trim() && !categories.some(cat => cat.name.toLowerCase() === newTag.trim().toLowerCase())) {
       const capitalizedTag = newTag.trim().charAt(0).toUpperCase() + newTag.trim().slice(1);
-      setTags([...tags, capitalizedTag]);
-      onSelectCategory(capitalizedTag);
+      const newCategory: CategoryType = {
+        id: `category-${capitalizedTag.toLowerCase().replace(/[^\w]+/g, '-')}`,
+        name: capitalizedTag
+      };
+      setCategories([...categories, newCategory]);
+      onSelectCategory(newCategory);
       setNewTag('');
       setIsAddingTag(false);
     }
   };
 
-const handleTagPress = (tag: string) => {
-    if (selectedCategory === tag) {
-        onSelectCategory('');
+  const handleTagPress = (category: CategoryType) => {
+    console.log('category', category);
+    if (selectedCategory && selectedCategory.id === category.id) {
+      onSelectCategory(null);
     } else {
-        onSelectCategory(tag);
+      onSelectCategory(category);
     }
-};
+  };
 
   const handleAddTagButtonPress = () => {
     setIsAddingTag(true);
@@ -46,9 +55,11 @@ const handleTagPress = (tag: string) => {
 
   return (
     <View style={styles.container}>
-      {tags.map((tag, index) => (
-        <TouchableOpacity key={index} onPress={() => handleTagPress(tag)}>
-          <Text style={[styles.tag, selectedCategory === tag && styles.selectedTag]}>{tag}</Text>
+      {categories.map((category) => (
+        <TouchableOpacity key={category.id} onPress={() => handleTagPress(category)}>
+          <Text style={[styles.tag, selectedCategory?.id === category.id && styles.selectedTag]}>
+            {category.name}
+          </Text>
         </TouchableOpacity>
       ))}
       {isAddingTag ? (
@@ -69,15 +80,11 @@ const handleTagPress = (tag: string) => {
         </View>
       ) : (
         <TouchableOpacity onPress={handleAddTagButtonPress} style={styles.addTagButton}>
-            <Octicons name='plus' size={15} color='black' />        
+            <Octicons name='plus' size={15} color='#030712' />        
         </TouchableOpacity>
       )}
     </View>
   );
-};
-
-ChooseCategoryView.defaultProps = {
-  onSelectCategory: () => {},
 };
 
 const styles = StyleSheet.create({
@@ -90,7 +97,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   tag: {
-    backgroundColor: '#fff',
+    backgroundColor: '#F9FAFB',
     padding: 8,
     margin: 5,
     borderRadius: 5,
@@ -102,7 +109,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   addTagButtonText: {
-    color: '#fff',
+    color: '#F9FAFB',
   },
   addTagContainer: {
     flexDirection: 'row',
@@ -123,14 +130,14 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   addButtonText: {
-    color: '#fff',
+    color: '#F9FAFB',
   },
   selectedTag: {
-    backgroundColor: '#007bff',
-    color: '#fff',
+    backgroundColor: colors.blue,
+    color: '#F9FAFB',
   },
   closeButton: {
-    backgroundColor: '#dc3545',
+    backgroundColor: '#B91C1C',
     padding: 10,
     paddingHorizontal: 12,
     marginRight: 5,

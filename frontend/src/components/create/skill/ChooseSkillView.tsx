@@ -5,7 +5,7 @@ import { AutocompleteDropdown } from 'react-native-autocomplete-dropdown';
 
 // Define props interface for ChooseSkillView component
 interface ChooseSkillViewProps {
-  selectedCategory: string | null;
+  selectedCategory: { id: string; name: string } | null;
   onSelectSkill: (value: string) => void;
 }
 
@@ -15,9 +15,10 @@ const ChooseSkillView: React.FC<ChooseSkillViewProps> = ({ selectedCategory, onS
   const [skillsData, setSkillsData] = useState<SkillType[]>(Skills);
   const [searchText, setSearchText] = useState<string>('');
 
+  console.log('selectedCategory', selectedCategory);
   useEffect(() => {
     if (selectedCategory) {
-      setSkillsData(CategorySkillMap[selectedCategory].map((skill, index) => ({
+      setSkillsData(CategorySkillMap[selectedCategory.name].map((skill, index) => ({
         id: index.toString(),
         title: skill,
         category: selectedCategory
@@ -60,6 +61,7 @@ const ChooseSkillView: React.FC<ChooseSkillViewProps> = ({ selectedCategory, onS
         suggestionsListContainerStyle={styles.suggestionsContainer}
         containerStyle={styles.dropdownContainer}
         emptyResultText="No results found"
+        
       />
     </View>
   );
