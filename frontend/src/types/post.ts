@@ -26,4 +26,4 @@ export type BasePost = {
     tags?: string[];
   };
   
-  export type Post = TrainingPost | CompetitionPost | RegularPost;T
+  export type Post = TrainingPost | CompetitionPost | RegularPost;

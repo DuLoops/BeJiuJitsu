@@ -12,7 +12,7 @@ interface ChooseCategoryViewProps {
 const ChooseCategoryView: React.FC<ChooseCategoryViewProps> = ({ 
   onSelectCategory = () => {}, 
   selectedCategory 
-}) => {
+}) => {     
   const [categories, setCategories] = useState<CategoryType[]>(Categories);
   const [newTag, setNewTag] = useState<string>('');
   const [isAddingTag, setIsAddingTag] = useState<boolean>(false);

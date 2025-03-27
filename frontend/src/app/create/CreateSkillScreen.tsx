@@ -19,18 +19,18 @@ const CreateSkillScreen = () => {
   const fromScreen = params.fromScreen || null;
   
   // Use the global state and dispatch from context
-  const { addSkill, newSkillState, newSkillDispatch } = useSkillContext();
+    const { addSkill, newSkillState, newSkillDispatch } = useSkillContext();
 
   const handleAddSkill = async () => {
     console.log('Creating skill with state:', JSON.stringify(newSkillState));
     
     // Validate required fields
-    if (!newSkillState.selectedCategory) {
+    if (!newSkillState.category) {
       showAlert('Error', 'Please select a category.');
       return;
     }
     
-    if (!newSkillState.selectedSkill || newSkillState.selectedSkill.trim() === '') {
+    if (!newSkillState.name || newSkillState.name.trim() === '') {
       showAlert('Error', 'Please enter a skill name.');
       return;
     }
@@ -97,12 +97,12 @@ const CreateSkillScreen = () => {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.label}>Select Category:</Text>
         <ChooseCategoryView
-          selectedCategory={newSkillState.selectedCategory}
+          selectedCategory={newSkillState.category}
           onSelectCategory={(category) => newSkillDispatch({ type: 'SET_CATEGORY', payload: category })}
         />
         <Text style={styles.label}>Skill name:</Text>
         <ChooseSkillView 
-          selectedCategory={newSkillState.selectedCategory} 
+          selectedCategory={newSkillState.category} 
           onSelectSkill={(skill: string) => newSkillDispatch({ type: 'SET_SKILL', payload: skill })} 
         />
         <View style={styles.detailsContainer}>

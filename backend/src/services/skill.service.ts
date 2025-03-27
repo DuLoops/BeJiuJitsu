@@ -27,6 +27,7 @@ export class SkillService {
 
         const createdUserSkill = await this.prisma.userSkill.create({
             data: {
+                userId: creatorId,
                 note: data.userSkill.note,
                 videoUrl: data.userSkill.videoUrl,
                 sequences: {
@@ -39,15 +40,19 @@ export class SkillService {
                     }))
                 },
                 skillId: data.skill.id,
-                skill: {
-                    connect: { id: data.skill.id }
-                },
                 createdAt: new Date(),
                 updatedAt: new Date()
             }
         });
 
+        return {
+            skillId: data.skill.id,
+            userSkill: createdUserSkill
+        }
         // Optionally, you can log or use `createdUserSkill` as needed
+       } catch (error) {
+           console.log(error);
+           throw error;
        }
     }
 

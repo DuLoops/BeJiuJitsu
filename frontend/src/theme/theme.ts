@@ -1,4 +1,3 @@
-import { blue } from "react-native-reanimated/lib/typescript/Colors";
 
 export const colors = {
   // Main theme colors

@@ -1,32 +1,38 @@
+import { Skill, Category, UserSkill } from '@prisma/client';
+
+// Use partial Prisma types for input DTOs
 export interface CreateSkillDto {
-    id: string;
-    name: string;
-    category: {id:string, name:string} | null;
-    note: string;
-    video: string | null;
-    sequence: SequenceStep[];
-  
+    isNewSkill: boolean;
+    skill: {
+        name: string;
+        categoryId: string;
+        id?: string;
+    }
+    userSkill: {
+        note: string;
+        videoUrl: string | null;
+        sequence: SequenceStep[];
+    },
+    creatorId: string;
+
 }
 
 export interface SequenceStep {
     stepNumber: number;
     intention: string;
     details: string[];
-  }
-  
-
-export interface UpdateSkillDto {
-    name?: string;       // Display name of the skill
-    categoryId?: string; // Category ID in kebab-case format
-    isPublic?: boolean;  // Whether skill is publicly available
 }
 
-// Additional DTO for frontend integration
-export interface SkillResponseDto {
-    id: string;         // Skill ID in kebab-case format (category-name)
-    name: string;       // Display name of the skill
-    categoryId: string; // Category ID
-    categoryName: string; // Category name for display
-    isPublic: boolean;  // Whether skill is publicly available
-    creatorId: string;  // ID of the user who created the skill
+export interface UpdateSkillDto {
+    name?: string;
+    categoryId?: string;
+    isPublic?: boolean;
+    note?: string;
+    videoUrl?: string | null;
+}
+
+// Response DTO that extends the Prisma Skill type with additional properties
+export interface SkillResponseDto extends Skill {
+    categoryName: string;
+    userSkill?: UserSkill | null;
 }
