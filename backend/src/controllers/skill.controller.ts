@@ -10,6 +10,7 @@ export class SkillController {
     }
 
     async createSkill(req: Request, res: Response) {
+        console.log('createSkill', req.user);
         try {
             const userId = req.user?.id;
             if (!userId) {

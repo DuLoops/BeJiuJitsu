@@ -1,0 +1,12 @@
+---
+description: This includes document files. ex.prd, app-flow, structure, etc.
+globs: 
+alwaysApply: false
+---
+prd doc - [product-requirements-document.md](mdc:documentation/product-requirements-document.md) 
+app flow doc - [app-flow.md](mdc:documentation/app-flow.md) 
+fronend guidelines - [frontend-development-guidelines.md](mdc:documentation/frontend-development-guidelines.md)
+backend structure - [backend-structure.md](mdc:documentation/backend-structure.md)
+tech stack - [technial-stack.md](mdc:documentation/technial-stack.md)
+
+Edit these files if necessary

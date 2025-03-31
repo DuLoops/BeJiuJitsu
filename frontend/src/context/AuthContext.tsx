@@ -22,7 +22,17 @@ export function isTokenExpired(expiresIn: number): boolean {
   return currentTime >= expiresIn;
 }
 
-const AuthContext = createContext<AuthState | any>(null);
+interface AuthContextType {
+  user: User | null;
+  profile: Profile | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  signIn: (credentials: { email: string; password: string }) => Promise<boolean>;
+  signOut: () => Promise<void>;
+  getAuthenticatedRequest: (endpoint: string, options?: RequestInit) => Promise<Response>;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
 
 const REFRESH_TOKEN_KEY = '@BJJApp:refreshToken';
 
@@ -46,7 +56,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token: null,  // renamed from tokens to token
   });
 
-  console.log('authState:', authState);
   useEffect(() => {
     loadStoredAuth();
   }, []);
@@ -163,7 +172,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signIn({ email, password }: { email: string; password: string }) {
-    setAuthState(prev => ({ ...prev, isLoading: true }));
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
@@ -171,11 +179,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
+      console.log("signIn response:", response);
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message);
+        throw new Error(data.message || 'Login failed');
       }
 
       // Store refresh token from cookies
@@ -212,8 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return profile !== null;
     } catch (error) {
       console.error('Login request failed:', error);
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-      return
+      throw error;
     }
   }
 
@@ -258,6 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
   
+  const isAuthenticated = Boolean(authState.user && authState.token);
 
   return (
     <AuthContext.Provider 
@@ -265,9 +273,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: authState.user,
         profile: authState.profile,
         isLoading: authState.isLoading,
+        isAuthenticated,
         signIn,
         signOut,
-        // updateProfile,
         getAuthenticatedRequest,
       }}
     >

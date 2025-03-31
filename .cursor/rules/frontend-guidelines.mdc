@@ -1,0 +1,13 @@
+---
+description: 
+globs: *.tsx
+alwaysApply: false
+---
+
+# Button and Text
+
+[Button.tsx](mdc:frontend/src/components/ui/Button.tsx) [Text.tsx](mdc:frontend/src/components/ui/Text.tsx) use these components to generate button and text
+
+# colors
+[theme.ts](mdc:frontend/src/theme/theme.ts) contains black, white, blue(secondary), and red(accent) colors 
+

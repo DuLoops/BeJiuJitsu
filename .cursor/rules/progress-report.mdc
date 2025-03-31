@@ -1,0 +1,66 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Rules
+- Record progress of development with date and summary
+- keep it simple
+
+# Progress Report
+
+Date : March 29, 2025
+
+## Frontend Updates - SkillContext
+
+### Changes Made to SkillContext
+1. **New Types and Interfaces**
+   - Added `NewSkillData` interface to match the backend DTO structure:
+     ```typescript
+     interface NewSkillData {
+       isNewSkill: boolean;
+       skill: {
+         name: string;
+         categoryId: string;
+         id?: string;
+       };
+       userSkill: {
+         note: string;
+         videoUrl: string | null;
+         sequence: SequenceStep[];
+       };
+     }
+     ```
+
+2. **Updated Action Types**
+   - Replaced old actions with new ones that match the updated data structure:
+     - `SET_CATEGORY_ID` instead of `SET_CATEGORY`
+     - `SET_SKILL_NAME` and `SET_SKILL_ID` instead of `SET_SKILL`
+     - Added `SET_IS_NEW_SKILL` for handling new vs existing skills
+
+3. **Reducer Updates**
+   - Modified state management to handle the nested structure
+   - All sequence-related actions now operate on `userSkill.sequence`
+   - Added proper type safety throughout the reducer
+
+4. **Context API Changes**
+   - Updated `SkillContextType` to use `UserSkillType` for recently created skills
+   - Modified `addSkill` function to take `userId` parameter
+   - Integrated with the new `createSkill` service function
+
+5. **Service Integration**
+   - Added proper error handling for skill creation
+   - Implemented proper state reset after successful skill creation
+   - Added TypeScript types for better type safety
+
+### Benefits
+1. Better alignment with backend API structure
+2. Improved type safety throughout the skill creation flow
+3. Clearer separation between skill and user skill data
+4. More robust error handling
+
+### Next Steps
+1. Update components using the SkillContext to match new structure
+2. Add validation for required fields
+3. Implement proper error messaging in the UI
+4. Add loading states for better user experience 

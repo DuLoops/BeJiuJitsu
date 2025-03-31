@@ -30,15 +30,25 @@ export default function Login() {
     try {
       setIsLoading(true);
       setErrors([]);
+      
+      // Attempt to sign in
       const hasProfile = await signIn({ email, password });
-      if (hasProfile) {
+      
+      // Only navigate if sign in was successful
+      if (hasProfile === true) {
         router.replace('/(tabs)');
-      } else {
+      } else if (hasProfile === false) {
         router.replace('/(onboarding)/CreateProfile');
       }
+      
     } catch (error) {
-      setErrors([{ field: 'password', message: 'Wrong email or password' },]);
-    } finally {
+      // Clear password field on authentication error
+      setPassword('');
+      setErrors([{ 
+        field: 'general', 
+        message: error instanceof Error ? error.message : 'Invalid email or password'
+      }]);
+      // Make sure loading is set to false on error
       setIsLoading(false);
     }
   };
@@ -54,6 +64,9 @@ export default function Login() {
       />
       <Text style={styles.title}>Welcome Back</Text>
       <View style={styles.form}>
+        {getErrorMessage('general') && (
+          <Text style={[styles.errorText, styles.generalError]}>{getErrorMessage('general')}</Text>
+        )}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email</Text>
           <TextInput
@@ -149,5 +162,9 @@ const styles = StyleSheet.create({
   backButton: {
     alignSelf: 'flex-start',
     marginTop: 20,
+  },
+  generalError: {
+    marginTop: 10,
+    marginBottom: 10,
   },
 });

@@ -14,7 +14,7 @@ export enum UserRole {
   }
   
   export interface User {
-    id: number;
+    id: string;
     email: string;
     role: UserRole;
     isVerified: boolean;
@@ -23,8 +23,8 @@ export enum UserRole {
   }
   
   export interface Profile {
-    id: number;
-    userId: number;
+    id: string;
+    userId: string;
     userName: string;
     belt: Belt;
     stripes: number;

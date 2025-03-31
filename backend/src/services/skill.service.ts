@@ -9,51 +9,57 @@ export class SkillService {
     }
 
     async createSkill(creatorId: string, data: CreateSkillDto) {
-       try{
-        if (data.isNewSkill) {
-            data.skill.id = await this.prisma.skill.create({
-                data: {
-                    name: data.skill.name,
-                    categoryId: data.skill.categoryId,
-                    creatorId,
-                    isPublic: false,
-                    createdAt: new Date()
-                }
-            }).then(skill => skill.id);
-        }
-        if (!data.skill.id) {
-            throw new Error('Skill ID is undefined');
-        }
+        console.log('createSkill', creatorId, data);
+        try {
+            // Check if skill exists by ID
+            let skillName = data.skill.name;
+            let existingSkill = await this.prisma.skill.findUnique({
+                where: { name: skillName }
+            });
+            console.log('existingSkill', existingSkill);
 
-        const createdUserSkill = await this.prisma.userSkill.create({
-            data: {
-                userId: creatorId,
-                note: data.userSkill.note,
-                videoUrl: data.userSkill.videoUrl,
-                sequences: {
-                    create: data.userSkill.sequence.map((step, index) => ({
-                        stepNumber: index + 1,
-                        intention: step.intention,
-                        details: {
-                            create: step.details.map(detail => ({ detail }))
-                        }
-                    }))
-                },
-                skillId: data.skill.id,
-                createdAt: new Date(),
-                updatedAt: new Date()
+            // If skill doesn't exist, create it
+            if (!existingSkill) {
+                existingSkill = await this.prisma.skill.create({
+                    data: {
+                        id: data.skill.categoryId + '-' + data.skill.name,
+                        name: data.skill.name,
+                        categoryId: data.skill.categoryId,
+                        creatorId,
+                        isPublic: false,
+                        createdAt: new Date()
+                    }
+                });
             }
-        });
 
-        return {
-            skillId: data.skill.id,
-            userSkill: createdUserSkill
+            const createdUserSkill = await this.prisma.userSkill.create({
+                data: {
+                    userId: creatorId,
+                    note: data.userSkill.note,
+                    videoUrl: data.userSkill.videoUrl,
+                    sequences: {
+                        create: data.userSkill.sequence.map((step, index) => ({
+                            stepNumber: index + 1,
+                            intention: step.intention,
+                            details: {
+                                create: step.details.map(detail => ({ detail }))
+                            }
+                        }))
+                    },
+                    skillId: existingSkill.id,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                }
+            });
+
+            return {
+                skillId: existingSkill.id,
+                userSkill: createdUserSkill
+            }
+        } catch (error) {
+            console.log(error);
+            throw error;
         }
-        // Optionally, you can log or use `createdUserSkill` as needed
-       } catch (error) {
-           console.log(error);
-           throw error;
-       }
     }
 
     async getSkills(userId: string) {

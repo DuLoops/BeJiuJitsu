@@ -1,10 +1,12 @@
-import { Stack } from "expo-router";
+import React from 'react';
+import { Stack} from "expo-router";
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/src/context/AuthContext';
 import { useProtectedRoute } from '@/src/hooks/useProtectedRoute';
 import { ThemeProvider } from "@/src/context/ThemeContext";
 import { useTheme } from '@/src/context/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { LoadingScreen } from '@/src/app/LoadingScreen';
 
 
 export default function RootLayout() {
@@ -23,40 +25,35 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const { isAuthenticated } = useAuth();
-  useProtectedRoute();
+  const { isAuthenticated, isLoading } = useAuth();
+  useProtectedRoute();  
   const { activeTheme } = useTheme();
 
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: activeTheme.background.default } }}>
-        {/* Auth Stack */}
-        <Stack.Screen name="(auth)/Landing" />
-        <Stack.Screen name="(auth)/Login" />
-        <Stack.Screen name="(auth)/Signup" />
-        {/* <Stack.Screen name="(auth)/ForgotPassword" />
-      <Stack.Screen name="(auth)/CreateProfile" /> */}
-        {/* Onboarding Stack */}
-        <Stack.Screen name="(onboarding)/CreateProfile" />
-        {/* <Stack.Screen name="(onboarding)/ConfirmEmail" /> */}
-
-        {/* Main App Stack */}
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-
-        {/* Create Stack - reference only the folder, not individual screens */}
-        <Stack.Screen
-          name="create"
-          options={{
-            headerShown: false  // Let the nested layout handle headers
-          }}
-        />
-
-        <Stack.Screen
-          name="+not-found"
-          options={{
-            title: 'Not Found',
-            presentation: 'modal'
-          }}
-        />
-      </Stack>
+    <Stack 
+      screenOptions={{ 
+        headerShown: false, 
+        contentStyle: { backgroundColor: activeTheme.background.default },
+        animation: 'slide_from_right',
+      }}
+    >
+      <Stack.Screen name="(auth)/Landing" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)/Login" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)/Signup" options={{ headerShown: false }} />
+      <Stack.Screen name="(onboarding)/CreateProfile" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="create" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="+not-found"
+        options={{
+          title: 'Not Found',
+          presentation: 'modal'
+        }}
+      />
+    </Stack>
   );
 }

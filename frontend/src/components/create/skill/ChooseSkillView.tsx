@@ -1,39 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, View, Platform } from 'react-native';
-import { SkillType, Skills, CategorySkillMap } from '@/src/constants/Skills';
-import { AutocompleteDropdown } from 'react-native-autocomplete-dropdown';
+import { CategoryType, Skills, CategorySkillMap } from '@/src/constants/Skills';
+import { AutocompleteDropdown, AutocompleteDropdownItem } from 'react-native-autocomplete-dropdown';
+import { debounce } from 'lodash';
+
+interface DataItem extends AutocompleteDropdownItem {
+  id: string;
+  title: string;
+}
 
 // Define props interface for ChooseSkillView component
 interface ChooseSkillViewProps {
-  selectedCategory: { id: string; name: string } | null;
+  selectedCategory: CategoryType | null;
   onSelectSkill: (value: string) => void;
 }
 
 const ItemSeparatorComponent = () => <View style={{ height: 1, width: '100%', backgroundColor: 'white' }} />;
 
 const ChooseSkillView: React.FC<ChooseSkillViewProps> = ({ selectedCategory, onSelectSkill }) => {
-  const [skillsData, setSkillsData] = useState<SkillType[]>(Skills);
+  const [skillsData, setSkillsData] = useState<DataItem[]>(
+    Skills.map((skill) => ({
+      id: skill.id,
+      title: skill.title
+    }))
+  );
   const [searchText, setSearchText] = useState<string>('');
 
-  console.log('selectedCategory', selectedCategory);
+
+
   useEffect(() => {
     if (selectedCategory) {
-      setSkillsData(CategorySkillMap[selectedCategory.name].map((skill, index) => ({
-        id: index.toString(),
-        title: skill,
-        category: selectedCategory
-      })));
+      const categorySkills = CategorySkillMap[selectedCategory.name] || [];
+      setSkillsData(
+        categorySkills.map((skillName, index) => ({
+          id: `${selectedCategory.id}-${index}`,
+          title: skillName
+        }))
+      );
       setSearchText("");
     } else {
-      setSkillsData(Skills);
+      setSkillsData(
+        Skills.map((skill) => ({
+          id: skill.id,
+          title: skill.title
+        }))
+      );
     }
   }, [selectedCategory]);
 
-  // Update parent component when searchText changes
+  const handleSelectItem = (item: AutocompleteDropdownItem | null) => {
+    if (!item?.title) return;
+    setSearchText(item.title);
+  };
+
   useEffect(() => {
-    if (searchText !== '') {
-      onSelectSkill(searchText);
-    }
+    onSelectSkill(searchText);
   }, [searchText]);
 
   return (
@@ -44,7 +65,7 @@ const ChooseSkillView: React.FC<ChooseSkillViewProps> = ({ selectedCategory, onS
         closeOnBlur={true}
         showClear={false}
         initialValue={undefined}
-        onSelectItem={item => item?.title && setSearchText(item.title)}
+        onSelectItem={handleSelectItem}
         dataSet={skillsData}
         ItemSeparatorComponent={ItemSeparatorComponent}
         ignoreAccents
@@ -54,14 +75,13 @@ const ChooseSkillView: React.FC<ChooseSkillViewProps> = ({ selectedCategory, onS
           style: { color: 'black' },
           value: searchText,
         }}
-        suggestionsListTextStyle={{ color: '#000' }}
         onChangeText={(text) => {
           setSearchText(text);
         }}
+        suggestionsListTextStyle={{ color: '#000' }}
         suggestionsListContainerStyle={styles.suggestionsContainer}
         containerStyle={styles.dropdownContainer}
         emptyResultText="No results found"
-        
       />
     </View>
   );

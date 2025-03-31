@@ -5,7 +5,7 @@ import { SegmentedControl } from '@/src/components/ui/SegmentedControl';
 import { Button } from '@/src/components/ui/Button';
 import { Detail } from '@/src/components/create/competition/Detail';
 import { useSkillContext } from '@/src/context/SkillContext';
-import { SkillType } from '@/src/types/skill';
+import { SkillType } from '@/src/types/skillType';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { router } from 'expo-router';
 
@@ -185,7 +185,7 @@ export default function CreateCompetitionScreen() {
           <Text style={styles.subSectionTitle}>Skills Used</Text>
           
           {/* Recently Created Skills */}
-          {recentlyCreatedSkills?.length > 0 && (
+          {/* {recentlyCreatedSkills?.length > 0 && (
             <View style={styles.recentSkillsContainer}>
               <Text style={styles.subSectionLabel}>Recently Created Skills</Text>
               <FlatList
@@ -202,12 +202,12 @@ export default function CreateCompetitionScreen() {
                     onPress={() => handleSelectSkill(item)}
                   >
                     <Text style={styles.skillName}>{item.name}</Text>
-                    <Text style={styles.skillCategory}>{item.category}</Text>
+                    <Text style={styles.skillCategory}>{item.category.name}</Text>
                   </TouchableOpacity>
                 )}
               />
             </View>
-          )}
+          )} */}
           
           {/* All Skills */}
           <View style={styles.allSkillsContainer}>
@@ -226,7 +226,7 @@ export default function CreateCompetitionScreen() {
                   onPress={() => handleSelectSkill(item)}
                 >
                   <Text style={styles.skillListName}>{item.name}</Text>
-                  <Text style={styles.skillListCategory}>{item.category}</Text>
+                  <Text style={styles.skillListCategory}>{item.category.name}</Text>
                 </TouchableOpacity>
               )}
               ListEmptyComponent={

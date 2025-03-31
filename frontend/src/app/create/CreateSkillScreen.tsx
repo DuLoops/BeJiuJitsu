@@ -1,6 +1,6 @@
 import { View, StyleSheet, ScrollView } from 'react-native';
 import React from 'react';
-import { useSkillContext, createSkillFromInput } from '@/src/context/SkillContext';
+import { useSkillContext } from '@/src/context/SkillContext';
 import { Accordion, AccordionItem } from '../../components/ui/Accordion';
 import ChooseCategoryView from '../../components/create/skill/ChooseCategoryView';
 import ChooseSkillView from '../../components/create/skill/ChooseSkillView';
@@ -12,30 +12,26 @@ import { Button } from '@/src/components/ui/Button';
 import { Text } from '@/src/components/ui/Text';
 import { TextInput } from 'react-native';
 import { AutocompleteDropdownContextProvider } from 'react-native-autocomplete-dropdown';
+import { Categories } from '@/src/constants/Skills';
 
 const CreateSkillScreen = () => {
-  // Get params using Expo Router's useLocalSearchParams
   const params = useLocalSearchParams();
   const fromScreen = params.fromScreen || null;
-  
-  // Use the global state and dispatch from context
-    const { addSkill, newSkillState, newSkillDispatch } = useSkillContext();
+  const { addSkill, newSkillState, newSkillDispatch } = useSkillContext();
 
   const handleAddSkill = async () => {
-    console.log('Creating skill with state:', JSON.stringify(newSkillState));
-    
     // Validate required fields
-    if (!newSkillState.category) {
+    if (!newSkillState.skill.categoryId) {
       showAlert('Error', 'Please select a category.');
       return;
     }
     
-    if (!newSkillState.name || newSkillState.name.trim() === '') {
+    if (!newSkillState.skill.name || newSkillState.skill.name.trim() === '') {
       showAlert('Error', 'Please enter a skill name.');
       return;
     }
     
-    const invalidStep = newSkillState.sequence.find(
+    const invalidStep = newSkillState.userSkill.sequence.find(
       step => step.intention.trim() === '' || step.details.some(detail => detail.trim() === '')
     );
 
@@ -44,20 +40,14 @@ const CreateSkillScreen = () => {
       return;
     }
 
-    // Convert input state to SkillType
-    const skillToAdd = createSkillFromInput(newSkillState);
-    console.log('Skill after conversion:', JSON.stringify(skillToAdd));
-
     try {
-      await addSkill(skillToAdd);
-      console.log('Skill added successfully:', skillToAdd);
+      await addSkill();
+      console.log('Skill added successfully');
       
-      // If we came from CompetitionScreen, navigate back there with the new skill id
+      // Navigate based on fromScreen
       if (fromScreen === 'CreateCompetitionScreen') {
         router.back();
-        // This doesn't pass the new skill ID back, but we'll rely on the context's recentlyCreatedSkills
       } else {
-        // Otherwise go to Home
         router.replace("/");
       }
     } catch (error) {
@@ -67,13 +57,13 @@ const CreateSkillScreen = () => {
   };
 
   const handleSequenceAccordionOpen = () => {
-    if (newSkillState.sequence.length === 0) {
+    if (newSkillState.userSkill.sequence.length === 0) {
       newSkillDispatch({ type: 'ADD_SEQUENCE_STEP' });
     }
   };
 
   const handleSequenceAccordionClose = () => {
-    if (newSkillState.sequence.length > 0) {
+    if (newSkillState.userSkill.sequence.length > 0) {
       showAlert(
         'Clear Sequence',
         'Do you want to clear all sequence data?',
@@ -92,18 +82,28 @@ const CreateSkillScreen = () => {
     }
   };
 
+  // Find the selected category object based on categoryId
+  const selectedCategory = newSkillState.skill.categoryId 
+    ? Categories.find(cat => cat.id === newSkillState.skill.categoryId) || null
+    : null;
+
   return (
     <AutocompleteDropdownContextProvider>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.label}>Select Category:</Text>
         <ChooseCategoryView
-          selectedCategory={newSkillState.category}
-          onSelectCategory={(category) => newSkillDispatch({ type: 'SET_CATEGORY', payload: category })}
+          selectedCategory={selectedCategory}
+          onSelectCategory={(category) => 
+            newSkillDispatch({ 
+              type: 'SET_CATEGORY_ID', 
+              payload: category?.id || '' 
+            })
+          }
         />
         <Text style={styles.label}>Skill name:</Text>
         <ChooseSkillView 
-          selectedCategory={newSkillState.category} 
-          onSelectSkill={(skill: string) => newSkillDispatch({ type: 'SET_SKILL', payload: skill })} 
+          selectedCategory={selectedCategory}
+          onSelectSkill={(skillName) => newSkillDispatch({ type: 'SET_SKILL_NAME', payload: skillName })} 
         />
         <View style={styles.detailsContainer}>
           <Text style={{ textAlign: 'center', paddingTop: 20 }}>Details</Text>
@@ -112,7 +112,7 @@ const CreateSkillScreen = () => {
               {(inputRef) => (
                 <TextInput
                   ref={inputRef}
-                  value={newSkillState.note}
+                  value={newSkillState.userSkill.note}
                   onChangeText={(text) => newSkillDispatch({ type: 'SET_NOTE', payload: text })}
                   placeholder="Note"
                   multiline
@@ -126,7 +126,7 @@ const CreateSkillScreen = () => {
               onClose={handleSequenceAccordionClose}
             >
               <CreateSequenceView
-                sequence={newSkillState.sequence}
+                sequence={newSkillState.userSkill.sequence}
                 onAddStep={() => newSkillDispatch({ type: 'ADD_SEQUENCE_STEP' })}
                 onRemoveStep={(index) => newSkillDispatch({ type: 'REMOVE_SEQUENCE_STEP', payload: index })}
                 onUpdateStep={(index, field, value) =>

@@ -6,7 +6,7 @@ import { useAuth } from '@/src/context/AuthContext';
 const isDev = process.env.EXPO_PUBLIC_DEV_MODE === 'true';
 
 export function useProtectedRoute() {
-  const { isLoading, user } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -14,10 +14,15 @@ export function useProtectedRoute() {
     if (isLoading || isDev) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-
-    if (!user && !inAuthGroup) {
+    const inOnboardingGroup = segments[0] === '(onboarding)';
+    console.log('isAuthenticated', isAuthenticated);
+    console.log('inAuthGroup', inAuthGroup);
+    if (!isAuthenticated && !inAuthGroup) {
       console.log('Redirecting to /(auth)/Landing');
       router.replace('/(auth)/Landing');
-    } 
-  }, [user, isLoading, segments]);
+    } else if (isAuthenticated && inAuthGroup) {
+      console.log('Redirecting authenticated users away from auth pages');
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated, isLoading, segments]);
 }
