@@ -1,17 +1,29 @@
-export class CreateUserSkillDto {
-    skillId!: string;
-    note?: string;  // Make sure note is optional
-    videoUrl?: string;
-    sequences?: {
-        stepNumber: number;
-        intention: string;
-        details: string[];
-    }[];
+
+
+export interface CreateUserSkillDto {
+    skill: {
+        name: string;
+        categoryId: string;
+        id?: string;
+    }
+    userSkill: {
+        note: string;
+        videoUrl: string | null;
+        sequence: SequenceStep[];
+    },
+    creatorId: string;
 }
 
 export class UpdateUserSkillDto {
     note?: string;
     videoUrl?: string;
+}
+
+
+export interface SequenceStep {
+    stepNumber: number;
+    intention: string;
+    details: string[];
 }
 
 export class CreateSkillUsageDto {

@@ -1,27 +1,55 @@
 import { Request, Response } from 'express';
 import { UserSkillService } from '../services/userSkill.service';
-import { CreateUserSkillDto, UpdateUserSkillDto, CreateSkillUsageDto } from '../dto/userSkill.dto';
+import { UserSkillManagerService } from '../services/userSkillManager.service';
+import { SkillService } from '../services/skill.service';
+import { CreateUserSkillDto, UpdateUserSkillDto, CreateUserSkillUsageDto } from '../dto/userSkill.dto';
+import { UserRole } from '@prisma/client';
 
 interface AuthenticatedRequest extends Request {
     user: {
-        id: number;
-        // ... other user properties ...
+        id: string;
+        email: string;
+        password: string;
+        isVerified: boolean;
+        role: UserRole;
+        createdAt: Date;
+        updatedAt: Date;
     };
 }
 
 export class UserSkillController {
     private userSkillService: UserSkillService;
+    private userSkillManagerService: UserSkillManagerService;
 
     constructor() {
         this.userSkillService = new UserSkillService();
+        const skillService = new SkillService();
+        this.userSkillManagerService = new UserSkillManagerService(skillService, this.userSkillService);
     }
 
     async createUserSkill(req: AuthenticatedRequest, res: Response) {
         try {
             const userId = req.user.id;
-            const skillData: CreateUserSkillDto = req.body;
-            const userSkill = await this.userSkillService.createUserSkill(userId, skillData);
-            res.status(201).json(userSkill);
+            const skillData = req.body;
+            console.log('skillData', skillData);
+            
+            if (skillData.skill.name) {
+                const result = await this.userSkillManagerService.createUserSkill(
+                    userId,
+                    {
+                        name: skillData.skill.name,
+                        categoryId: skillData.categoryId
+                    },
+                    {
+                        note: skillData.userSkill.note,
+                        videoUrl: skillData.userSkill.videoUrl,
+                        sequences: skillData.userSkill.sequences
+                    }
+                );
+                return res.status(201).json(result);
+            }
+
+            res.status(400).json({ message: 'Skill name must be provided' });
         } catch (error) {
             res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
         }
@@ -40,7 +68,7 @@ export class UserSkillController {
     async updateUserSkill(req: AuthenticatedRequest, res: Response) {
         try {
             const userId = req.user.id;
-            const userSkillId = parseInt(req.params.id);
+            const userSkillId = req.params.id;
             const updateData: UpdateUserSkillDto = req.body;
             const userSkill = await this.userSkillService.updateUserSkill(userSkillId, userId, updateData);
             res.json(userSkill);
@@ -49,22 +77,26 @@ export class UserSkillController {
         }
     }
 
-    async addSkillUsage(req: AuthenticatedRequest, res: Response) {
+    async addUserSkillUsage(req: AuthenticatedRequest, res: Response) {
         try {
+            const userSkillId = req.params.id;
             const userId = req.user.id;
-            const userSkillId = parseInt(req.params.id);
-            const usageData: CreateSkillUsageDto = req.body;
-            const usage = await this.userSkillService.addSkillUsage(userSkillId, userId, usageData);
-            res.status(201).json(usage);
-        } catch (error) {
-            res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
+            const usageData: CreateUserSkillUsageDto = req.body;
+            const usage = await this.userSkillService.addUserSkillUsage(userSkillId, userId, usageData);
+            res.json(usage);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                res.status(400).json({ error: error.message });
+            } else {
+                res.status(500).json({ error: 'An unknown error occurred' });
+            }
         }
     }
 
     async deleteUserSkill(req: AuthenticatedRequest, res: Response) {
         try {
             const userId = req.user.id;
-            const userSkillId = parseInt(req.params.id);
+            const userSkillId = req.params.id;
             await this.userSkillService.deleteUserSkill(userSkillId, userId);
             res.status(204).send();
         } catch (error) {
