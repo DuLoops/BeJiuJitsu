@@ -41,7 +41,7 @@ const CreateSkillScreen = () => {
     }
 
     try {
-      await addSkill();
+      await addSkill(fromScreen === 'CreateCompetitionScreen');
       console.log('Skill added successfully');
       
       // Navigate based on fromScreen

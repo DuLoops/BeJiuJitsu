@@ -15,13 +15,9 @@ export function useProtectedRoute() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === '(onboarding)';
-    console.log('isAuthenticated', isAuthenticated);
-    console.log('inAuthGroup', inAuthGroup);
     if (!isAuthenticated && !inAuthGroup) {
-      console.log('Redirecting to /(auth)/Landing');
       router.replace('/(auth)/Landing');
     } else if (isAuthenticated && inAuthGroup) {
-      console.log('Redirecting authenticated users away from auth pages');
       router.replace('/(tabs)');
     }
   }, [isAuthenticated, isLoading, segments]);

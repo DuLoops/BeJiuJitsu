@@ -2,7 +2,6 @@ import { SkillType, UserSkillType } from '@/src/types/skillType';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/context/AuthContext';
 import { API_URL } from '@/src/config/env';
-import { NewSkillData } from '../context/SkillContext';
 
 // Base API functions
 export const fetchSkills = async (getAuthenticatedRequest: any): Promise<SkillType[]> => {
@@ -19,32 +18,6 @@ export const fetchSkills = async (getAuthenticatedRequest: any): Promise<SkillTy
     throw new Error(`Failed to fetch skills: ${response.status}`);
   }
   return response.json();
-};
-
-export const createSkill = async (
-  getAuthenticatedRequest: (endpoint: string, options?: RequestInit) => Promise<Response>,
-  data: NewSkillData
-): Promise<{ skillId: string; userSkill: UserSkillType }> => {
-  try {
-    console.log('createSkill', data);
-    const response = await getAuthenticatedRequest(`${API_URL}/api/skills`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error');
-      throw new Error(`Failed to create skill: ${response.status} - ${errorText}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    console.error('Error creating skill:', error);
-    throw error;
-  }
 };
 
 export const addSkill = async (skill: SkillType, getAuthenticatedRequest: any): Promise<SkillType> => {

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma} from '@prisma/client';
 import { CreateSkillDto, UpdateSkillDto } from '../dto/skill.dto';
 
 export class SkillService {
@@ -8,58 +8,25 @@ export class SkillService {
         this.prisma = new PrismaClient();
     }
 
-    async createSkill(creatorId: string, data: CreateSkillDto) {
-        console.log('createSkill', creatorId, data);
-        try {
-            // Check if skill exists by ID
-            let skillName = data.skill.name;
-            let existingSkill = await this.prisma.skill.findUnique({
-                where: { name: skillName }
-            });
-            console.log('existingSkill', existingSkill);
-
-            // If skill doesn't exist, create it
-            if (!existingSkill) {
-                existingSkill = await this.prisma.skill.create({
-                    data: {
-                        id: data.skill.categoryId + '-' + data.skill.name,
-                        name: data.skill.name,
-                        categoryId: data.skill.categoryId,
-                        creatorId,
-                        isPublic: false,
-                        createdAt: new Date()
-                    }
-                });
-            }
-
-            const createdUserSkill = await this.prisma.userSkill.create({
+    async createSkill(creatorId: string, data: CreateSkillDto, tx?: Prisma.TransactionClient) {
+        console.log('Creating skill with data:', data);
+        if (tx) {
+            return tx.skill.create({
                 data: {
-                    userId: creatorId,
-                    note: data.userSkill.note,
-                    videoUrl: data.userSkill.videoUrl,
-                    sequences: {
-                        create: data.userSkill.sequence.map((step, index) => ({
-                            stepNumber: index + 1,
-                            intention: step.intention,
-                            details: {
-                                create: step.details.map(detail => ({ detail }))
-                            }
-                        }))
-                    },
-                    skillId: existingSkill.id,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
+                    ...data,
+                    creatorId
                 }
             });
-
-            return {
-                skillId: existingSkill.id,
-                userSkill: createdUserSkill
-            }
-        } catch (error) {
-            console.log(error);
-            throw error;
         }
+
+        return await this.prisma.$transaction(async (prismaTransaction) => {
+            return prismaTransaction.skill.create({
+                data: {
+                    ...data,
+                    creatorId
+                }
+            });
+        });
     }
 
     async getSkills(userId: string) {

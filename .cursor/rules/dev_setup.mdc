@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Run these commands at the bottom tab terminal for dev setup. (Don't open new window)
+1. cd backend && npm run dev
+2. cd backend && npx prisma studio
+3. cd frontend && npx expo start -- --web

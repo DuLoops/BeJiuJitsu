@@ -1,22 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useReducer } from 'react';
 import { SkillType, CategoryType, UserSkillType, SequenceStep } from '@/src/types/skillType';
-import * as skillService from '../services/skillService';
+import * as userSkillService from '../services/userSkillService';
 import { useSkills, useAddSkill as useAddSkillMutation } from '../services/skillService';
 import { useAuth } from './AuthContext';
+import { NewUserSkillDataType } from '@/src/types/skillType';
 
-// Types for the new skill creation
-export interface NewSkillData {
-  skill: {
-    name: string;
-    categoryId: string;
-    id: string;
-  };
-  userSkill: {
-    note: string;
-    videoUrl: string | null;
-    sequence: SequenceStep[];
-  };
-}
 
 export type SkillAction =
   | { type: 'SET_NOTE'; payload: string }
@@ -34,7 +22,7 @@ export type SkillAction =
   | { type: 'CLEAR_SEQUENCE' }
   | { type: 'RESET_SKILL' };
 
-export const initialSkillState: NewSkillData = {
+export const initialSkillState: NewUserSkillDataType = {
   skill: {
     name: '',
     categoryId: '',
@@ -47,7 +35,7 @@ export const initialSkillState: NewSkillData = {
   }
 };
 
-export const skillReducer = (state: NewSkillData, action: SkillAction): NewSkillData => {
+export const skillReducer = (state: NewUserSkillDataType, action: SkillAction): NewUserSkillDataType => {
   switch (action.type) {
     case 'SET_NOTE':
       return {
@@ -177,8 +165,8 @@ export const skillReducer = (state: NewSkillData, action: SkillAction): NewSkill
 type SkillContextType = {
   skills: SkillType[];
   recentlyCreatedSkills: UserSkillType[];
-  addSkill: () => Promise<void>;
-  newSkillState: NewSkillData;
+  addSkill: (saveToRecentlyCreatedSkills?: boolean) => Promise<void>;
+  newSkillState: NewUserSkillDataType;
   newSkillDispatch: React.Dispatch<SkillAction>;
   clearRecentlyCreatedSkills: () => void;
   isAddingSkill: boolean;
@@ -197,12 +185,13 @@ export const SkillProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   
   const skills = querySkills;
 
-  const addSkill = async () => {
+  const addSkill = async (saveToRecentlyCreatedSkills: boolean = false) => {
     try {
-      const result = await skillService.createSkill(getAuthenticatedRequest, newSkillState);
+      console.log('Adding user skill:', newSkillState);
+      const result = await userSkillService.createUserSkill(getAuthenticatedRequest, newSkillState);
       
-      if (result.userSkill) {
-        setRecentlyCreatedSkills(prev => [...prev, result.userSkill]);
+      if (saveToRecentlyCreatedSkills) {
+        setRecentlyCreatedSkills(prev => [...prev, result]);
       }
       
       newSkillDispatch({ type: 'RESET_SKILL' });
@@ -213,7 +202,7 @@ export const SkillProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return Promise.reject(error);
     }
   };
-
+  
   const clearRecentlyCreatedSkills = () => {
     setRecentlyCreatedSkills([]);
   };

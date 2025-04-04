@@ -253,7 +253,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setAuthState(prev => ({ ...prev, token: newToken }));
     }
-    console.log("getAuthenticatedRequest token:", authState.token, endpoint);
 
     return fetch(endpoint, {
       ...options,

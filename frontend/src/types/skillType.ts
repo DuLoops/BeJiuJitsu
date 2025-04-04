@@ -66,3 +66,16 @@ export interface SkillUsageType {
 export type BjjType = 'GI' | 'NOGI' | 'BOTH';
 export type TrainingIntensity = 'LIGHT' | 'MEDIUM' | 'HARD';
 export type UsageType = 'TRAINING' | 'COMPETITION';
+
+export interface NewUserSkillDataType {
+  skill: {
+    name: string;
+    categoryId: string;
+    id: string;
+  };
+  userSkill: {
+    note: string;
+    videoUrl: string | null;
+    sequence: SequenceStep[];
+  };
+}

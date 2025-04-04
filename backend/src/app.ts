@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import authRoutes from './routes/auth.routes';
 import profileRoutes from './routes/profile.routes';
-// import userSkillRoutes from './routes/userSkill.routes';
+import userSkillRoutes from './routes/userSkill.routes';
 // import trainingRoutes from './routes/training.routes';
 import skillRoutes from './routes/skill.routes';
 // import competitionRoutes from './routes/competition.routes';
@@ -17,7 +17,7 @@ const corsOptions: cors.CorsOptions = {
       : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization']
 
 };
 
@@ -32,7 +32,7 @@ app.use('/api/profile', profileRoutes);
 // app.use('/api/trainings', [authenticateJWT, hasProfile], trainingRoutes);
 app.use('/api/skills', authenticateJWT, skillRoutes);
 // app.use('/api/competitions', [authenticateJWT, hasProfile], competitionRoutes);
-// app.use('/api/user-skills', [authenticateJWT, hasProfile], userSkillRoutes);
+app.use('/api/user-skills', [authenticateJWT, hasProfile], userSkillRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

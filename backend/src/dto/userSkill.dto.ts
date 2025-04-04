@@ -9,16 +9,16 @@ export interface CreateUserSkillDto {
     userSkill: {
         note: string;
         videoUrl: string | null;
-        sequence: SequenceStep[];
+        sequences: SequenceStep[];
     },
     creatorId: string;
 }
 
-export class UpdateUserSkillDto {
+export interface UpdateUserSkillDto {
     note?: string;
     videoUrl?: string;
+    sequences?: SequenceStep[];
 }
-
 
 export interface SequenceStep {
     stepNumber: number;
@@ -26,7 +26,11 @@ export interface SequenceStep {
     details: string[];
 }
 
-export class CreateSkillUsageDto {
+export class UpdateUserSkilUsagelDto {
+    note?: string;
+    videoUrl?: string;
+}
+export class CreateUserSkillUsageDto {
     usageType!: 'TRAINING' | 'COMPETITION';
     trainingId?: string;
     competitionId?: string;
