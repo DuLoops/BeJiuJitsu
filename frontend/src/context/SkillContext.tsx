@@ -20,7 +20,8 @@ export type SkillAction =
   | { type: 'REMOVE_STEP_DETAIL'; payload: { stepIndex: number; detailIndex: number } }
   | { type: 'UPDATE_STEP_DETAIL'; payload: { stepIndex: number; detailIndex: number; value: string } }
   | { type: 'CLEAR_SEQUENCE' }
-  | { type: 'RESET_SKILL' };
+  | { type: 'RESET_SKILL' }
+  | { type: 'SET_SKILL_TO_EDIT'; payload: NewUserSkillDataType };
 
 export const initialSkillState: NewUserSkillDataType = {
   skill: {
@@ -157,6 +158,12 @@ export const skillReducer = (state: NewUserSkillDataType, action: SkillAction): 
       };
     case 'RESET_SKILL':
       return initialSkillState;
+    case 'SET_SKILL_TO_EDIT':
+      return {
+        ...state,
+        skill: action.payload.skill,
+        userSkill: action.payload.userSkill
+      };
     default:
       return state;
   }
@@ -166,11 +173,14 @@ type SkillContextType = {
   skills: SkillType[];
   recentlyCreatedSkills: UserSkillType[];
   addSkill: (saveToRecentlyCreatedSkills?: boolean) => Promise<void>;
+    updateSkill: (skillId: string) => Promise<void>;
   newSkillState: NewUserSkillDataType;
   newSkillDispatch: React.Dispatch<SkillAction>;
   clearRecentlyCreatedSkills: () => void;
   isAddingSkill: boolean;
+  isUpdatingSkill: boolean;
   addSkillError: Error | null;
+  updateSkillError: Error | null;
 };
 
 const SkillContext = createContext<SkillContextType | undefined>(undefined);
@@ -182,6 +192,7 @@ export const SkillProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   
   const { data: querySkills = [], isLoading, isError } = useSkills();
   const { mutateAsync, isPending: isAddingSkill, error: addSkillError } = useAddSkillMutation();
+  const { mutateAsync: updateUserSkillMutation, isPending: isUpdatingSkill, error: updateSkillError } = userSkillService.useUpdateUserSkill();
   
   const skills = querySkills;
 
@@ -203,6 +214,27 @@ export const SkillProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
   
+  const updateSkill = async (skillId: string) => {
+    try {
+      console.log('Updating user skill:', newSkillState);
+      await updateUserSkillMutation({ 
+        skillId, 
+        data: {
+          note: newSkillState.userSkill.note,
+          videoUrl: newSkillState.userSkill.videoUrl,
+          sequence: newSkillState.userSkill.sequence
+        }
+      });
+      
+      newSkillDispatch({ type: 'RESET_SKILL' });
+      
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Failed to update skill', error);
+      return Promise.reject(error);
+    }
+  };
+  
   const clearRecentlyCreatedSkills = () => {
     setRecentlyCreatedSkills([]);
   };
@@ -212,12 +244,15 @@ export const SkillProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{ 
         skills, 
         recentlyCreatedSkills,
-        addSkill, 
+        addSkill,
+        updateSkill,
         newSkillState,
         newSkillDispatch,
         clearRecentlyCreatedSkills,
         isAddingSkill,
-        addSkillError: addSkillError as Error | null
+        isUpdatingSkill,
+        addSkillError: addSkillError as Error | null,
+        updateSkillError: updateSkillError as Error | null
       }}
     >
       {children}

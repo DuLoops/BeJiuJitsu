@@ -7,15 +7,18 @@ import {colors} from '@/src/theme/theme';
 interface ChooseCategoryViewProps {
   onSelectCategory: (category: CategoryType | null) => void;
   selectedCategory: CategoryType | null;
+  disabled?: boolean;
 }
 
 const ChooseCategoryView: React.FC<ChooseCategoryViewProps> = ({ 
   onSelectCategory = () => {}, 
-  selectedCategory 
+  selectedCategory,
+  disabled = false
 }) => {     
   const [categories] = useState<CategoryType[]>(Categories);
 
   const handleTagPress = (category: CategoryType) => {
+    if (disabled) return;
     if (selectedCategory?.id === category.id) {
       onSelectCategory(null);
     } else {
@@ -26,8 +29,16 @@ const ChooseCategoryView: React.FC<ChooseCategoryViewProps> = ({
   return (
     <View style={styles.container}>
       {categories.map((category) => (
-        <TouchableOpacity key={category.id} onPress={() => handleTagPress(category)}>
-          <Text style={[styles.tag, selectedCategory?.id === category.id && styles.selectedTag]}>
+        <TouchableOpacity 
+          key={category.id} 
+          onPress={() => handleTagPress(category)}
+          disabled={disabled}
+        >
+          <Text style={[
+            styles.tag, 
+            selectedCategory?.id === category.id && styles.selectedTag,
+            disabled && styles.disabledTag
+          ]}>
             {category.name}
           </Text>
         </TouchableOpacity>
@@ -54,6 +65,9 @@ const styles = StyleSheet.create({
   selectedTag: {
     backgroundColor: colors.blue,
     color: '#F9FAFB',
+  },
+  disabledTag: {
+    opacity: 0.5,
   }
 });
 

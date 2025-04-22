@@ -1,11 +1,11 @@
 import { View, StyleSheet, ScrollView } from 'react-native';
-import React from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 import { useSkillContext } from '@/src/context/SkillContext';
 import { Accordion, AccordionItem } from '../../components/ui/Accordion';
 import ChooseCategoryView from '../../components/create/skill/ChooseCategoryView';
 import ChooseSkillView from '../../components/create/skill/ChooseSkillView';
 import CreateSequenceView from '../../components/create/skill/CreateSequenceView';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { router } from 'expo-router';
 import { showAlert } from '@/src/utils/alert';
 import { Button } from '@/src/components/ui/Button';
@@ -13,13 +13,39 @@ import { Text } from '@/src/components/ui/Text';
 import { TextInput } from 'react-native';
 import { AutocompleteDropdownContextProvider } from 'react-native-autocomplete-dropdown';
 import { Categories } from '@/src/constants/Skills';
+import { NewUserSkillDataType, UserSkillType } from '@/src/types/skillType';
+import { useDeleteUserSkill } from '@/src/services/userSkillService';
 
 const CreateSkillScreen = () => {
   const params = useLocalSearchParams();
+  const navigation = useNavigation();
   const fromScreen = params.fromScreen || null;
-  const { addSkill, newSkillState, newSkillDispatch } = useSkillContext();
+  const skillToEdit = params.skillToEdit ? JSON.parse(params.skillToEdit as string) as NewUserSkillDataType : null;
+  const { addSkill, updateSkill, newSkillState, newSkillDispatch } = useSkillContext();
+  const deleteSkillMutation = useDeleteUserSkill();
 
-  const handleAddSkill = async () => {
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: skillToEdit ? "Edit Skill" : "Create Skill"
+    });
+  }, [navigation, skillToEdit]);
+
+  useEffect(() => {
+    console.log('skillToEdit', skillToEdit);
+    console.log('newSkillState', newSkillState);
+    if (skillToEdit) {
+      // Initialize form with existing skill data
+      // newSkillDispatch({ type: 'SET_CATEGORY_ID', payload: skillToEdit.skill.categoryId });
+      // newSkillDispatch({ type: 'SET_SKILL_NAME', payload: skillToEdit.skill.name });
+      // newSkillDispatch({ type: 'SET_SKILL_ID', payload: skillToEdit.id });
+      // newSkillDispatch({ type: 'SET_NOTE', payload: skillToEdit.note || '' });
+      // newSkillDispatch({ type: 'SET_VIDEO', payload: skillToEdit.videoUrl });
+      // newSkillDispatch({ type: 'SET_SEQUENCE', payload: skillToEdit.sequence });
+      newSkillDispatch({ type: 'SET_SKILL_TO_EDIT', payload: skillToEdit });
+    }
+  }, [skillToEdit]);
+
+  const handleSaveSkill = async () => {
     // Validate required fields
     if (!newSkillState.skill.categoryId) {
       showAlert('Error', 'Please select a category.');
@@ -31,18 +57,16 @@ const CreateSkillScreen = () => {
       return;
     }
     
-    const invalidStep = newSkillState.userSkill.sequence.find(
-      step => step.intention.trim() === '' || step.details.some(detail => detail.trim() === '')
-    );
-
-    if (invalidStep) {
-      showAlert('Error', 'All steps must have an intention and non-empty details.');
-      return;
-    }
+ 
 
     try {
-      await addSkill(fromScreen === 'CreateCompetitionScreen');
-      console.log('Skill added successfully');
+      if (skillToEdit) {
+        await updateSkill(skillToEdit.skill.id);
+        console.log('Skill updated successfully');
+      } else {
+        await addSkill(fromScreen === 'CreateCompetitionScreen');
+        console.log('Skill added successfully');
+      }
       
       // Navigate based on fromScreen
       if (fromScreen === 'CreateCompetitionScreen') {
@@ -51,9 +75,42 @@ const CreateSkillScreen = () => {
         router.replace("/");
       }
     } catch (error) {
-      console.error('Failed to add skill:', error);
-      showAlert('Error', 'Failed to add skill. Please try again.');
+      console.error('Failed to save skill:', error);
+      showAlert('Error', `Failed to ${skillToEdit ? 'update' : 'add'} skill. Please try again.`);
     }
+  };
+
+  const handleDeleteSkill = () => {
+    if (!skillToEdit) return;
+
+    showAlert(
+      'Delete Skill',
+      'Are you sure you want to delete this skill? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteSkillMutation.mutateAsync(skillToEdit.skill.id);
+              console.log('Skill deleted successfully');
+              if (fromScreen === 'CreateCompetitionScreen') {
+                router.back();
+              } else {
+                router.replace("/");
+              }
+            } catch (error) {
+              console.error('Failed to delete skill:', error);
+              showAlert('Error', 'Failed to delete skill. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleSequenceAccordionOpen = () => {
@@ -99,11 +156,14 @@ const CreateSkillScreen = () => {
               payload: category?.id || '' 
             })
           }
+          disabled={!!skillToEdit}
         />
         <Text style={styles.label}>Skill name:</Text>
         <ChooseSkillView 
           selectedCategory={selectedCategory}
-          onSelectSkill={(skillName) => newSkillDispatch({ type: 'SET_SKILL_NAME', payload: skillName })} 
+          onSelectSkill={(skillName) => newSkillDispatch({ type: 'SET_SKILL_NAME', payload: skillName })}
+          disabled={!!skillToEdit}
+          initialValue={skillToEdit?.skill.name}
         />
         <View style={styles.detailsContainer}>
           <Text style={{ textAlign: 'center', paddingTop: 20 }}>Details</Text>
@@ -140,12 +200,23 @@ const CreateSkillScreen = () => {
             </AccordionItem>
           </Accordion>
         </View>
-        <Button 
-          title="Add Skill" 
-          onPress={handleAddSkill}
-          size="xl"
-          variant="primary" 
-        />
+        <View style={styles.buttonContainer}>
+          <Button 
+            title={skillToEdit ? "Update Skill" : "Add Skill"}
+            onPress={handleSaveSkill}
+            size="xl"
+            variant="primary" 
+          />
+          {skillToEdit && (
+            <Button 
+              title="Delete Skill"
+              onPress={handleDeleteSkill}
+              size="xl"
+              variant="outline"
+              style={styles.deleteButton}
+            />
+          )}
+        </View>
       </ScrollView>
     </AutocompleteDropdownContextProvider>
   );
@@ -185,6 +256,13 @@ const styles = StyleSheet.create({
     padding: 10,
     zIndex: 0,
   },
+  buttonContainer: {
+    gap: 10,
+    marginTop: 20,
+  },
+  deleteButton: {
+    backgroundColor: '#DC2626',
+  }
 });
 
 export default CreateSkillScreen;

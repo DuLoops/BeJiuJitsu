@@ -45,16 +45,25 @@ export default function TabLayout() {
       >
         <TouchableOpacity style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }} activeOpacity={1} onPressOut={() => setModalVisible(false)}>
           <View style={{ width: 200, padding: 20, backgroundColor: 'white', borderRadius: 10, marginBottom: 80, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => { setModalVisible(false); router.push('/create/CreateTrainingScreen'); }}>
-              <Text size="md" weight="medium">Training</Text>
+            <TouchableOpacity 
+              style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
+              onPress={() => { setModalVisible(false); router.push('/create/CreateTrainingScreen'); }}
+            >
+              <Text size="lg" weight="medium">Training</Text>
             </TouchableOpacity>
             <View style={{ height: 1, backgroundColor: '#ccc', width: '100%', marginVertical: 10 }} />
-            <TouchableOpacity onPress={() => { setModalVisible(false); router.push('/create/CreateCompetitionScreen'); }}>
-              <Text size="md" weight="medium">Competition</Text>
+            <TouchableOpacity 
+              style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
+              onPress={() => { setModalVisible(false); router.push('/create/CreateCompetitionScreen'); }}
+            >
+              <Text size="lg" weight="medium">Competition</Text>
             </TouchableOpacity>
             <View style={{ height: 1, backgroundColor: '#ccc', width: '100%', marginVertical: 10 }} />
-            <TouchableOpacity onPress={() => { setModalVisible(false); router.push('/create/CreateSkillScreen'); }}>
-              <Text size="md" weight="medium">Skill</Text>
+            <TouchableOpacity 
+              style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
+              onPress={() => { setModalVisible(false); router.push('/create/CreateSkillScreen'); }}
+            >
+              <Text size="lg" weight="medium">Skill</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
