@@ -95,23 +95,26 @@ model Skill {
 }
 
 model UserSkill {
-  id         String          @id @default(uuid())
-  userId     String
-  user       User            @relation(fields: [userId], references: [id])
-  skillId    String
-  skill      Skill           @relation(fields: [skillId], references: [id])
-  note       String?
-  videoUrl   String?
-  sequences  SkillSequence[]
-  usages     SkillUsage[]
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  id           String          @id @default(uuid())
+  userId       String
+  user         User            @relation(fields: [userId], references: [id])
+  skillId      String
+  skill        Skill           @relation(fields: [skillId], references: [id])
+  source       SkillSource     @default(INDEPENDENT)
+  competition  Competition?    @relation("CompetitionCreatedSkills", fields: [competitionId], references: [id])
+  competitionId String?
+  note         String?
+  videoUrl     String?
+  sequences    SkillSequence[]
+  usages       SkillUsage[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   @@unique([userId, skillId])
   @@index([userId])
   @@index([skillId])
+  @@index([competitionId])
 }
-
 
 model Category {
   id         String              @id @default(uuid())
@@ -186,38 +189,65 @@ enum UsageType {
 }
 
 model Competition {
-  id          String              @id @default(uuid())
-  userId      String
-  user        User                @relation(fields: [userId], references: [id])
-  name        String
-  date        DateTime
-  location    String?
-  type        BjjType
-  weightClass String
-  matchCount  Int
-  winCount    Int
-  loseCount   Int
-  skillUsages SkillUsage[]
-  details     CompetitionDetail[]
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  id            String              @id @default(uuid())
+  userId        String
+  user          User                @relation(fields: [userId], references: [id])
+  name          String?
+  date          DateTime?
+  location      String?
+  details       CompetitionDetail[]
+  skillUsages   SkillUsage[]
+  createdSkills UserSkill[]        @relation("CompetitionCreatedSkills")
+  note          String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
   @@index([userId])
 }
 
 model CompetitionDetail {
-  id            String       @id @default(uuid())
-  competitionId String
-  competition   Competition  @relation(fields: [competitionId], references: [id])
-  isWin           Boolean
-  submissionCount Int         @default(0)
-  pointsCount     Int         @default(0)
-  overtimeCount   Int         @default(0)
-  decisionCount   Int         @default(0)
-  notes           String?
-  createdAt       DateTime    @default(now())
+  id              String        @id @default(uuid())
+  competitionId   String
+  competition     Competition   @relation(fields: [competitionId], references: [id])
+  type            BjjType      
+  winCount        Int          @default(0)
+  loseCount       Int          @default(0)
+  matchDetailId   String       @unique
+  matchDetail     MatchDetail  @relation(fields: [matchDetailId], references: [id])
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   @@index([competitionId])
+  @@index([matchDetailId])
+  @@unique([competitionId, type])
+}
+
+model MatchDetail {
+  id              String              @id @default(uuid())
+  detail          CompetitionDetail?
+  submissionWins  Int                 @default(0)
+  submissionLoss  Int                 @default(0)
+  pointWins       Int                 @default(0)
+  pointLoss       Int                 @default(0)
+  overtimeWins    Int                 @default(0)
+  overtimeLoss    Int                 @default(0)
+  decisionWins    Int                 @default(0)
+  decisionLoss    Int                 @default(0)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+enum MatchResultType {
+  SUBMISSION
+  POINTS
+  OVERTIME
+  DECISION
+}
+
+enum SkillSource {
+  TRAINING
+  COMPETITION
+  INDEPENDENT
 }
 
 enum BjjType {

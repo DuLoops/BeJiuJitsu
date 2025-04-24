@@ -68,6 +68,18 @@ export const deleteUserSkill = async (
   }
 };
 
+export const fetchUserSkill = async (
+  getAuthenticatedRequest: any,
+  userSkillId: string
+): Promise<UserSkillType> => {
+  const response = await getAuthenticatedRequest(`${API_URL}/api/user-skills/${userSkillId}`);
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => 'Unknown error');
+    throw new Error(`Failed to fetch user skill: ${response.status} - ${errorText}`);
+  }
+  return response.json();
+};
+
 // React Query hooks
 export const useUserSkills = () => {
   const { getAuthenticatedRequest } = useAuth();
@@ -111,5 +123,14 @@ export const useDeleteUserSkill = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userSkills'] });
     },
+  });
+};
+
+export const useGetUserSkill = (userSkillId: string) => {
+  const { getAuthenticatedRequest } = useAuth();
+  return useQuery({
+    queryKey: ['userSkill', userSkillId],
+    queryFn: () => fetchUserSkill(getAuthenticatedRequest, userSkillId),
+    enabled: !!userSkillId,
   });
 }; 

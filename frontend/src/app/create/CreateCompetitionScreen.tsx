@@ -72,9 +72,10 @@ export default function CreateCompetitionScreen() {
 
   const handleEditSkill = (userSkill: UserSkillType) => {
     router.push({
-      pathname: "/create/CreateSkillScreen",
+      pathname: "/create/EditSkillScreen",
       params: { 
-        skillToEdit: JSON.stringify(userSkill),
+        skillId: userSkill.skill.id,
+        userSkillId: userSkill.id,
         fromScreen: 'CreateCompetitionScreen'
       }
     });
