@@ -129,16 +129,6 @@ bejiujitsu/
     └── tsconfig.json
 ```
 
-## Usage
-
-### Custom UI Components
-The application uses custom UI components for consistent styling:
-- Buttons, Cards, Inputs, and more
-
-### Color Palette
-- Dark: #030712
-- Light: #F9FAFB
-- Accent (Red): #B91C1C
 
 ## Why BeJiuJitsu?
 
@@ -148,13 +138,6 @@ Built by practitioners for practitioners, BeJiuJitsu understands the unique need
 
 *Track. Learn. Compete. Connect. Your complete BJJ companion.*
 
-## Contributing
-
-We welcome contributions to BeJiuJitsu! Please see our [contributing guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report issues, or request features.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
