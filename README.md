@@ -1,50 +1,144 @@
-# Welcome to your Expo app 👋
+# BeJiuJitsu: Train, Learn, Compete, Connect
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+BeJiuJitsu is a comprehensive mobile application designed specifically for Brazilian Jiu-Jitsu practitioners of all levels. This app seamlessly integrates training management, skill progression tracking, competition results, and community engagement into one intuitive platform.
 
-## Get started
+## Features
 
-1. Install dependencies
+### Training Management
+- Log and track your training sessions with detailed information
+- Record techniques practiced during each session
+- Monitor training frequency, duration, and intensity
+- Set training goals and receive progress updates
+- Injury tracking and recovery management
 
+### Skill Development
+- Create personalized skill trees for different BJJ positions and techniques
+- Track your progress on specific techniques and movements
+- Access skill assessment tools to identify strengths and areas for improvement
+- Set skill-focused goals with achievement tracking
+- Visual progression system to celebrate milestones
+
+### Competition Tracker
+- Record and store your competition match results
+- Track detailed information about each match (opponent, weight class, division)
+- Log specific techniques used during matches
+- Document submission types or points scored
+- Keep notes on performance strengths and areas for improvement
+
+### Community Feed
+- Share training insights, techniques, and accomplishments
+- Post questions and receive feedback from the community
+- Follow other BJJ practitioners for inspiration and knowledge exchange
+- Discover local training partners and events
+- Access community-created content and instructional material
+
+## Tech Stack
+
+### Frontend
+- React Native with Expo
+- TypeScript
+- Custom UI components
+- AsyncStorage for local data persistence
+- React Navigation for routing
+
+### Backend
+- Node.js
+- Express
+- TypeScript
+- Prisma ORM
+- PostgreSQL database
+- JWT Authentication
+- RESTful API architecture
+
+## Installation
+
+### Prerequisites
+- Node.js (v16+)
+- npm or yarn
+- PostgreSQL
+- Expo CLI (`npm install -g expo-cli`)
+
+### Setup
+1. Clone the repository
    ```bash
+   git clone https://github.com/yourusername/bejiujitsu.git
+   cd bejiujitsu
+   ```
+
+2. Install backend dependencies
+   ```bash
+   cd backend
    npm install
    ```
 
-2. Start the app
-
+3. Configure environment variables
    ```bash
-   npx expo start
+   cp .env.example .env
+   # Edit .env with your database credentials and other settings
    ```
 
-In the output, you'll find options to open the app in a
+4. Run database migrations
+   ```bash
+   npx prisma migrate dev
+   ```
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+5. Install frontend dependencies
+   ```bash
+   cd ../frontend
+   npm install
+   ```
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+6. Start the development servers
+   
+   Backend:
+   ```bash
+   cd backend
+   npm run dev
+   ```
+   
+   Frontend:
+   ```bash
+   cd frontend
+   npm start
+   ```
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+## Project Structure
+```
+bejiujitsu/
+├── backend/
+│   ├── prisma/
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── middlewares/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── index.ts
+│   ├── package.json
+│   └── tsconfig.json
+└── frontend/
+    ├── assets/
+    ├── src/
+    │   ├── components/
+    │   ├── navigation/
+    │   ├── screens/
+    │   ├── services/
+    │   ├── types/
+    │   └── App.tsx
+    ├── app.json
+    ├── package.json
+    └── tsconfig.json
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-## Learn more
+## Why BeJiuJitsu?
 
-To learn more about developing your project with Expo, look at the following resources:
+BeJiuJitsu combines practical training management tools with social features to create a holistic platform for your jiu-jitsu journey. Whether you're a beginner looking to establish consistent training habits, an intermediate practitioner focused on expanding your technical repertoire, or a competitor preparing for tournaments, BeJiuJitsu provides the structure and support to help you achieve your goals while connecting with the broader BJJ community.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Built by practitioners for practitioners, BeJiuJitsu understands the unique needs and challenges of the Brazilian Jiu-Jitsu lifestyle and offers thoughtful solutions to enhance your development both on and off the mats.
 
-## Join the community
+*Track. Learn. Compete. Connect. Your complete BJJ companion.*
 
-Join our community of developers creating universal apps.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---
+
+© 2025 BeJiuJitsu. All rights reserved.
