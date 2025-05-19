@@ -1,14 +1,16 @@
 import ThemedInput from '@/src/components/ui/ThemedInput';
+import { ThemedText } from '@/src/components/ui/ThemedText';
 import { AuthContext } from '@/src/context/AuthContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React, { useContext, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import ThemedButton from '../components/ui/ThemedButton';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const auth = useContext(AuthContext);
 
   if (!auth) {
@@ -24,20 +26,21 @@ export default function LoginScreen() {
   const handleSignIn = async () => {
     try {
       await signInWithEmail(email, password);
-
+      setErrorMessage(null);
+      router.replace('/');
     } catch (error: any) {
       let message = error?.message || error?.error_description || error?.toString() || 'Sign in failed';
-      Alert.alert(message);
+      console.log(message);
+      setErrorMessage(message);
     }
-    router.replace('/');
   };
 
   const handleSignUp = async () => {
     try {
       await signUpWithEmail(email, password);
-      Alert.alert('Please check your inbox for email verification!');
+      setErrorMessage('Please check your inbox!');
     } catch (error: any) {
-      Alert.alert(error.message || 'Sign up failed');
+      setErrorMessage(error.message || 'Sign up failed');
     }
   };
 
@@ -70,6 +73,7 @@ export default function LoginScreen() {
       <View style={styles.verticallySpaced}>
         <ThemedButton disabled={loading} onPress={handleSignUp} title="Sign up" />
       </View>
+      {errorMessage ? <ThemedText style={styles.errorText}>{errorMessage}</ThemedText> : null}
     </View>
   );
 }
@@ -86,5 +90,10 @@ const styles = StyleSheet.create({
   },
   mt20: {
     marginTop: 20,
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 10,
   },
 });

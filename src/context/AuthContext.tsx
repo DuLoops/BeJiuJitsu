@@ -1,9 +1,10 @@
 import { supabase } from '@/src/lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { SplashScreen } from "expo-router";
+import { router, SplashScreen } from "expo-router";
 import React, { createContext, ReactNode, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 SplashScreen.preventAutoHideAsync();
+
 
 interface AuthContextType {
   session: Session | null;
@@ -19,6 +20,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+
+
+  useEffect(()=> {
+    if (__DEV__) {
+      console.log('signing in for dev');
+        handleSignIn('test@test.com', 'testing');
+    }
+  },[])
+  const handleSignIn = async (email:string, password:string) => {
+    try {
+      await signInWithEmail(email, password);
+      router.replace('/');
+    } catch (error: any) {
+      let message = error?.message || error?.error_description || error?.toString() || 'Sign in failed';
+      console.log(message);
+    }
+  };
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
