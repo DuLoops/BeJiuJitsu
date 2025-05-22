@@ -1,11 +1,11 @@
-import ThemedInput from '@/src/components/ui/ThemedInput';
-import { ThemedText } from '@/src/components/ui/ThemedText';
+import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
+import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
+import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
 import { AuthContext } from '@/src/context/AuthContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React, { useContext, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import ThemedButton from '../components/ui/ThemedButton';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');

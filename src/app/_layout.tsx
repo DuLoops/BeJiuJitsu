@@ -9,14 +9,13 @@ export default function RootLayout() {
   const colorScheme = 'light';
 
 
-
   return (
     <AuthProvider>
       <ThemeProvider value={colorScheme === 'light' ? DefaultTheme : DarkTheme}>
         <StatusBar style="auto" />
         <Stack>
+          <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
           <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-          <Stack.Screen name="LoginScreen" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
       </ThemeProvider>

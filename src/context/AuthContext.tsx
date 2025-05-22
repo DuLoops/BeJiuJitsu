@@ -14,6 +14,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         handleSignIn('test@test.com', 'testing');
     }
   },[])
+
   const handleSignIn = async (email:string, password:string) => {
     try {
       await signInWithEmail(email, password);

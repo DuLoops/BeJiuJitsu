@@ -7,3 +7,6 @@ Backlog
 
 - Solve ws/realtime issude - Temporate fix by metro.config.js - https://github.com/supabase/supabase-js/issues/1400#issuecomment-2843653869 
 
+Resources
+- Load new supabase db
+npx supabase gen types typescript --linked > src/supabase/types.ts;   
