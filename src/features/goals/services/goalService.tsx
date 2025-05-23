@@ -1,136 +1,114 @@
 import { supabase } from '@/src/lib/supabase';
 import { Tables, TablesInsert, TablesUpdate } from '@/src/supabase/types';
-import { Alert } from 'react-native';
 
 // Type definitions for Goal related operations
 export type Goal = Tables<'goals'>;
 export type GoalInsert = TablesInsert<'goals'>;
 export type GoalUpdate = TablesUpdate<'goals'>;
 
-export const useGoalService = () => {
-  const getCurrentUserId = async (): Promise<string> => {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
-      console.error('Error fetching user for goal operation:', error);
-      Alert.alert('Error', 'Could not fetch user session. Please try again.');
-      throw new Error('User not authenticated for goal operation');
+// Function to fetch goals for a given profile ID
+export const fetchGoalsByProfileId = async (profileId: string): Promise<Goal[]> => {
+  if (!profileId) {
+    throw new Error('Profile ID is required to fetch goals.');
+  }
+  try {
+    const { data, error } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('profile_id', profileId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching goals in service:', error);
+      throw new Error(error.message || 'Failed to fetch goals.');
     }
-    return user.id;
-  };
+    return data || [];
+  } catch (err) {
+    console.error('Catch block error in fetchGoalsByProfileId:', err);
+    if (err instanceof Error) throw err;
+    throw new Error('An unexpected error occurred while fetching goals.');
+  }
+};
 
-  const addGoal = async (goalData: {
-    description: string;
-    due_date?: string;
-    completed?: boolean;
-  }): Promise<Goal | null> => {
-    try {
-      const userId = await getCurrentUserId();
-      const goalToInsert: GoalInsert = {
-        profile_id: userId,
-        description: goalData.description,
-        due_date: goalData.due_date,
-        completed: goalData.completed || false,
-      };
-      const { data, error } = await supabase
-        .from('goals')
-        .insert(goalToInsert)
-        .select()
-        .single();
+// Data type for adding a goal, profile_id is now mandatory as it's not fetched internally
+export interface AddSupabaseGoalParams extends Omit<GoalInsert, 'id' | 'created_at' | 'updated_at'> {
+  profile_id: string; // Ensure profile_id is part of the input data for the service function
+}
 
-      if (error) {
-        console.error('Error adding goal:', error);
-        Alert.alert('Error', `Failed to add goal: ${error.message}`);
-        return null;
-      }
-      return data;
-    } catch (err) {
-      console.error(err);
-      if (!(err instanceof Error && err.message.includes('User not authenticated'))) {
-        Alert.alert('Error', 'An unexpected error occurred while adding the goal.');
-      }
-      return null;
+// Function to add a new goal to Supabase
+export const addGoalToSupabase = async (goalData: AddSupabaseGoalParams): Promise<Goal> => {
+  try {
+    const goalToInsert: GoalInsert = {
+      ...goalData,
+      // Supabase handles id, created_at, updated_at by default for new inserts
+    };
+    const { data, error } = await supabase
+      .from('goals')
+      .insert(goalToInsert)
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('Error adding goal in service:', error);
+      throw new Error(error?.message || 'Failed to add goal. No data returned.');
     }
-  };
+    return data;
+  } catch (err) {
+    console.error('Catch block error in addGoalToSupabase:', err);
+    if (err instanceof Error) throw err;
+    throw new Error('An unexpected error occurred while adding the goal.');
+  }
+};
 
-  const getGoals = async (): Promise<Goal[] | null> => {
-    try {
-      const userId = await getCurrentUserId();
-      const { data, error } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('profile_id', userId)
-        .order('created_at', { ascending: false });
+// Data type for updating a goal
+export interface UpdateSupabaseGoalParams {
+  goalId: number;
+  updates: Partial<GoalUpdate>; // Can include profile_id if you allow re-parenting, otherwise omit from GoalUpdate here
+}
 
-      if (error) {
-        console.error('Error fetching goals:', error);
-        Alert.alert('Error', `Failed to fetch goals: ${error.message}`);
-        return null;
-      }
-      return data;
-    } catch (err) {
-      console.error(err);
-      if (!(err instanceof Error && err.message.includes('User not authenticated'))) {
-        Alert.alert('Error', 'An unexpected error occurred while fetching goals.');
-      }
-      return null;
+// Function to update an existing goal in Supabase
+export const updateSupabaseGoal = async ({ goalId, updates }: UpdateSupabaseGoalParams): Promise<Goal> => {
+  try {
+    // Ensure required fields like profile_id aren't accidentally set to null if not partial
+    const finalUpdates: Partial<GoalUpdate> = {
+        ...updates,
+        updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from('goals')
+      .update(finalUpdates)
+      .eq('id', goalId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('Error updating goal in service:', error);
+      throw new Error(error?.message || 'Failed to update goal. No data returned.');
     }
-  };
+    return data;
+  } catch (err) {
+    console.error('Catch block error in updateSupabaseGoal:', err);
+    if (err instanceof Error) throw err;
+    throw new Error('An unexpected error occurred while updating the goal.');
+  }
+};
 
-  const updateGoal = async (
-    goalId: number,
-    updates: Partial<GoalUpdate>
-  ): Promise<Goal | null> => {
-    try {
-      await getCurrentUserId();
-      const { data, error } = await supabase
-        .from('goals')
-        .update(updates)
-        .eq('id', goalId)
-        .select()
-        .single();
+// Function to delete a goal from Supabase
+export const deleteSupabaseGoal = async (goalId: number): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('goals')
+      .delete()
+      .eq('id', goalId);
 
-      if (error) {
-        console.error('Error updating goal:', error);
-        Alert.alert('Error', `Failed to update goal: ${error.message}`);
-        return null;
-      }
-      return data;
-    } catch (err) {
-      console.error(err);
-       if (!(err instanceof Error && err.message.includes('User not authenticated'))) {
-        Alert.alert('Error', 'An unexpected error occurred while updating the goal.');
-      }
-      return null;
+    if (error) {
+      console.error('Error deleting goal in service:', error);
+      throw new Error(error.message || 'Failed to delete goal.');
     }
-  };
-
-  const deleteGoal = async (goalId: number): Promise<boolean> => {
-    try {
-      await getCurrentUserId();
-      const { error } = await supabase
-        .from('goals')
-        .delete()
-        .eq('id', goalId);
-
-      if (error) {
-        console.error('Error deleting goal:', error);
-        Alert.alert('Error', `Failed to delete goal: ${error.message}`);
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.error(err);
-      if (!(err instanceof Error && err.message.includes('User not authenticated'))) {
-        Alert.alert('Error', 'An unexpected error occurred while deleting the goal.');
-      }
-      return false;
-    }
-  };
-
-  return { 
-    addGoal,
-    getGoals,
-    updateGoal,
-    deleteGoal
-  };
+  } catch (err) {
+    console.error('Catch block error in deleteSupabaseGoal:', err);
+    if (err instanceof Error) throw err;
+    throw new Error('An unexpected error occurred while deleting the goal.');
+  }
 }; 

@@ -1,11 +1,11 @@
 import { AuthContext } from '@/src/context/AuthContext'; // Assuming you have this for user ID
-import { GoalsList } from '@/src/features/auth/components/GoalsList';
-import { SelectRank } from '@/src/features/auth/components/SelectRank';
-import { useCheckUsernameAvailability, useUpsertProfile } from '@/src/features/auth/hooks/useProfileQueries';
-import { UpsertProfileParams } from '@/src/features/auth/services/profileService'; // Import params type
-import { validateUsername } from '@/src/features/auth/utils/validation';
 import { useAddGoal } from '@/src/features/goals/hooks/useGoalHooks';
 import { AddSupabaseGoalParams } from '@/src/features/goals/services/goalService'; // Import params type
+import { GoalsList } from '@/src/features/profile/components/GoalsList';
+import { SelectRank } from '@/src/features/profile/components/SelectRank';
+import { useCheckUsernameAvailability, useUpsertProfile } from '@/src/features/profile/hooks/useProfileQueries';
+import { UpsertProfileParams } from '@/src/features/profile/services/profileService'; // Import params type
+import { validateUsername } from '@/src/features/profile/utils/validation';
 import { Belt } from '@/src/supabase/constants';
 import { router } from 'expo-router';
 import React, { useContext, useEffect, useState } from 'react'; // Added useEffect, useContext
@@ -161,7 +161,7 @@ export default function CreateProfileScreen() {
             style={[styles.input, styles.usernameInput]}
             value={userName}
             onChangeText={setUserName} // Debounce handled by useEffect
-            placeholder="Enter your username (min 3 chars)"
+            placeholder="Enter your username"
             autoCapitalize="none"
           />
           {/* Check button removed as query runs on debounce. UI feedback is via text. */}

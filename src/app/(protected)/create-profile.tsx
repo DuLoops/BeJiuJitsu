@@ -1,4 +1,4 @@
-import CreateProfileScreen from "@/src/features/auth/screens/CreateProfileScreen";
+import CreateProfileScreen from "@/src/features/profile/screens/CreateProfileScreen";
 
 export default function CreateProfilePage() {
   return <CreateProfileScreen />;
