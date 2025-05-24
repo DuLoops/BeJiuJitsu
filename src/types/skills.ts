@@ -1,105 +1,111 @@
+// Enums
+export enum CategoryEnum {
+  GUARD = "Guard",
+  PASSING = "Passing",
+  SWEEPS = "Sweeps",
+  SUBMISSIONS = "Submissions",
+  ESCAPES = "Escapes",
+  TAKEDOWNS = "Takedowns",
+  THROWS = "Throws",
+  OTHER = "Other", // For user-defined categories
+}
 
+// This would ideally be populated from a predefined list or allow dynamic creation
+// For now, let's list a few common ones as examples, users can add more.
+export enum SkillNameEnum {
+  // Guard
+  CLOSED_GUARD = "Closed Guard",
+  OPEN_GUARD = "Open Guard",
+  HALF_GUARD = "Half Guard",
+  SPIDER_GUARD = "Spider Guard",
+  DE_LA_RIVA_GUARD = "De La Riva Guard",
+  BUTTERFLY_GUARD = "Butterfly Guard",
+  // Passing
+  TORREANDO_PASS = "Torreando Pass",
+  KNEE_CUT_PASS = "Knee Cut Pass",
+  X_PASS = "X-Pass",
+  // Sweeps
+  SCISSOR_SWEEP = "Scissor Sweep",
+  PENDULUM_SWEEP = "Pendulum Sweep",
+  // Submissions
+  REAR_NAKED_CHOKE = "Rear Naked Choke",
+  GUILLOTINE = "Guillotine",
+  ARMBAR = "Armbar",
+  KIMURA = "Kimura",
+  TRIANGLE_CHOKE = "Triangle Choke",
+  // Escapes
+  SHRIMPING = "Shrimping (Hip Escape)",
+  BRIDGE_AND_ROLL = "Bridge and Roll",
+  // Takedowns
+  DOUBLE_LEG_TAKEDOWN = "Double Leg Takedown",
+  SINGLE_LEG_TAKEDOWN = "Single Leg Takedown",
+  // Throws
+  IPPON_SEOINAGE = "Ippon Seoinage",
+  OSOTO_GARI = "Osoto Gari",
+  // Other for user-defined skills
+  OTHER = "Other",
+}
 
+export enum UserSkillSourceEnum {
+  SEMINAR = "Seminar",
+  INSTRUCTIONAL = "Instructional",
+  CLASS = "Class",
+  COMPETITION = "Competition",
+  SPARRING = "Sparring",
+  OTHER = "Other",
+}
 
-export interface SkillType {
-    name: string;
-    category: CategoryEnum
-  }
+// Interfaces
+export interface Category {
+  id: string; // UUID
+  name: CategoryEnum | string; // Allow custom string for user-defined categories
+  isPredefined: boolean;
+  userId?: string | null; // Link to user if not predefined
+  created_at?: Date;
+  updated_at?: Date;
+}
 
-  export enum CategoryEnum {
-    Takedown = 'Takedown',
-    Pass = 'Pass',
-    Control = 'Control',
-    Submission = 'Submission',
-    Escape = 'Escape',
-    Guard = 'Guard',
-    Sweep = 'Sweep',
-    System = 'System',
-    None = 'None',
-  }
-  
-  export const Skills: SkillType[] = [
-    { name: 'Single Leg', category: CategoryEnum.Takedown },
-    { name: 'Double Leg', category: CategoryEnum.Takedown },
-    { name: 'Body Lock', category: CategoryEnum.Takedown },
-    { name: 'Foot Sweep', category: CategoryEnum.Takedown },
-    { name: 'Ankle Pick', category: CategoryEnum.Takedown },
-    { name: 'Arm Drag', category: CategoryEnum.Takedown },
-    { name: 'Fireman\'s Carry', category: CategoryEnum.Takedown },
-    { name: 'Tomoe Nage', category: CategoryEnum.Takedown },
-    { name: 'Knee Cut', category: CategoryEnum.Pass },
-    { name: 'Leg Drag', category: CategoryEnum.Pass },
-    { name: 'Torreando', category: CategoryEnum.Pass },
-    { name: 'Over Under', category: CategoryEnum.Pass },   
-    { name: 'Tripod', category: CategoryEnum.Pass },
-    { name: 'Body Lock', category: CategoryEnum.Pass },
-    { name: 'Stack Pass', category: CategoryEnum.Pass },
-    { name: 'X Pass', category: CategoryEnum.Pass },
-    { name: 'Smash Pass', category: CategoryEnum.Pass },
-    { name: 'Back Step', category: CategoryEnum.Pass },
-    { name: 'Leg Weave', category: CategoryEnum.Pass },
-    { name: 'Berimbolo', category: CategoryEnum.Pass },
-    { name: 'Side Control', category: CategoryEnum.Control },
-    { name: 'Mount', category: CategoryEnum.Control },
-    { name: 'Back Control', category: CategoryEnum.Control },
-    { name: 'Knee on Belly', category: CategoryEnum.Control },
-    { name: 'North South', category: CategoryEnum.Control },
-    { name: 'AShi Grami', category: CategoryEnum.Control },
-    { name: 'Crucifix', category: CategoryEnum.Control },
-    { name: 'Leg Ride', category: CategoryEnum.Control },
-    { name: 'Wrestling Pin', category: CategoryEnum.Control },
-    { name: 'Choke', category: CategoryEnum.Submission },
-    { name: 'Armbar', category: CategoryEnum.Submission },
-    { name: 'Kimura', category: CategoryEnum.Submission },
-    { name: 'Triangle', category: CategoryEnum.Submission },
-    { name: 'Rear Naked Choke', category: CategoryEnum.Submission },
-    { name: 'Guillotine', category: CategoryEnum.Submission },
-    { name: 'Americana', category: CategoryEnum.Submission },
-    { name: 'Omoplata', category: CategoryEnum.Submission },
-    { name: 'Heel Hook', category: CategoryEnum.Submission },
-    { name: 'Knee Bar', category: CategoryEnum.Submission },
-    { name: 'Toe Hold', category: CategoryEnum.Submission },
-    { name: 'Ezekiel', category: CategoryEnum.Submission },
-    { name: 'Wrist Lock', category: CategoryEnum.Submission },
-    { name: 'Neck Crank', category: CategoryEnum.Submission },
-    { name: 'Calf Slicer', category: CategoryEnum.Submission },
-    { name: 'Shoulder Lock', category: CategoryEnum.Submission },
-    { name: 'Leg Lock', category: CategoryEnum.Submission },
-    { name: 'Side Control Escape', category: CategoryEnum.Escape },
-    { name: 'Mount Escape', category: CategoryEnum.Escape },
-    { name: 'Back Escape', category: CategoryEnum.Escape },
-    { name: 'Knee on Belly Escape', category: CategoryEnum.Escape },
-    { name: 'North South Escape', category: CategoryEnum.Escape },
-    { name: 'Closed Guard', category: CategoryEnum.Guard },
-    { name: 'Open Guard', category: CategoryEnum.Guard },
-    { name: 'Half Guard', category: CategoryEnum.Guard },
-    { name: 'Butterfly Guard', category: CategoryEnum.Guard },
-    { name: 'Spider Guard', category: CategoryEnum.Guard },
-    { name: 'De La Riva', category: CategoryEnum.Guard },
-    { name: 'Reverse De La Riva', category: CategoryEnum.Guard },
-    { name: 'Lasso Guard', category: CategoryEnum.Guard },
-    { name: 'X Guard', category: CategoryEnum.Guard },
-    { name: 'Rubber Guard', category: CategoryEnum.Guard },
-    { name: '50/50', category: CategoryEnum.Guard },
-    { name: 'Deep Half Guard', category: CategoryEnum.Guard },
-    { name: 'Scissor Sweep', category: CategoryEnum.Sweep },
-    { name: 'Butterfly Sweep', category: CategoryEnum.Sweep },
-    { name: 'Game Plan', category: CategoryEnum.System },
-    { name: 'Concept', category: CategoryEnum.System },
-    { name: 'Strategy', category: CategoryEnum.System },
-    { name: 'Principle', category: CategoryEnum.System },
+// For Skill Sequences
+export interface SkillSequence {
+  id: string; // UUID
+  userSkillId: string; // Foreign key to UserSkill.id
+  stepNumber: number;
+  intention?: string | null; // What the user wants to achieve with this step
+  // Note: 'detail' from the original requirement seems more appropriate for SequenceDetail
+  created_at?: Date;
+  updated_at?: Date;
+}
 
-  ]
+export interface SequenceDetail {
+  id: string; // UUID
+  skillSequenceId: string; // Foreign key to SkillSequence.id
+  detail: string; // Specific instructions or notes for this step
+  // video_timestamp_start?: number; // Optional: For linking to specific part of a video
+  // video_timestamp_end?: number; // Optional
+  created_at?: Date;
+  updated_at?: Date;
+}
 
-  // For backward compatibility
-  export const CategorySkillMap: { [key: string]: string[] } = {
-      Takedown: ['Single Leg', 'Double Leg', 'Body Lock', 'Foot Sweep', 'Ankle Pick', 'Arm Drag', 'Fireman\'s Carry', 'Tomoe Nage'],
-      Pass: ['Knee Cut', 'Leg Drag', 'Torreando', 'Over Under', 'Tripod', 'Body Lock','Stack Pass', 'X Pass', 'Smash Pass', 'Back Step', 'Leg Weave', 'Berimbolo'],
-      Control: ['Side Control', 'Mount', 'Back Control', 'Knee on Belly', 'North South', ' AShi Grami', 'Crucifix','Leg Ride', 'Wrestling Pin'],
-      Submission: ['Choke', 'Armbar', 'Kimura', 'Triangle', 'Rear Naked Choke', 'Guillotine', 'Americana', 'Omoplata', 'Heel Hook', 'Knee Bar', 'Toe Hold', 'Ezekiel', 'Wrist Lock', 'Neck Crank', 'Calf Slicer', 'Shoulder Lock', 'Leg Lock'],
-      Escape: ['Side Control Escape', 'Mount Escape', 'Back Escape', 'Knee on Belly Escape', 'North South Escape'],
-      Guard: ['Closed Guard', 'Open Guard', 'Half Guard', 'Butterfly Guard', 'Spider Guard', 'De La Riva', 'Reverse De La Riva', 'Lasso Guard', 'X Guard', 'Rubber Guard', '50/50', 'Deep Half Guard'],
-      Sweep: ['Scissor Sweep', 'Butterfly Sweep'],
-      System: ['Game Plan', 'Concept', 'Strategy', 'Principle'],
-  };
-  
+export interface Skill {
+  id: string; // UUID
+  name: SkillNameEnum | string; // Allow custom string for user-defined skills
+  categoryId: string; // Foreign key to Category.id
+  isPublic: boolean; // True if predefined or shared, false if user-specific base skill
+  creatorId?: string | null; // Link to user if they created this base skill and it's not public by default
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+export interface UserSkill {
+  id: string; // UUID
+  userId: string; // Foreign key to auth.users.id
+  skillId: string; // Foreign key to Skill.id
+  note?: string | null;
+  source?: UserSkillSourceEnum | string | null;
+  isFavorite?: boolean;
+  videoUrl?: string | null;
+  // proficiencyLevel?: number; // Example: 1-5 scale, for future enhancement
+  // lastPracticed?: Date; // For future enhancement
+  created_at?: Date;
+  updated_at?: Date;
+}

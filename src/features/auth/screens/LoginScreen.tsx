@@ -21,7 +21,7 @@ export default function LoginScreen() {
     );
   }
 
-  const { loading, signInWithEmail, signUpWithEmail } = auth;
+  const { loading, signInWithEmail } = auth;
 
   const handleSignIn = async () => {
     try {
@@ -32,15 +32,6 @@ export default function LoginScreen() {
       let message = error?.message || error?.error_description || error?.toString() || 'Sign in failed';
       console.log(message);
       setErrorMessage(message);
-    }
-  };
-
-  const handleSignUp = async () => {
-    try {
-      await signUpWithEmail(email, password);
-      setErrorMessage('Please check your inbox!');
-    } catch (error: any) {
-      setErrorMessage(error.message || 'Sign up failed');
     }
   };
 
@@ -71,7 +62,7 @@ export default function LoginScreen() {
         <ThemedButton disabled={loading} onPress={handleSignIn} title="Sign in" />
       </View>
       <View style={styles.verticallySpaced}>
-        <ThemedButton disabled={loading} onPress={handleSignUp} title="Sign up" />
+        <ThemedButton onPress={() => router.push('/(auth)/signup')} title="Create account" />
       </View>
       {errorMessage ? <ThemedText style={styles.errorText}>{errorMessage}</ThemedText> : null}
     </View>

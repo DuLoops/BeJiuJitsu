@@ -1,28 +1,31 @@
+import React, { useContext, useEffect } from 'react';
+import { Stack, router } from 'expo-router';
 import { AuthContext } from '@/src/context/AuthContext';
-import { Redirect, Stack } from 'expo-router';
-import React, { useContext } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
-export const unstable_settings = {
-    initialRouteName: "(tabs)", // anchor
-  };
+export default function ProtectedLayout() {
+  const auth = useContext(AuthContext);
 
-  
-const ProtectedLayout = () => {
-  const auth = useContext(AuthContext)
-  
-  if(!auth?.session){
-    return <Redirect href="/(auth)/login" />
+  useEffect(() => {
+    if (!auth) return;
+    const { session, loading } = auth;
+    if (!loading && !session) {
+      router.replace('/(auth)/login');
+    }
+  }, [auth?.session, auth?.loading]);
+
+  if (auth?.loading || !auth?.session) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
+
   return (
     <Stack>
-        <Stack.Screen name="(tabs)" options={{headerShown:false}}/>
-        <Stack.Screen name="create-profile" options={{headerShown:false}}/>
-        <Stack.Screen name="(modal)/create/skill" options={{headerShown:false, presentation:'modal'}}/>
-        <Stack.Screen name="(modal)/create/training" options={{headerShown:false, presentation:'modal'}}/>
-        <Stack.Screen name="(modal)/create/competition" options={{headerShown:false, presentation:'modal'}}/>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="create-profile" options={{ title: 'Create Profile' }} />
     </Stack>
-  )
+  );
 }
-
-export default ProtectedLayout
-
