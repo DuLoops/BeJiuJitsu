@@ -6,7 +6,7 @@ alwaysApply: true
 # Project Settings and Directory Structure
 
 ## Tech stack
-Frontend: Expo React native
+Frontend: Expo React native, React query
 Backend: Supabase
 
 ## Project Component Usage Guidelines

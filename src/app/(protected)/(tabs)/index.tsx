@@ -53,6 +53,7 @@ const IndexPage = () => {
     )
   }
 
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={{ padding: 10 }}>

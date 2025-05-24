@@ -1,0 +1,273 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String           @id @default(uuid())
+  email            String           @unique
+  password         String
+  profile          Profile?
+  trainings        Training[]
+  skills           UserSkill[]
+  competitions     Competition[]
+  category         Category[]
+  isVerified       Boolean          @default(false) // Email verification
+  role             UserRole         @default(PRACTITIONER)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+enum UserRole {
+  PRACTITIONER
+  INSTRUCTOR
+  ADMIN
+}
+
+model Profile {
+  id          String     @id @default(uuid())
+  userId      String     @unique
+  user        User       @relation(fields: [userId], references: [id])
+  userName    String    @unique
+  belt        Belt
+  stripes     Int       @default(0)
+  weight      Float?
+  academy     String?
+  avatar      String?
+  goals       Goal[]    // Add this line
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([userName])
+}
+
+enum Belt {
+  WHITE
+  GRAY
+  ORANGE
+  YELLOW
+  GREEN
+  BLUE
+  PURPLE
+  BROWN
+  BLACK
+}
+
+model Training {
+  id          String            @id @default(uuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id])
+  date        DateTime
+  duration    Int
+  bjjType     BjjType
+  note        String?
+  skillIds    Int[] // Array of skill IDs
+  skillUsages SkillUsage[]
+  intensity   TrainingIntensity @default(MEDIUM)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([userId])
+}
+
+enum TrainingIntensity {
+  LIGHT
+  MEDIUM
+  HARD
+}
+
+model Skill {
+  id          String      @id @default(uuid())
+  creatorId   String
+  isPublic    Boolean     @default(false)
+  name        String      @unique
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  userSkills  UserSkill[]
+  createdAt   DateTime    @default(now())
+
+  @@index([categoryId])
+}
+
+model UserSkill {
+  id           String          @id @default(uuid())
+  userId       String
+  user         User            @relation(fields: [userId], references: [id])
+  skillId      String
+  skill        Skill           @relation(fields: [skillId], references: [id])
+  source       SkillSource     @default(INDEPENDENT)
+  competition  Competition?    @relation("CompetitionCreatedSkills", fields: [competitionId], references: [id])
+  competitionId String?
+  note         String?
+  videoUrl     String?
+  sequences    SkillSequence[]
+  usages       SkillUsage[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@unique([userId, skillId])
+  @@index([userId])
+  @@index([skillId])
+  @@index([competitionId])
+}
+
+model Category {
+  id         String              @id @default(uuid())
+  userId     String? // null for predefined categories
+  user       User?               @relation(fields: [userId], references: [id])
+  name       String
+  isPredefined Boolean
+  predefined Boolean            @default(false) // only for predefined categories
+  skills     Skill[]
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@index([isPredefined])
+}
+
+enum PredefinedCategory {
+  TAKEDOWN
+  PASS
+  CONTROL
+  SUBMISSION
+  ESCAPE
+  GUARD
+  SWEEP
+  SYSTEM
+}
+
+model SkillUsage {
+  id            String       @id @default(uuid())
+  skillId       String
+  userSkill     UserSkill   @relation(fields: [skillId], references: [id])
+  trainingId    String?
+  training      Training?    @relation(fields: [trainingId], references: [id])
+  competitionId String?
+  competition   Competition? @relation(fields: [competitionId], references: [id])
+  usageType     UsageType
+  quantity      Int          @default(1)
+  success       Boolean      @default(true)
+  note          String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([skillId])
+}
+
+model SkillSequence {
+  id         String           @id @default(uuid())
+  skillId    String
+  userSkill  UserSkill       @relation(fields: [skillId], references: [id])
+  stepNumber Int
+  intention  String
+  details    SequenceDetail[]
+  createdAt  DateTime         @default(now())
+
+  @@index([skillId])
+}
+
+model SequenceDetail {
+  id         String        @id @default(uuid())
+  sequenceId String
+  sequence   SkillSequence @relation(fields: [sequenceId], references: [id])
+  detail     String
+  createdAt  DateTime      @default(now())
+
+  @@index([sequenceId])
+}
+
+enum UsageType {
+  TRAINING
+  COMPETITION
+}
+
+model Competition {
+  id            String              @id @default(uuid())
+  userId        String
+  user          User                @relation(fields: [userId], references: [id])
+  name          String?
+  date          DateTime?
+  location      String?
+  details       CompetitionDetail[]
+  skillUsages   SkillUsage[]
+  createdSkills UserSkill[]        @relation("CompetitionCreatedSkills")
+  note          String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([userId])
+}
+
+model CompetitionDetail {
+  id              String        @id @default(uuid())
+  competitionId   String
+  competition     Competition   @relation(fields: [competitionId], references: [id])
+  type            BjjType      
+  winCount        Int          @default(0)
+  loseCount       Int          @default(0)
+  matchDetailId   String       @unique
+  matchDetail     MatchDetail  @relation(fields: [matchDetailId], references: [id])
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([competitionId])
+  @@index([matchDetailId])
+  @@unique([competitionId, type])
+}
+
+model MatchDetail {
+  id              String              @id @default(uuid())
+  detail          CompetitionDetail?
+  submissionWins  Int                 @default(0)
+  submissionLoss  Int                 @default(0)
+  pointWins       Int                 @default(0)
+  pointLoss       Int                 @default(0)
+  overtimeWins    Int                 @default(0)
+  overtimeLoss    Int                 @default(0)
+  decisionWins    Int                 @default(0)
+  decisionLoss    Int                 @default(0)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+enum MatchResultType {
+  SUBMISSION
+  POINTS
+  OVERTIME
+  DECISION
+}
+
+enum SkillSource {
+  TRAINING
+  COMPETITION
+  INDEPENDENT
+}
+
+enum BjjType {
+  GI
+  NOGI
+  BOTH
+}
+
+model Goal {
+  id          String     @id @default(uuid())
+  profileId   String
+  profile     Profile    @relation(fields: [profileId], references: [id])
+  title       String
+  description String?
+  isCompleted Boolean    @default(false)  
+  targetDate  DateTime?
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([profileId])
+  @@index([isCompleted])  // Update index
+}
