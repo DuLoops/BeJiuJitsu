@@ -11,6 +11,7 @@ import { getProfile } from '@/src/features/profile/services/profileService';
 import { fetchUserSkillsWithDetails } from '@/src/features/skill/services/skillService';
 import { fetchTrainingsForUser } from '@/src/features/training/services/trainingService';
 import { fetchCompetitionsForUser } from '@/src/features/competition/services/competitionService';
+import { getFollowCounts, FollowCounts } from '@/src/features/social/services/socialService'; // Import for follow counts
 
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
@@ -26,6 +27,13 @@ export default function ProfileTabScreen() {
     queryKey: ['profile', userId],
     queryKeyHash: `profile-${userId}`,
     queryFn: () => getProfile(userId!),
+    enabled: !!userId,
+  });
+
+  const { data: followCounts, isLoading: isLoadingFollowCounts, error: errorFollowCounts } = useQuery<FollowCounts, Error>({
+    queryKey: ['followCounts', userId],
+    queryKeyHash: `followCounts-${userId}`,
+    queryFn: () => getFollowCounts(userId!),
     enabled: !!userId,
   });
 
@@ -74,13 +82,15 @@ export default function ProfileTabScreen() {
     </View>
   );
   
-  if (isLoadingProfile || isLoadingSkills || isLoadingTrainings || isLoadingCompetitions) {
+  if (isLoadingProfile || isLoadingFollowCounts || isLoadingSkills || isLoadingTrainings || isLoadingCompetitions) {
     // More granular loading states can be handled if desired
     return renderLoading();
   }
 
   // Prioritize profile error, as other data depends on it
   if (errorProfile) return renderError(errorProfile);
+  // Handle follow counts error separately if needed, or group with general errors
+  if (errorFollowCounts) console.error("Error fetching follow counts:", errorFollowCounts);
 
 
   return (
@@ -100,11 +110,25 @@ export default function ProfileTabScreen() {
           </View>
           {profile ? (
             <>
-              <ThemedText style={styles.detailItem}>Username: {profile.username || 'N/A'}</ThemedText>
-              <ThemedText style={styles.detailItem}>Full Name: {profile.full_name || 'N/A'}</ThemedText>
+              {/* Avatar can be an <Image /> component if avatar_url is available */}
+              <ThemedText style={styles.username}>{profile.username || 'N/A'}</ThemedText>
+              <ThemedText style={styles.fullName}>{profile.full_name || 'N/A'}</ThemedText>
               <ThemedText style={styles.detailItem}>Belt: {profile.belt || 'N/A'} ({profile.stripes || 0} stripes)</ThemedText>
               <ThemedText style={styles.detailItem}>Weight: {profile.weight ? `${profile.weight} kg` : 'N/A'}</ThemedText>
-              {/* Avatar can be an <Image /> component if avatar_url is available */}
+              
+              {/* Follow Counts */}
+              <View style={styles.followCountsContainer}>
+                <TouchableOpacity onPress={() => router.push({ pathname: '/(protected)/profile/following', params: { userId: profile.id, username: profile.username }})}>
+                  <ThemedText style={styles.followText}>
+                    {followCounts?.followingCount ?? <ActivityIndicator size="small"/>} Following
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => router.push({ pathname: '/(protected)/profile/followers', params: { userId: profile.id, username: profile.username }})}>
+                  <ThemedText style={styles.followText}>
+                    {followCounts?.followersCount ?? <ActivityIndicator size="small"/>} Followers
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
             </>
           ) : (
             <ThemedText>No profile data found. Please create your profile.</ThemedText>
@@ -220,6 +244,33 @@ const styles = StyleSheet.create({
   innerContainer: {
     padding: 15,
   },
+  username: { // Style for username if needed distinct from detailItem
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center', // Example styling
+    marginBottom: 5,
+  },
+  fullName: { // Style for full name if needed
+    fontSize: 16,
+    color: 'gray', // Example styling
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  followCountsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
+    marginBottom: 5,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    // borderColor: '#eee', // Use theme color
+  },
+  followText: {
+    fontSize: 16,
+    fontWeight: '500',
+    // color: '#007bff' // Example link color, use theme
+  },
   centered: {
     flex: 1,
     justifyContent: 'center',
@@ -251,6 +302,7 @@ const styles = StyleSheet.create({
   detailItem: {
     fontSize: 16,
     marginBottom: 8,
+    textAlign: 'center', // Example: center profile details too
   },
   listItem: {
     padding: 12,

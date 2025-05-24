@@ -39,6 +39,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="search" // This matches the new file: src/app/(protected)/(tabs)/search.tsx
+        options={{
+          title: 'Search Users',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="search-outline" color={color} size={size} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
