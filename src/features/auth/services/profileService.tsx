@@ -1,9 +1,11 @@
 import { supabase } from '@/src/lib/supabase';
-import { Belt } from '@/src/supabase/constants';
-import { Tables, TablesInsert } from '@/src/supabase/types';
+// import { Belt } from '@/src/supabase/constants'; // Removed
+import { Enums, Tables, TablesInsert } from '@/src/supabase/types'; // Added Enums
 
 export type Profile = Tables<'profiles'>;
 export type ProfileInsert = TablesInsert<'profiles'>;
+
+type BeltType = Enums<'Belts'>; // Using Enums helper for Belt type
 
 export const checkSupabaseUsername = async (
   username: string,
@@ -33,7 +35,7 @@ export const checkSupabaseUsername = async (
 export interface UpsertProfileParams {
   id: string;
   username: string;
-  belt: Belt;
+  belt: BeltType; // Changed to BeltType
   stripes: number;
   weight?: number;
   academy_id?: number;
@@ -45,6 +47,7 @@ export const upsertSupabaseProfile = async (profileData: UpsertProfileParams): P
   try {
     const profileToUpsert: ProfileInsert = {
       ...profileData,
+      // belt: profileData.belt as any, // Ensure belt type is compatible with DB enum if needed
       updated_at: new Date().toISOString(),
     };
 

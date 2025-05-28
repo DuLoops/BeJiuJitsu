@@ -68,9 +68,9 @@ export interface Category {
 // For Skill Sequences
 export interface SkillSequence {
   id: string; // UUID
-  userSkillId: string; // Foreign key to UserSkill.id
+  skillId: string; // Foreign key to UserSkill.id
   stepNumber: number;
-  intention?: string | null; // What the user wants to achieve with this step
+  intention: string; // What the user wants to achieve with this step
   // Note: 'detail' from the original requirement seems more appropriate for SequenceDetail
   created_at?: Date;
   updated_at?: Date;
@@ -78,7 +78,7 @@ export interface SkillSequence {
 
 export interface SequenceDetail {
   id: string; // UUID
-  skillSequenceId: string; // Foreign key to SkillSequence.id
+  sequenceId: string; // Foreign key to SkillSequence.id
   detail: string; // Specific instructions or notes for this step
   // video_timestamp_start?: number; // Optional: For linking to specific part of a video
   // video_timestamp_end?: number; // Optional

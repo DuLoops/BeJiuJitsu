@@ -1,28 +1,28 @@
-import React, { useContext } from 'react';
-import { Alert } from 'react-native';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AuthContext } from '@/src/context/AuthContext';
+import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import {
   followUser,
-  unfollowUser,
   getFollowStatus,
+  unfollowUser,
 } from '@/src/features/social/services/socialService';
-import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
+import { useAuthStore } from '@/src/store/authStore';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import React from 'react';
+import { Alert } from 'react-native';
 
 interface FollowButtonProps {
   targetUserId: string;
 }
 
 export default function FollowButton({ targetUserId }: FollowButtonProps) {
-  const auth = useContext(AuthContext);
-  const currentUserId = auth?.session?.user?.id;
+  const { session } = useAuthStore();
+  const currentUserId = session?.user?.id;
   const queryClient = useQueryClient();
 
   const queryKey = ['followStatus', currentUserId, targetUserId];
 
   const { data: isFollowing, isLoading: isLoadingStatus } = useQuery<boolean, Error>({
     queryKey: queryKey,
-    queryKeyHash: `followStatus-${currentUserId}-${targetUserId}`,
+    queryKeyHashFn: () => `followStatus-${currentUserId}-${targetUserId}`,
     queryFn: () => getFollowStatus(currentUserId!, targetUserId),
     enabled: !!currentUserId && !!targetUserId && currentUserId !== targetUserId,
   });
@@ -88,7 +88,7 @@ export default function FollowButton({ targetUserId }: FollowButtonProps) {
   }
 
   if (isLoadingStatus) {
-    return <ThemedButton title="Loading..." disabled style={{ paddingHorizontal: 10, paddingVertical: 6 }} textStyle={{fontSize: 14}}/>;
+    return <ThemedButton title="Loading..." disabled style={{ paddingHorizontal: 10, paddingVertical: 6 }} />;
   }
 
   const handlePress = () => {
@@ -111,7 +111,6 @@ export default function FollowButton({ targetUserId }: FollowButtonProps) {
         paddingVertical: 6, 
         backgroundColor: isFollowing ? 'grey' : 'royalblue' // Example theme-friendly colors
       }}
-      textStyle={{fontSize: 14, color: 'white'}} // Assuming ThemedButton textStyle prop for text color
     />
   );
 }

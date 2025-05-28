@@ -1,17 +1,17 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Alert, TouchableOpacity } from 'react-native';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AuthContext } from '@/src/context/AuthContext';
-import {
-  fetchUserSkillsWithDetails, // To be created in service
-  deleteUserSkill, // To be created in service
-} from '@/src/features/skill/services/skillService';
-import { UserSkill, SkillSequence, SequenceDetail, Category, Skill } from '@/src/types/skills'; // Assuming Category and Skill might be needed for display
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
-import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import {
+  deleteUserSkill,
+  fetchUserSkillsWithDetails, // To be created in service
+} from '@/src/features/skill/services/skillService';
+import { useAuthStore } from '@/src/store/authStore';
+import { Category, SequenceDetail, Skill, SkillSequence, UserSkill } from '@/src/types/skills'; // Assuming Category and Skill might be needed for display
 import { Ionicons } from '@expo/vector-icons';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Define a more detailed type for the items in the list
 export interface UserSkillWithDetails extends UserSkill {
@@ -61,7 +61,7 @@ const UserSkillListItem: React.FC<UserSkillListItemProps> = ({ item, onDelete, o
           )}
           <View style={styles.actionsContainer}>
             <ThemedButton title="Edit" onPress={() => onEdit(item)} style={styles.actionButton} />
-            <ThemedButton title="Delete" onPress={() => onDelete(item.id)} style={[styles.actionButton, styles.deleteButton]} buttonColor="red" />
+            <ThemedButton title="Delete" onPress={() => onDelete(item.id)} style={[styles.actionButton, styles.deleteButton]} />
           </View>
         </View>
       )}
@@ -70,13 +70,13 @@ const UserSkillListItem: React.FC<UserSkillListItemProps> = ({ item, onDelete, o
 };
 
 export default function UserSkillList() {
-  const auth = useContext(AuthContext);
+  const session = useAuthStore((state) => state.session);
   const queryClient = useQueryClient();
-  const userId = auth?.session?.user?.id;
+  const userId = session?.user?.id;
 
   const { data: userSkills, isLoading, error, refetch } = useQuery<UserSkillWithDetails[], Error>({
     queryKey: ['userSkillsWithDetails', userId],
-    queryKeyHash: `userSkillsWithDetails-${userId}`,
+    queryKeyHashFn: (queryKey) => queryKey.join('-'),
     queryFn: () => fetchUserSkillsWithDetails(userId!),
     enabled: !!userId,
   });

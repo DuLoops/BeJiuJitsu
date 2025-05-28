@@ -1,21 +1,26 @@
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import { NumberInput } from '@/src/components/ui/molecules/NumberInput';
-import { Belt } from '@/src/supabase/constants';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
+import { Enums } from '@/src/supabase/types';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
+
+type BeltType = Enums<'Belts'>;
 
 interface SelectRankProps {
-  belt: Belt;
+  belt: BeltType;
   stripes: number;
-  onBeltChange: (belt: Belt) => void;
+  onBeltChange: (belt: BeltType) => void;
   onStripesChange: (stripes: number) => void;
 }
 
-const BELT_OPTIONS = [
-  { label: 'White', value: 'White', color: '#FFFFFF', borderColor: '#E5E7EB' },
-  { label: 'Blue', value: 'Blue', color: '#2563EB' },
-  { label: 'Purple', value: 'Purple', color: '#7C3AED' },
-  { label: 'Brown', value: 'Brown', color: '#78350F' },
-  { label: 'Black', value: 'Black', color: '#111827' },
+const BELT_DEFINITIONS: { label: string; value: BeltType; color: string; borderColor?: string; textColor?: string }[] = [
+  { label: 'White', value: 'WHITE', color: '#FFFFFF', borderColor: '#E5E7EB', textColor: '#374151' },
+  { label: 'Blue', value: 'BLUE', color: '#2563EB', textColor: '#FFFFFF' },
+  { label: 'Purple', value: 'PURPLE', color: '#7C3AED', textColor: '#FFFFFF' },
+  { label: 'Brown', value: 'BROWN', color: '#78350F', textColor: '#FFFFFF' },
+  { label: 'Black', value: 'BLACK', color: '#111827', textColor: '#FFFFFF' },
 ];
 
 export const SelectRank: React.FC<SelectRankProps> = ({
@@ -24,45 +29,47 @@ export const SelectRank: React.FC<SelectRankProps> = ({
   onBeltChange,
   onStripesChange,
 }) => {
+  const selectedBorderColor = useThemeColor({}, 'tint');
+
   return (
-    <View style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.label}>Belt Rank</Text>
-        <View style={styles.beltContainer}>
-          {BELT_OPTIONS.map((option) => (
+    <ThemedView style={styles.container}>
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Belt Rank</ThemedText>
+        <ThemedView style={styles.beltContainer}>
+          {BELT_DEFINITIONS.map((option) => (
             <Pressable
               key={option.value}
-              onPress={() => onBeltChange(option.value as Belt)}
+              onPress={() => onBeltChange(option.value)}
               style={[
                 styles.beltOption,
                 { backgroundColor: option.color },
                 option.borderColor && { borderColor: option.borderColor, borderWidth: 1 },
-                belt === option.value && styles.selectedBelt,
+                belt === option.value && [styles.selectedBelt, { borderColor: selectedBorderColor }],
               ]}
             >
-              <Text
+              <ThemedText
                 style={[
                   styles.beltLabel,
-                  { color: option.value === 'White' ? '#374151' : '#FFFFFF' },
+                  { color: option.textColor || '#FFFFFF' },
                 ]}
               >
                 {option.label}
-              </Text>
+              </ThemedText>
             </Pressable>
           ))}
-        </View>
-      </View>
+        </ThemedView>
+      </ThemedView>
       
-      <View style={styles.section}>
-        <Text style={styles.label}>Stripes</Text>
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Stripes</ThemedText>
         <NumberInput
           value={stripes}
           onChange={onStripesChange}
           minValue={0}
           maxValue={4}
         />
-      </View>
-    </View>
+      </ThemedView>
+    </ThemedView>
   );
 };
 
@@ -74,9 +81,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#374151',
   },
   beltContainer: {
     flexDirection: 'row',
@@ -92,7 +96,6 @@ const styles = StyleSheet.create({
   selectedBelt: {
     transform: [{scale: 1.02}],
     borderWidth: 2,
-    borderColor: '#DC2626', // Red border
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -103,8 +106,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   beltLabel: {
-    fontWeight: '600',
-    fontSize: 14,
   },
 });
 

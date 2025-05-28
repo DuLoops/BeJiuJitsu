@@ -1,32 +1,32 @@
-import React, { useContext } from 'react';
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
-import { useQuery } from '@tanstack/react-query';
-import { AuthContext } from '@/src/context/AuthContext';
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import FollowButton from '@/src/features/social/components/FollowButton';
 import {
   getFollowersList,
   SearchedUserProfile, // Re-using this type for the list items
 } from '@/src/features/social/services/socialService';
-import FollowButton from '@/src/features/social/components/FollowButton';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
+import { useAuthStore } from '@/src/store/authStore';
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
+import React from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 interface FollowersListScreenProps {
   userIdProp?: string; 
 }
 
 export default function FollowersListScreen({ userIdProp }: FollowersListScreenProps) {
-  const auth = useContext(AuthContext);
+  const { session } = useAuthStore();
   const params = useLocalSearchParams<{ userId?: string }>();
   
-  const userIdToFetch = userIdProp || params.userId || auth?.session?.user?.id;
+  const userIdToFetch = userIdProp || params.userId || session?.user?.id;
 
   const {
     data: followersList,
@@ -35,13 +35,13 @@ export default function FollowersListScreen({ userIdProp }: FollowersListScreenP
     refetch,
   } = useQuery<SearchedUserProfile[], Error>({
     queryKey: ['followersList', userIdToFetch],
-    queryKeyHash: `followersList-${userIdToFetch}`,
+    queryKeyHashFn: () => `followersList-${userIdToFetch}`,
     queryFn: () => getFollowersList(userIdToFetch!),
     enabled: !!userIdToFetch,
   });
 
   const handleProfileTap = (targetUserId: string) => {
-    router.push({ pathname: `/(protected)/profile/${targetUserId}`, params: { userId: targetUserId } });
+    router.push(`/profile/${targetUserId}`);
   };
 
   const renderItem = ({ item }: { item: SearchedUserProfile }) => (
@@ -54,7 +54,7 @@ export default function FollowersListScreen({ userIdProp }: FollowersListScreenP
         <ThemedText style={styles.fullName}>{item.full_name || 'N/A'}</ThemedText>
       </View>
       <View style={styles.actionsContainer}>
-        {userIdToFetch && item.id !== auth?.session?.user?.id && <FollowButton targetUserId={item.id} />}
+        {userIdToFetch && item.id !== session?.user?.id && <FollowButton targetUserId={item.id} />}
       </View>
     </TouchableOpacity>
   );
@@ -84,7 +84,7 @@ export default function FollowersListScreen({ userIdProp }: FollowersListScreenP
     );
   }
 
-  if (!followersList || followersList.length === 0) {
+  if (!followersList || (followersList && followersList.length === 0)) {
     return (
       <ThemedView style={styles.centeredContainer}>
         <ThemedText>No followers yet.</ThemedText>
@@ -95,7 +95,7 @@ export default function FollowersListScreen({ userIdProp }: FollowersListScreenP
   return (
     <ThemedView style={styles.container}>
       <FlatList
-        data={followersList}
+        data={followersList || []}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         style={styles.list}

@@ -1,31 +1,37 @@
-import { AuthContext } from '@/src/context/AuthContext'; // Assuming you have this for user ID
-import { GoalsList } from '@/src/features/auth/components/GoalsList';
-import { SelectRank } from '@/src/features/auth/components/SelectRank';
+import ThemedButton from '@/src/components/ui/atoms/ThemedButton'; // For TouchableOpacity
+import ThemedInput from '@/src/components/ui/atoms/ThemedInput'; // For TextInput
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import { useCheckUsernameAvailability, useUpsertProfile } from '@/src/features/auth/hooks/useProfileQueries';
 import { UpsertProfileParams } from '@/src/features/auth/services/profileService'; // Import params type
-import { validateUsername } from '@/src/features/auth/utils/validation';
 import { useAddGoal } from '@/src/features/goals/hooks/useGoalHooks';
 import { AddSupabaseGoalParams } from '@/src/features/goals/services/goalService'; // Import params type
-import { Belt } from '@/src/supabase/constants';
+import { GoalsList } from '@/src/features/profile/components/GoalsList';
+import { SelectRank } from '@/src/features/profile/components/SelectRank';
+import { validateUsername } from '@/src/features/profile/utils/validation';
+import { useAuthStore } from '@/src/store/authStore'; // Import Zustand store
+import { Enums } from '@/src/supabase/types'; // Added for Belt enum
 import { router } from 'expo-router';
-import React, { useContext, useEffect, useState } from 'react'; // Added useEffect, useContext
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react'; // Removed useContext
+import { ActivityIndicator, Alert, ScrollView, StyleSheet } from 'react-native'; // Removed Text, TextInput, TouchableOpacity, View
 
 interface GoalState {
   id: string; // For local list key
   text: string;
 }
 
+type BeltType = Enums<'Belts'>; // Using Enums helper for Belt type
+
 export default function CreateProfileScreen() {
   const [userName, setUserName] = useState('');
   const [debouncedUserName, setDebouncedUserName] = useState(userName);
-  const [belt, setBelt] = useState<Belt>('White');
+  const [belt, setBelt] = useState<BeltType>('WHITE'); // Changed to BeltType and uppercase WHITE
   const [stripes, setStripes] = useState(0);
   const [goals, setGoals] = useState<GoalState[]>([]);
   const [usernameDisplayError, setUsernameDisplayError] = useState<string | null>(null);
   
-  const auth = useContext(AuthContext);
-  const currentUserId = auth?.session?.user?.id;
+  const { session } = useAuthStore(); // Use Zustand store
+  const currentUserId = session?.user?.id;
 
   // Debounce username input for the availability check query
   useEffect(() => {
@@ -152,12 +158,12 @@ export default function CreateProfileScreen() {
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>Create Your Profile</Text>
+      <ThemedText style={styles.title}>Create Your Profile</ThemedText>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>Username</Text>
-        <View style={styles.usernameContainer}>
-          <TextInput
+      <ThemedView style={styles.section}>
+        <ThemedText style={styles.label}>Username</ThemedText>
+        <ThemedView style={styles.usernameContainer}>
+          <ThemedInput
             style={[styles.input, styles.usernameInput]}
             value={userName}
             onChangeText={setUserName} // Debounce handled by useEffect
@@ -165,40 +171,39 @@ export default function CreateProfileScreen() {
             autoCapitalize="none"
           />
           {/* Check button removed as query runs on debounce. UI feedback is via text. */}
-        </View>
-        {isCheckingUsername && <Text style={styles.infoText}>Checking username...</Text>}
+        </ThemedView>
+        {isCheckingUsername && <ThemedText style={styles.infoText}>Checking username...</ThemedText>}
         {usernameDisplayError && (
-            <Text style={styles.errorText}>{usernameDisplayError}</Text>
+            <ThemedText style={styles.errorText}>{usernameDisplayError}</ThemedText>
         )}
         {isUsernameAvailable === true && userName === debouncedUserName && !isCheckingUsername && !isUsernameQueryError && (
-          <Text style={styles.successText}>Username is available!</Text>
+          <ThemedText style={styles.successText}>Username is available!</ThemedText>
         )}
-      </View>
+      </ThemedView>
 
-      <View style={styles.section}>
+      <ThemedView style={styles.section}>
         <SelectRank
           belt={belt}
           stripes={stripes}
           onBeltChange={setBelt}
           onStripesChange={setStripes}
         />
-      </View>
+      </ThemedView>
 
-      <View style={styles.section}>
+      <ThemedView style={styles.section}>
         <GoalsList items={goals} onItemsChange={setGoals} title="Training Goals" />
-      </View>
+      </ThemedView>
 
-      <TouchableOpacity
-        style={[styles.submitButton, overallIsLoading && styles.submitButtonDisabled]}
-        onPress={handleAttemptSubmit}
-        disabled={overallIsLoading}
-      >
-        {overallIsLoading ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.submitButtonText}>Create Profile & Goals</Text>
-        )}
-      </TouchableOpacity>
+      {overallIsLoading ? (
+        <ActivityIndicator size="large" color={styles.activityIndicatorColor.color} /> // Assuming styles.activityIndicatorColor.color is defined or use a theme color
+      ) : (
+        <ThemedButton
+          style={styles.submitButton} // Removed disabled style, ThemedButton handles its own disabled state
+          onPress={handleAttemptSubmit}
+          disabled={overallIsLoading} // This will be false here, effectively always enabled, but good for clarity
+          title="Create Profile & Goals"
+        />
+      )}
       {/* Individual mutation errors are handled by Alerts in the hooks */}
     </ScrollView>
   );
@@ -208,13 +213,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+    // backgroundColor: '#fff', // ThemedView will handle background
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 24,
-    color: '#111827',
+    // color: '#111827', // ThemedText will handle color
   },
   section: {
     marginBottom: 24,
@@ -222,14 +227,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#374151',
+    // color: '#374151', // ThemedText will handle color
     marginBottom: 8,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    padding: 12,
+    // borderWidth: 1, // ThemedInput might handle these
+    // borderColor: '#E5E7EB',
+    // borderRadius: 8,
+    // padding: 12,
     fontSize: 16,
   },
   usernameContainer: {
@@ -242,34 +247,37 @@ const styles = StyleSheet.create({
   },
   // Check button style removed as button is removed
   infoText: {
-    color: '#374151',
+    // color: '#374151', // ThemedText
     fontSize: 14,
     marginTop: 4,
   },
   errorText: {
-    color: '#DC2626',
+    // color: '#DC2626', // ThemedText, consider specific error type prop if available
     fontSize: 14,
     marginTop: 4,
   },
   successText: {
-    color: '#059669',
+    // color: '#10B981', // ThemedText
     fontSize: 14,
     marginTop: 4,
   },
   submitButton: {
-    backgroundColor: '#000',
-    padding: 16,
+    // backgroundColor: '#007AFF', // ThemedButton will handle background
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 24,
+    justifyContent: 'center',
   },
   submitButtonDisabled: {
-    opacity: 0.5,
+    // backgroundColor: '#A0A0A0', // ThemedButton disabled state
   },
   submitButtonText: {
-    color: '#fff',
+    // color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
+  },
+  activityIndicatorColor: { // Example, adjust as needed or use useThemeColor
+    color: '#007AFF',
   },
 });

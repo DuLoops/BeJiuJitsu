@@ -1,22 +1,22 @@
-import React, { useContext } from 'react';
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
-import { useQuery } from '@tanstack/react-query';
-import { AuthContext } from '@/src/context/AuthContext';
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import FollowButton from '@/src/features/social/components/FollowButton';
 import {
   getFollowingList,
   SearchedUserProfile, // Re-using this type for the list items
 } from '@/src/features/social/services/socialService';
-import FollowButton from '@/src/features/social/components/FollowButton';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
+import { useAuthStore } from '@/src/store/authStore';
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
+import React from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 interface FollowingListScreenProps {
   // If userId is passed as a prop directly (e.g. from a parent component not using router params)
@@ -24,11 +24,11 @@ interface FollowingListScreenProps {
 }
 
 export default function FollowingListScreen({ userIdProp }: FollowingListScreenProps) {
-  const auth = useContext(AuthContext);
+  const { session } = useAuthStore();
   const params = useLocalSearchParams<{ userId?: string }>();
   
   // Determine the userId: prioritize prop, then param, then current user (for own list)
-  const userIdToFetch = userIdProp || params.userId || auth?.session?.user?.id;
+  const userIdToFetch = userIdProp || params.userId || session?.user?.id;
 
   const {
     data: followingList,
@@ -37,13 +37,13 @@ export default function FollowingListScreen({ userIdProp }: FollowingListScreenP
     refetch,
   } = useQuery<SearchedUserProfile[], Error>({
     queryKey: ['followingList', userIdToFetch],
-    queryKeyHash: `followingList-${userIdToFetch}`,
+    queryKeyHashFn: () => `followingList-${userIdToFetch}`,
     queryFn: () => getFollowingList(userIdToFetch!),
     enabled: !!userIdToFetch,
   });
 
   const handleProfileTap = (targetUserId: string) => {
-    router.push({ pathname: `/(protected)/profile/${targetUserId}`, params: { userId: targetUserId } });
+    router.push(`/profile/${targetUserId}`);
   };
 
   const renderItem = ({ item }: { item: SearchedUserProfile }) => (
@@ -56,7 +56,7 @@ export default function FollowingListScreen({ userIdProp }: FollowingListScreenP
         <ThemedText style={styles.fullName}>{item.full_name || 'N/A'}</ThemedText>
       </View>
       <View style={styles.actionsContainer}>
-        {userIdToFetch && item.id !== auth?.session?.user?.id && <FollowButton targetUserId={item.id} />}
+        {userIdToFetch && item.id !== session?.user?.id && <FollowButton targetUserId={item.id} />}
       </View>
     </TouchableOpacity>
   );
@@ -86,7 +86,7 @@ export default function FollowingListScreen({ userIdProp }: FollowingListScreenP
     );
   }
 
-  if (!followingList || followingList.length === 0) {
+  if (!followingList || (followingList && followingList.length === 0)) {
     return (
       <ThemedView style={styles.centeredContainer}>
         <ThemedText>Not following anyone yet.</ThemedText>
@@ -97,7 +97,7 @@ export default function FollowingListScreen({ userIdProp }: FollowingListScreenP
   return (
     <ThemedView style={styles.container}>
       <FlatList
-        data={followingList}
+        data={followingList || []}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         style={styles.list}

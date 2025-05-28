@@ -1,33 +1,29 @@
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
-import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
-import { AuthContext } from '@/src/context/AuthContext';
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import { useAuthStore } from '@/src/store/authStore';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import React, { useContext, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const auth = useContext(AuthContext);
+  const { loading, signInWithEmail, session, isInitialized } = useAuthStore();
 
-  if (!auth) {
-    return (
-      <View style={styles.container}>
-        <Text>Error: Auth context is not available. Ensure LoginScreen is wrapped by AuthProvider.</Text>
-      </View>
-    );
-  }
-
-  const { loading, signInWithEmail } = auth;
+  useEffect(() => {
+    if (isInitialized && session) {
+      router.replace('/(protected)/(tabs)');
+    }
+  }, [session, isInitialized]);
 
   const handleSignIn = async () => {
+    setErrorMessage(null);
     try {
       await signInWithEmail(email, password);
-      setErrorMessage(null);
-      router.replace('/');
     } catch (error: any) {
       let message = error?.message || error?.error_description || error?.toString() || 'Sign in failed';
       console.log(message);
@@ -36,8 +32,8 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
+    <ThemedView style={styles.container}>
+      <ThemedView style={[styles.verticallySpaced, styles.mt20]}>
         <ThemedInput
           label="Email"
           icon={<Ionicons name="mail" size={24} color="black" />}
@@ -46,8 +42,8 @@ export default function LoginScreen() {
           placeholder="email@address.com"
           autoCapitalize={'none'}
         />
-      </View>
-      <View style={styles.verticallySpaced}>
+      </ThemedView>
+      <ThemedView style={styles.verticallySpaced}>
         <ThemedInput
           label="Password"
           icon={<Ionicons name="lock-closed" size={24} color="black" />}
@@ -57,15 +53,15 @@ export default function LoginScreen() {
           placeholder="Password"
           autoCapitalize={'none'}
         />
-      </View>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
+      </ThemedView>
+      <ThemedView style={[styles.verticallySpaced, styles.mt20]}>
         <ThemedButton disabled={loading} onPress={handleSignIn} title="Sign in" />
-      </View>
-      <View style={styles.verticallySpaced}>
+      </ThemedView>
+      <ThemedView style={styles.verticallySpaced}>
         <ThemedButton onPress={() => router.push('/(auth)/signup')} title="Create account" />
-      </View>
+      </ThemedView>
       {errorMessage ? <ThemedText style={styles.errorText}>{errorMessage}</ThemedText> : null}
-    </View>
+    </ThemedView>
   );
 }
 

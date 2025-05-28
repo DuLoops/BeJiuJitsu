@@ -1,31 +1,33 @@
-import React, { useContext } from 'react';
-import {
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  Image, // For avatar
-  Text, // For error/loading if ThemedText not sufficient
-} from 'react-native';
+import { useAuthStore } from '@/src/store/authStore';
 import { useQuery } from '@tanstack/react-query';
-import { AuthContext } from '@/src/context/AuthContext'; // To get current user for FollowButton logic
-import { Profile } from '@/src/types';
+import React from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+} from 'react-native'; // Removed View, Text
+// import { Profile } from '@/src/types'; // Removed
+import ThemedText from '@/src/components/ui/atoms/ThemedText'; // Ensured default import
+import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import { getProfile } from '@/src/features/profile/services/profileService';
 import FollowButton from '@/src/features/social/components/FollowButton';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
-import { Ionicons } from '@expo/vector-icons'; // For placeholder avatar
+import { useThemeColor } from '@/src/hooks/useThemeColor'; // For themed icon color
+import { Tables } from '@/src/supabase/types'; // Added
+import { Ionicons } from '@expo/vector-icons';
 
 interface PublicProfileScreenProps {
   userId: string;
 }
 
-export default function PublicProfileScreen({ userId }: PublicProfileScreenProps) {
-  const auth = useContext(AuthContext);
-  const currentUserId = auth?.session?.user?.id;
+type Profile = Tables<'profiles'>; // Use Tables helper
 
-  const { data: profile, isLoading, error } = useQuery<Profile | null, Error>({ 
-    queryKey: ['publicProfile', userId],
-    queryKeyHash: `publicProfile-${userId}`,
+export default function PublicProfileScreen({ userId }: PublicProfileScreenProps) {
+  const { session } = useAuthStore();
+  const currentUserId = session?.user?.id;
+  const iconColor = useThemeColor({}, 'icon'); // Default icon color from theme
+
+  const { data: profile, isLoading, error } = useQuery<Profile | null, Error>({
+    queryKey: ['publicProfile', userId], // queryKeyHash removed
     queryFn: () => getProfile(userId),
     enabled: !!userId,
   });
@@ -57,32 +59,30 @@ export default function PublicProfileScreen({ userId }: PublicProfileScreenProps
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.profileHeader}>
-        {profile.avatar_url ? (
-          <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+      <ThemedView style={styles.profileHeader}> {/* Changed View to ThemedView */}
+        {profile.avatar ? ( // Changed avatar_url to avatar
+          <Image source={{ uri: profile.avatar }} style={styles.avatar} />
         ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Ionicons name="person-circle-outline" size={80} color="#ccc" />
-          </View>
+          <ThemedView style={styles.avatarPlaceholder}> {/* Changed View to ThemedView */}
+            <Ionicons name="person-circle-outline" size={80} color={iconColor} /> {/* Used themed icon color */}
+          </ThemedView>
         )}
-        <ThemedText style={styles.username}>{profile.username || 'N/A'}</ThemedText>
-        <ThemedText style={styles.fullName}>{profile.full_name || 'User'}</ThemedText>
+        <ThemedText type="title" style={styles.username}>{profile.username || 'N/A'}</ThemedText>
+        <ThemedText type="subtitle" style={styles.fullName}>{profile.full_name || 'User'}</ThemedText>
         {profile.belt && (
             <ThemedText style={styles.beltInfo}>Belt: {profile.belt} - {profile.stripes || 0} stripe(s)</ThemedText>
         )}
-      </View>
+      </ThemedView>
 
-      <View style={styles.followButtonContainer}>
-        {/* Ensure FollowButton is not shown for the current user's own public profile page */}
+      <ThemedView style={styles.followButtonContainer}> {/* Changed View to ThemedView */}
         {currentUserId && userId !== currentUserId && (
           <FollowButton targetUserId={userId} />
         )}
-      </View>
+      </ThemedView>
 
-      {/* Placeholder for other profile content like skills, activity, etc. */}
-      <View style={styles.contentArea}>
+      <ThemedView style={styles.contentArea}> {/* Changed View to ThemedView */}
         <ThemedText style={styles.placeholderText}>More profile details coming soon...</ThemedText>
-      </View>
+      </ThemedView>
     </ThemedView>
   );
 }
@@ -115,18 +115,18 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#e0e0e0',
+    // backgroundColor: '#e0e0e0', // ThemedView might handle this or useThemeColor
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
   },
   username: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    // fontSize: 24, // Handled by ThemedText type="title"
+    // fontWeight: 'bold', // Handled by ThemedText type="title"
   },
   fullName: {
-    fontSize: 18,
-    color: 'gray',
+    // fontSize: 18, // Handled by ThemedText type="subtitle"
+    // color: 'gray', // Handled by ThemedText type="subtitle"
     marginBottom: 5,
   },
   beltInfo: {
@@ -137,13 +137,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  contentArea: {
-    // Placeholder for future content
-  },
+  contentArea: {},
   placeholderText: {
     textAlign: 'center',
     fontSize: 16,
-    color: 'gray',
+    // color: 'gray', // ThemedText should handle this
     marginTop: 30,
   },
 });

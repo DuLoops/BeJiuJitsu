@@ -1,6 +1,6 @@
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import React from 'react';
-import { StyleProp, StyleSheet, Text, TouchableOpacity, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 
 type ButtonSize = 'sm' | 'md' | 'lg' | 'xl';
 type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'outline';
@@ -12,6 +12,7 @@ interface ButtonProps {
   variant?: ButtonVariant;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
+  icon?: React.ReactNode;
 }
 
 const ThemedButton = ({ 
@@ -20,7 +21,8 @@ const ThemedButton = ({
   size = 'md',
   variant = 'primary',
   disabled = false,
-  style
+  style,
+  icon
 }: ButtonProps) => {
   // Use only valid color keys from Colors
   const backgroundColor = variant === 'outline' ? 'transparent' : useThemeColor({}, 'background');
@@ -30,9 +32,10 @@ const ThemedButton = ({
 
   const styles = StyleSheet.create({
     button: {
-      borderRadius: 12,
-      justifyContent: 'center',
+      flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
       shadowColor: shadowColor,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.2,
@@ -52,7 +55,11 @@ const ThemedButton = ({
       fontSize: 16,
       fontWeight: '600',
       color: textColor,
+      marginLeft: icon ? 8 : 0,
     },
+    iconContainer: {
+      // Add styles for icon container if needed
+    }
   });
 
   return (
@@ -65,6 +72,7 @@ const ThemedButton = ({
         style
       ]}
     >
+      {icon && <View style={styles.iconContainer}>{icon}</View>}
       <Text style={styles.text}>
         {title}
       </Text>

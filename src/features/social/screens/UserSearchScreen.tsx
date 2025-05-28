@@ -1,31 +1,29 @@
-import React, { useState, useContext } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
   FlatList,
   StyleSheet,
-  ActivityIndicator,
   TouchableOpacity,
-  Text, // For placeholder text
-  // useEffect, // Added in previous version for debounce, ensure it's here if needed
+  View
 } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
 //Removed duplicate: import React, { useState, useContext, useEffect } from 'react'; 
-import { AuthContext } from '@/src/context/AuthContext';
-import {
-  searchProfiles,
-  SearchedUserProfile,
-} from '@/src/features/social/services/socialService';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
-import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
-// import ThemedButton from '@/src/components/ui/atoms/ThemedButton'; 
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import {
+  SearchedUserProfile,
+  searchProfiles,
+} from '@/src/features/social/services/socialService';
+import { useAuthStore } from '@/src/store/authStore'; // Import useAuthStore
+// import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import FollowButton from '@/src/features/social/components/FollowButton';
 import { Ionicons } from '@expo/vector-icons';
-import FollowButton from '@/src/features/social/components/FollowButton'; 
 import { router } from 'expo-router'; // Import router for navigation
 
 export default function UserSearchScreen() {
-  const auth = useContext(AuthContext);
-  const currentUserId = auth?.session?.user?.id;
+  const { session } = useAuthStore(); // Use useAuthStore
+  const currentUserId = session?.user?.id;
 
   const [searchText, setSearchText] = useState('');
   const [debouncedSearchText, setDebouncedSearchText] = useState('');
@@ -48,13 +46,13 @@ export default function UserSearchScreen() {
     isFetching, // To show loading indicator during refetch on text change
   } = useQuery<SearchedUserProfile[], Error>({
     queryKey: ['searchProfiles', debouncedSearchText, currentUserId],
-    queryKeyHash: `searchProfiles-${debouncedSearchText}-${currentUserId}`,
+    queryKeyHashFn: () => `searchProfiles-${debouncedSearchText}-${currentUserId}`,
     queryFn: () => searchProfiles(debouncedSearchText, currentUserId!),
     enabled: !!currentUserId && debouncedSearchText.trim().length > 0, // Only run if user is logged in and search text is not empty
   });
 
   const handleProfileTap = (userId: string) => {
-    router.push({ pathname: `/(protected)/profile/${userId}`, params: { userId } });
+    router.push(`/profile/${userId}`); // Corrected router.push path
   };
 
   const renderItem = ({ item }: { item: SearchedUserProfile }) => (

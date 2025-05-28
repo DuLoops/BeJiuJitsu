@@ -1,59 +1,61 @@
-import React, { useContext } from 'react';
-import { ScrollView, StyleSheet, View, Text, ActivityIndicator, FlatList, TouchableOpacity } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
-import { AuthContext } from '@/src/context/AuthContext';
-import { Profile } from '@/src/types';
-import { TrainingWithDetails } from '@/src/types/training'; // Updated Type
-import { CompetitionWithDetails } from '@/src/types/competition'; // Updated Type
 import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList';
+import { useAuthStore } from '@/src/store/authStore';
+import { Tables } from '@/src/supabase/types';
+import { CompetitionWithDetails } from '@/src/types/competition';
+import { TrainingWithDetails } from '@/src/types/training';
+import { useQuery } from '@tanstack/react-query';
+import React from 'react';
+import { ActivityIndicator, FlatList, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
+import { fetchCompetitionsForUser } from '@/src/features/competition/services/competitionService';
 import { getProfile } from '@/src/features/profile/services/profileService';
 import { fetchUserSkillsWithDetails } from '@/src/features/skill/services/skillService';
+import { FollowCounts, getFollowCounts } from '@/src/features/social/services/socialService';
 import { fetchTrainingsForUser } from '@/src/features/training/services/trainingService';
-import { fetchCompetitionsForUser } from '@/src/features/competition/services/competitionService';
-import { getFollowCounts, FollowCounts } from '@/src/features/social/services/socialService'; // Import for follow counts
 
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
-import { router } from 'expo-router';
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { View } from 'react-native';
 
 export default function ProfileTabScreen() {
-  const auth = useContext(AuthContext);
-  const userId = auth?.session?.user?.id;
+  const { session } = useAuthStore();
+  const userId = session?.user?.id;
+  const themedIconColor = useThemeColor({}, 'icon');
 
-  const { data: profile, isLoading: isLoadingProfile, error: errorProfile } = useQuery<Profile | null, Error>({
+  const { data: profile, isLoading: isLoadingProfile, error: errorProfile } = useQuery<Tables<"profiles"> | null, Error>({
     queryKey: ['profile', userId],
-    queryKeyHash: `profile-${userId}`,
     queryFn: () => getProfile(userId!),
     enabled: !!userId,
   });
 
   const { data: followCounts, isLoading: isLoadingFollowCounts, error: errorFollowCounts } = useQuery<FollowCounts, Error>({
     queryKey: ['followCounts', userId],
-    queryKeyHash: `followCounts-${userId}`,
+    queryKeyHashFn: () => `followCounts-${userId}`,
     queryFn: () => getFollowCounts(userId!),
     enabled: !!userId,
   });
 
   const { data: userSkills, isLoading: isLoadingSkills, error: errorSkills } = useQuery<UserSkillWithDetails[], Error>({
     queryKey: ['userSkillsWithDetails', userId], // Using existing key from UserSkillList
-    queryKeyHash: `userSkillsWithDetails-${userId}`,
+    queryKeyHashFn: () => `userSkillsWithDetails-${userId}`,
     queryFn: () => fetchUserSkillsWithDetails(userId!),
     enabled: !!userId,
   });
 
   const { data: trainings, isLoading: isLoadingTrainings, error: errorTrainings } = useQuery<TrainingWithDetails[], Error>({
     queryKey: ['trainingsForUser', userId],
-    queryKeyHash: `trainingsForUser-${userId}`,
+    queryKeyHashFn: () => `trainingsForUser-${userId}`,
     queryFn: () => fetchTrainingsForUser(userId!, true),
     enabled: !!userId,
   });
   
   const { data: competitions, isLoading: isLoadingCompetitions, error: errorCompetitions } = useQuery<CompetitionWithDetails[], Error>({
     queryKey: ['competitionsForUser', userId],
-    queryKeyHash: `competitionsForUser-${userId}`,
+    queryKeyHashFn: () => `competitionsForUser-${userId}`,
     queryFn: () => fetchCompetitionsForUser(userId!),
     enabled: !!userId,
   });
@@ -105,7 +107,6 @@ export default function ProfileTabScreen() {
               onPress={navigateToEditProfile} 
               icon={<Ionicons name="create-outline" size={16} color="white" />} // Example icon
               style={styles.editButton}
-              textStyle={styles.editButtonText}
             />
           </View>
           {profile ? (
@@ -139,7 +140,7 @@ export default function ProfileTabScreen() {
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <ThemedText style={styles.sectionTitle}>My Skills</ThemedText>
-            <ThemedButton title="View All Skills" onPress={() => router.push('/(protected)/(tabs)/skills/')} style={styles.viewAllButton} textStyle={styles.viewAllButtonText} />
+            <ThemedButton title="View All Skills" onPress={() => console.log('TODO: Navigate to all skills screen')} style={styles.viewAllButton} />
           </View>
           {errorSkills ? renderError(errorSkills) : userSkills && userSkills.length > 0 ? (
             <FlatList
@@ -166,7 +167,6 @@ export default function ProfileTabScreen() {
                     title="Log New Training" 
                     onPress={() => router.push('/(protected)/(modal)/create/training')} 
                     style={styles.viewAllButton} 
-                    textStyle={styles.viewAllButtonText}
                 />
             </View>
           {errorTrainings ? renderError(errorTrainings) : trainings && trainings.length > 0 ? (
@@ -200,7 +200,6 @@ export default function ProfileTabScreen() {
                     title="Log New Competition" 
                     onPress={() => router.push('/(protected)/(modal)/create/competition')} 
                     style={styles.viewAllButton} 
-                    textStyle={styles.viewAllButtonText}
                 />
             </View>
           {errorCompetitions ? renderError(errorCompetitions) : competitions && competitions.length > 0 ? (
@@ -209,7 +208,7 @@ export default function ProfileTabScreen() {
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
                 <ThemedView style={styles.listItem}>
-                  <ThemedText style={styles.listItemTitle}>{item.name} - {new Date(item.date).toLocaleDateString()}</ThemedText>
+                  <ThemedText style={styles.listItemTitle}>{item.name} - {item.date ? new Date(item.date).toLocaleDateString() : 'Date N/A'}</ThemedText>
                   <ThemedText>Brand: {item.tournament_brand?.name || 'N/A'}</ThemedText>
                   {item.divisions?.map(div => (
                     <View key={div.id} style={styles.divisionSummary}>

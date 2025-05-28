@@ -1,54 +1,75 @@
-import React, { useState, useContext } from 'react';
-import { View, ScrollView, Alert, StyleSheet, Platform, Text, TouchableOpacity } from 'react-native';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AuthContext } from '@/src/context/AuthContext';
-import {
-  fetchUserSkillsForSelection,
-  createTrainingSessionWithSkillUsages,
-} from '@/src/features/training/services/trainingService';
-import { Training, UserSkillUsageFormData } from '@/src/types/training';
-import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList';
-import { BjjType, TrainingIntensity, Constants } from '@/src/supabase/types'; // Get enums from Supabase types
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
-import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { Picker } from '@react-native-picker/picker';
-import { Switch } from 'react-native-paper';
+import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList';
+import {
+  createTrainingSessionWithSkillUsages,
+  fetchUserSkillsForSelection,
+} from '@/src/features/training/services/trainingService';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
+import { useAuthStore } from '@/src/store/authStore';
+import {
+  BjjTypeEnum,
+  BjjTypesArray,
+  TrainingIntensitiesArray,
+  TrainingIntensityEnum
+} from '@/src/supabase/constants';
+import { TablesInsert } from '@/src/supabase/types';
+import { Training } from '@/src/types/training';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+
+// Define the shape of the form data for skill usage within this component
+interface ExtendedUserSkillUsageFormData {
+  userSkillId: string;    // This is UserSkill.id
+  skill_id: string;       // This is Skill.id (base skill id, for display/logic if needed)
+  userSkillName: string;  
+  quantity: string;       
+  success: boolean;
+}
 
 export default function CreateTrainingScreen() {
-  const auth = useContext(AuthContext);
+  const { session } = useAuthStore();
   const queryClient = useQueryClient();
-  const userId = auth?.session?.user?.id;
+  const userId = session?.user?.id;
+  const tintColor = useThemeColor({}, 'tint');
+  const iconColor = useThemeColor({}, 'icon');
+  const successColor = useThemeColor({}, 'tint');
 
   // Form State - Training Details
   const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(Platform.OS === 'ios'); // Show by default on iOS
-  const [duration, setDuration] = useState(''); // in minutes
-  const [bjjType, setBjjType] = useState<BjjType>(Constants.public.Enums.BjjType[0]);
-  const [intensity, setIntensity] = useState<TrainingIntensity>(Constants.public.Enums.TrainingIntensity[1]); // Default to Medium
+  const [showDatePicker, setShowDatePicker] = useState(Platform.OS === 'ios');
+  const [duration, setDuration] = useState('');
+  const [bjjType, setBjjType] = useState<BjjTypeEnum>(BjjTypesArray[0]);
+  const [intensity, setIntensity] = useState<TrainingIntensityEnum>(TrainingIntensitiesArray[1]);
   const [note, setNote] = useState('');
 
   // Form State - Skill Usages
-  const [selectedSkillsUsage, setSelectedSkillsUsage] = useState<UserSkillUsageFormData[]>([]);
+  const [selectedSkillsUsage, setSelectedSkillsUsage] = useState<ExtendedUserSkillUsageFormData[]>([]);
 
   // Fetch User Skills for selection
   const { data: userSkills, isLoading: isLoadingUserSkills } = useQuery<UserSkillWithDetails[], Error>({
     queryKey: ['userSkillsForSelection', userId],
-    queryKeyHash: `userSkillsForSelection-${userId}`,
     queryFn: () => fetchUserSkillsForSelection(userId!),
     enabled: !!userId,
   });
 
   // Mutation for creating Training session and UserSkillUsages
   const mutation = useMutation({
-    mutationFn: createTrainingSessionWithSkillUsages,
+    mutationFn: (data: { 
+        trainingData: Omit<Training, 'id' | 'created_at' | 'updatedAt'>, 
+        skillUsagesData: Omit<TablesInsert<'UserSkillUsage'>, 'id' | 'trainingId'>[] 
+    }) => createTrainingSessionWithSkillUsages(data),
     onSuccess: () => {
       Alert.alert('Success', 'Training session logged!');
-      queryClient.invalidateQueries({ queryKey: ['trainingSessions', userId] }); // Assuming a query key for fetching training sessions
-      queryClient.invalidateQueries({ queryKey: ['userSkillsWithDetails', userId]}); // If skill usage might affect skill display
+      queryClient.invalidateQueries({ queryKey: ['trainingsForUser', userId] });
+      queryClient.invalidateQueries({ queryKey: ['userSkillsWithDetails', userId]});
       router.back();
     },
     onError: (error: Error) => {
@@ -68,12 +89,18 @@ export default function CreateTrainingScreen() {
       if (existing) {
         return prev.filter(s => s.userSkillId !== skill.id);
       } else {
-        return [...prev, { userSkillId: skill.id, userSkillName: skill.skill.name, quantity: '1', success: true }];
+        return [...prev, { 
+          userSkillId: skill.id, // This is UserSkill.id
+          skill_id: skill.skill.id, // This is Skill.id
+          userSkillName: skill.skill.name, 
+          quantity: '1', 
+          success: true 
+        }];
       }
     });
   };
 
-  const handleSkillUsageChange = (userSkillId: string, field: keyof UserSkillUsageFormData, value: string | boolean) => {
+  const handleSkillUsageChange = (userSkillId: string, field: keyof ExtendedUserSkillUsageFormData, value: string | boolean) => {
     setSelectedSkillsUsage(prev =>
       prev.map(s => (s.userSkillId === userSkillId ? { ...s, [field]: value } : s))
     );
@@ -89,22 +116,30 @@ export default function CreateTrainingScreen() {
         return;
     }
 
-    const trainingData: Omit<Training, 'id' | 'created_at' | 'updated_at'> = {
-      userId,
-      date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+    const trainingDataPayload = {
+      userId: userId!, 
+      date: date.toISOString().split('T')[0],
       duration: Number(duration),
-      bjjType,
-      intensity,
-      note,
-    };
+      bjjType: bjjType,
+      intensity: intensity,
+      note: note || null,
+      id: '',
+      createdAt: undefined as string | undefined,
+      updatedAt: undefined as string | undefined,
+    } as Training;
 
-    const skillUsagesData = selectedSkillsUsage.map(s => ({
-      userSkillId: s.userSkillId,
+    const skillUsagesPayload: Omit<TablesInsert<'UserSkillUsage'>, 'id' | 'trainingId'>[] = selectedSkillsUsage.map(s => ({
+      skillId: s.userSkillId, // UserSkillUsage.skillId is FK to UserSkill.id
       quantity: Number(s.quantity) || 0,
       success: s.success,
+      usageType: 'TRAINING', // Direct string value for the enum type
+      note: null,
+      competitionId: null,
+      matchId: null,
+      // createdAt, updatedAt are optional in TablesInsert<'UserSkillUsage'>
     }));
 
-    mutation.mutate({ trainingData, skillUsagesData });
+    mutation.mutate({ trainingData: trainingDataPayload, skillUsagesData: skillUsagesPayload });
   };
   
   return (
@@ -142,7 +177,7 @@ export default function CreateTrainingScreen() {
           onValueChange={(itemValue) => setBjjType(itemValue)}
           style={styles.picker}
         >
-          {Constants.public.Enums.BjjType.map(type => (
+          {BjjTypesArray.map(type => (
             <Picker.Item key={type} label={type} value={type} />
           ))}
         </Picker>
@@ -153,7 +188,7 @@ export default function CreateTrainingScreen() {
           onValueChange={(itemValue) => setIntensity(itemValue)}
           style={styles.picker}
         >
-          {Constants.public.Enums.TrainingIntensity.map(level => (
+          {TrainingIntensitiesArray.map(level => (
             <Picker.Item key={level} label={level} value={level} />
           ))}
         </Picker>
@@ -170,41 +205,47 @@ export default function CreateTrainingScreen() {
 
         <ThemedText style={styles.sectionTitle}>Skills Practiced/Used</ThemedText>
         {isLoadingUserSkills ? (
-          <Text>Loading your skills...</Text>
+          <ActivityIndicator />
         ) : userSkills && userSkills.length > 0 ? (
-          userSkills.map(skill => (
-            <View key={skill.id} style={styles.skillUsageContainer}>
-              <TouchableOpacity 
-                style={styles.skillToggle}
-                onPress={() => handleToggleSkillUsage(skill)}
-              >
-                <Ionicons 
-                    name={selectedSkillsUsage.some(s => s.userSkillId === skill.id) ? 'checkbox-outline' : 'square-outline'} 
-                    size={24} 
-                    color={selectedSkillsUsage.some(s => s.userSkillId === skill.id) ? '#4CAF50' : '#ccc'} 
-                />
-                <ThemedText style={styles.skillNameText}>{skill.skill.name} ({skill.skill.category.name})</ThemedText>
-              </TouchableOpacity>
-              {selectedSkillsUsage.find(s => s.userSkillId === skill.id) && (
-                <View style={styles.skillUsageInputs}>
-                  <ThemedInput
-                    label="Quantity/Reps:"
-                    value={selectedSkillsUsage.find(s => s.userSkillId === skill.id)?.quantity || '1'}
-                    onChangeText={text => handleSkillUsageChange(skill.id, 'quantity', text)}
-                    keyboardType="numeric"
-                    style={styles.smallInput}
+          userSkills.map(skill => {
+            const currentSkillUsage = selectedSkillsUsage.find(s => s.userSkillId === skill.id);
+            const isSkillSelected = !!currentSkillUsage;
+            return (
+              <ThemedView key={skill.id} style={styles.skillUsageContainer}>
+                <TouchableOpacity 
+                  style={styles.skillToggle}
+                  onPress={() => handleToggleSkillUsage(skill)}
+                >
+                  <Ionicons 
+                      name={isSkillSelected ? 'checkbox-outline' : 'square-outline'} 
+                      size={24} 
+                      color={isSkillSelected ? successColor : iconColor} 
                   />
-                  <View style={styles.switchRow}>
-                    <ThemedText style={styles.label}>Successful?</ThemedText>
-                    <Switch
-                      value={selectedSkillsUsage.find(s => s.userSkillId === skill.id)?.success || false}
-                      onValueChange={val => handleSkillUsageChange(skill.id, 'success', val)}
+                  <ThemedText style={styles.skillNameText}>{skill.skill.name} ({skill.skill.category.name})</ThemedText>
+                </TouchableOpacity>
+                {isSkillSelected && currentSkillUsage && (
+                  <ThemedView style={styles.skillUsageInputs}>
+                    <ThemedInput
+                      label="Quantity/Reps:"
+                      value={currentSkillUsage.quantity || '1'}
+                      onChangeText={text => handleSkillUsageChange(skill.id, 'quantity', text)}
+                      keyboardType="numeric"
+                      style={styles.smallInput}
                     />
-                  </View>
-                </View>
-              )}
-            </View>
-          ))
+                    <ThemedView style={styles.switchRow}>
+                      <ThemedText style={styles.label}>Successful?</ThemedText>
+                      <Switch
+                        value={currentSkillUsage.success || false}
+                        onValueChange={val => handleSkillUsageChange(skill.id, 'success', val)}
+                        trackColor={{ false: "#767577", true: tintColor }}
+                        thumbColor={currentSkillUsage.success ? tintColor : "#f4f3f4"}
+                      />
+                    </ThemedView>
+                  </ThemedView>
+                )}
+              </ThemedView>
+            );
+          })
         ) : (
           <ThemedText>You haven't added any skills yet. Add skills first to track their usage.</ThemedText>
         )}
@@ -249,9 +290,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   smallInput: {
-    // flex: 1, // If in a row
-    // marginRight: 10, // If in a row
-    marginBottom: 10, // Standalone for now
+    marginBottom: 10,
   },
   textArea: {
     minHeight: 80,
@@ -260,7 +299,7 @@ const styles = StyleSheet.create({
   picker: {
     marginBottom: 15,
     height: Platform.OS === 'ios' ? 180 : 50,
-    backgroundColor: '#f0f0f0', // Basic styling for picker visibility
+    backgroundColor: '#f0f0f0',
   },
   button: {
     marginTop: 20,
@@ -269,24 +308,26 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    marginBottom: 10,
   },
   skillToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: 8,
   },
   skillNameText: {
     fontSize: 16,
     marginLeft: 10,
+    flexShrink: 1,
   },
   skillUsageInputs: {
-    paddingLeft: 30, // Indent inputs under the skill name
+    paddingLeft: 30,
+    gap: 8,
   },
   switchRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 5,
-    marginBottom: 10,
+    alignItems: 'center',
+    paddingVertical: 5,
   },
 });

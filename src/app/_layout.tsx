@@ -1,62 +1,88 @@
-import { AuthContext, AuthProvider } from '@/src/context/AuthContext';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'; // Devtools can be added later if needed
-import { Stack, router, useSegments } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import React, { useContext, useEffect } from 'react';
-import 'react-native-reanimated';
 import { getProfile } from '@/src/features/profile/services/profileService'; // Assuming this service exists
+import { useAuthStore } from '@/src/store/authStore';
+import { SplashScreen, Stack, router, useSegments } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import React, { useEffect, useRef } from 'react';
+import 'react-native-reanimated';
 
 // Create a client
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
-  const auth = useContext(AuthContext);
+  const { session, loading, isInitialized, initializeAuth } = useAuthStore();
   const segments = useSegments();
+  const isMounted = useRef(false); // To prevent splash hide on unmount or during initial fast transitions
 
   useEffect(() => {
-    if (auth?.loading) return; // Wait until auth state is determined
+    isMounted.current = true;
+    initializeAuth();
+    return () => {
+      isMounted.current = false;
+    };
+  }, [initializeAuth]);
+
+  useEffect(() => {
+    if (!isMounted.current) return;
+
+    const hideSplashSafely = () => {
+      if (isMounted.current) {
+        SplashScreen.hideAsync();
+      }
+    };
+
+    if (loading || !isInitialized) {
+      SplashScreen.preventAutoHideAsync();
+      return;
+    }
 
     const inAuthGroup = segments[0] === '(auth)';
     const inProtectedGroup = segments[0] === '(protected)';
+    // Simplified root check: if not in auth or protected, assume it's a root-like state or an unhandled path.
+    // Redirection logic will handle if it's a valid logged-in user at such a path.
+    const isPotentiallyAtRootOrAppEntry = !inAuthGroup && !inProtectedGroup;
+    const isAtCreateProfile = segments.length > 1 && segments[0] === '(protected)' && segments[1] === 'create-profile';
 
     const checkProfileAndRedirect = async () => {
-      if (auth?.session?.user) {
-        try {
-          const profile = await getProfile(auth.session.user.id);
+      try {
+        if (session?.user) {
+          const profile = await getProfile(session.user.id);
           if (!profile) {
-            if (segments[1] !== 'create-profile') { // Avoid redirect loop
+            if (!isAtCreateProfile) {
               router.replace('/(protected)/create-profile');
+            } else {
+              hideSplashSafely(); 
             }
-          } else if (inAuthGroup || segments.length === 0 || segments[0] === '') {
-            // If logged in and has profile, redirect from auth or root to protected home
-            router.replace('/(protected)/');
+          } else if (inAuthGroup || isPotentiallyAtRootOrAppEntry) { // If logged in with profile, and in auth or at app entry, go to tabs
+            router.replace('/(protected)/(tabs)');
+          } else {
+            hideSplashSafely(); 
           }
-        } catch (error) {
-          console.error("Failed to fetch profile:", error);
-          // Handle error, maybe redirect to login or show an error message
-          if (inProtectedGroup) { // If error occurs while in protected area, redirect to login
+        } else { // No session
+          if (!inAuthGroup) {
             router.replace('/(auth)/login');
+          } else {
+            hideSplashSafely(); 
           }
         }
-      } else {
-        // No session, redirect to login if not already in auth group
-        if (!inAuthGroup) {
+      } catch (error) {
+        console.error("Failed to process auth state or fetch profile:", error);
+        if (inProtectedGroup && !isAtCreateProfile) {
           router.replace('/(auth)/login');
+        } else {
+          hideSplashSafely();
         }
       }
     };
 
     checkProfileAndRedirect();
 
-  }, [auth?.session, auth?.loading, segments]);
+  }, [session, loading, isInitialized, segments, initializeAuth]);
 
-
-  // Before auth.loading is false, we can return a loading screen or null
-  // For simplicity, returning null, but a splash screen or loading indicator is better UX
-  if (auth?.loading) {
-    return null; // Or a loading spinner
+  if (loading || !isInitialized) {
+    return null;
   }
 
   return (
@@ -74,12 +100,10 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider value={colorScheme === 'light' ? DefaultTheme : DarkTheme}>
-          <StatusBar style="auto" />
-          <RootLayoutNav />
-        </ThemeProvider>
-      </AuthProvider>
+      <ThemeProvider value={colorScheme === 'light' ? DefaultTheme : DarkTheme}>
+        <StatusBar style="auto" />
+        <RootLayoutNav />
+      </ThemeProvider>
       {/* {__DEV__ && <ReactQueryDevtools client={queryClient} />} */}
     </QueryClientProvider>
   );

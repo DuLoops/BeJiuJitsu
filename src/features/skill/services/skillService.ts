@@ -1,15 +1,16 @@
 import { supabase } from '@/src/lib/supabase';
-import { Category, Skill, UserSkill, CategoryEnum, SkillNameEnum, SkillSequence, SequenceDetail } from '@/src/types/skills';
+import { Database } from '@/src/supabase/types';
+import { Category, CategoryEnum, SequenceDetail, Skill, SkillNameEnum, SkillSequence, UserSkill } from '@/src/types/skills';
 
 // Fetch Functions
 export const fetchCategories = async () => {
-  const { data, error } = await supabase.from('categories').select('*');
+  const { data, error } = await supabase.from('Category').select('*');
   if (error) throw error;
   return data as Category[];
 };
 
 export const fetchSkills = async (categoryId?: string) => {
-  let query = supabase.from('skills').select('*');
+  let query = supabase.from('Skill').select('*');
   if (categoryId) {
     query = query.eq('categoryId', categoryId);
   }
@@ -21,11 +22,11 @@ export const fetchSkills = async (categoryId?: string) => {
 // Fetches UserSkills with all related details (Skill, Category, Sequences, SequenceDetails)
 export const fetchUserSkillsWithDetails = async (userId: string) => {
   const { data, error } = await supabase
-    .from('user_skills')
+    .from('UserSkill')
     .select(`
       *,
-      skill:skills!inner(*, category:categories!inner(*)),
-      sequences:skill_sequences!left(*, details:sequence_details!left(*))
+      skill:Skill!inner(*, category:Category!inner(*)),
+      sequences:SkillSequence!left(*, details:SequenceDetail!left(*))
     `)
     .eq('userId', userId);
 
@@ -38,36 +39,41 @@ export const fetchUserSkillsWithDetails = async (userId: string) => {
 
 
 export const fetchUserSkills = async (userId: string) => {
-  const { data, error } = await supabase.from('user_skills').select('*').eq('userId', userId);
+  const { data, error } = await supabase.from('UserSkill').select('*').eq('userId', userId);
   if (error) throw error;
   return data as UserSkill[];
 };
 
 // Create Functions
-export const createCategory = async (categoryData: Partial<Category>, currentUserId: string) => {
+export const createCategory = async (categoryData: Pick<Category, 'name'> & Partial<Omit<Category, 'name'>>, currentUserId: string) => {
   const { data, error } = await supabase
-    .from('categories')
-    .insert([{ ...categoryData, isPredefined: false, userId: currentUserId, updated_at: new Date() }])
+    .from('Category')
+    .insert([{ ...categoryData, isPredefined: false, userId: currentUserId, updatedAt: new Date().toISOString() }])
     .select()
     .single();
   if (error) throw error;
   return data as Category;
 };
 
-export const createSkill = async (skillData: Partial<Skill>, currentUserId: string) => {
+export const createSkill = async (skillData: Pick<Skill, 'name' | 'categoryId'> & Partial<Omit<Skill, 'name' | 'categoryId'>>, currentUserId: string) => {
   const { data, error } = await supabase
-    .from('skills')
-    .insert([{ ...skillData, isPublic: false, creatorId: currentUserId, updated_at: new Date() }])
+    .from('Skill')
+    .insert([{ ...skillData, isPublic: false, creatorId: currentUserId, updatedAt: new Date().toISOString() }])
     .select()
     .single();
   if (error) throw error;
   return data as Skill;
 };
 
-export const createUserSkill = async (userSkillData: Partial<UserSkill>, userId: string) => {
+export const createUserSkill = async (userSkillData: Pick<UserSkill, 'skillId'> & Partial<Omit<UserSkill, 'skillId'>>, userId: string) => {
   const { data, error } = await supabase
-    .from('user_skills')
-    .insert([{ ...userSkillData, userId, updated_at: new Date() }])
+    .from('UserSkill')
+    .insert([{ 
+      ...userSkillData, 
+      source: userSkillData.source as Database["public"]["Enums"]["SkillSource"],
+      userId, 
+      updatedAt: new Date().toISOString() 
+    }])
     .select()
     .single();
   if (error) throw error;
@@ -101,7 +107,7 @@ export const addOrUpdateUserSkill = async ({
   if (!finalCategoryId && categoryName) {
     // Check if a user-defined category with this name already exists for this user
     const { data: existingUserCategories, error: existingCatError } = await supabase
-      .from('categories')
+      .from('Category')
       .select('id')
       .eq('name', categoryName)
       .eq('userId', userId)
@@ -114,7 +120,7 @@ export const addOrUpdateUserSkill = async ({
     } else {
       // Check for predefined category by name (less likely to be an exact match if user is typing, but good for enum selections)
       const { data: predefinedCategories, error: predefinedCatError } = await supabase
-        .from('categories')
+        .from('Category')
         .select('id')
         .eq('name', categoryName)
         .eq('isPredefined', true)
@@ -135,8 +141,8 @@ export const addOrUpdateUserSkill = async ({
   // 2. Find or Create Skill
   // Check if skill already exists (public or user-created for this category)
   const { data: existingSkills, error: existingSkillError } = await supabase
-    .from('skills')
-    .select('id, creatorId, isPublic')
+    .from('Skill')
+    .select('id, name, categoryId, creatorId, isPublic')
     .eq('name', skillName)
     .eq('categoryId', finalCategoryId!)
     // .or(`isPublic.eq.true,creatorId.eq.${userId}`) // More complex query if needed
@@ -178,14 +184,14 @@ export const addOrUpdateUserSkill = async ({
 };
 
 // Create SkillSequence and SequenceDetail entries
-export const createSkillSequences = async (sequences: Partial<SkillSequence>[]) => {
-  const { data, error } = await supabase.from('skill_sequences').insert(sequences).select();
+export const createSkillSequences = async (sequences: Array<Pick<SkillSequence, 'skillId' | 'stepNumber' | 'intention'>>) => {
+  const { data, error } = await supabase.from('SkillSequence').insert(sequences).select();
   if (error) throw error;
   return data as SkillSequence[];
 };
 
-export const createSequenceDetails = async (details: Partial<SequenceDetail>[]) => {
-  const { data, error } = await supabase.from('sequence_details').insert(details).select();
+export const createSequenceDetails = async (details: Array<Pick<SequenceDetail, 'sequenceId' | 'detail'>>) => {
+  const { data, error } = await supabase.from('SequenceDetail').insert(details).select();
   if (error) throw error;
   return data as SequenceDetail[];
 };
@@ -230,23 +236,24 @@ export const addUserSkillWithSequences = async ({
 
   // If sequences are provided, create them
   if (sequenceInputs && sequenceInputs.length > 0) {
-    const skillSequenceEntries: Partial<SkillSequence>[] = sequenceInputs.map((seq, index) => ({
-      userSkillId: userSkill.id, // Link to the created UserSkill
+    const skillSequenceEntries: Array<Pick<SkillSequence, 'skillId' | 'stepNumber' | 'intention'> & Partial<SkillSequence>> = sequenceInputs.map((seq, index) => ({
+      skillId: userSkill.id, // Link to the created UserSkill
       stepNumber: index + 1,
-      intention: seq.intention,
+      intention: seq.intention || '', // Ensure intention is a string
       // 'detail' from original requirement is now in SequenceDetail
     }));
 
-    const createdSequences = await createSkillSequences(skillSequenceEntries);
+    const createdSequences = await createSkillSequences(skillSequenceEntries as Array<Pick<SkillSequence, 'skillId' | 'stepNumber' | 'intention'>>); // Cast to satisfy createSkillSequences, though ideally types align better
 
     // Now create SequenceDetail entries for each SkillSequence
-    let allSequenceDetails: Partial<SequenceDetail>[] = [];
+    const allSequenceDetails: Array<Pick<SequenceDetail, 'sequenceId' | 'detail'>> = [];
     createdSequences.forEach((cs, i) => {
-      const detailsForSequence = sequenceInputs[i].detailsArray.map(d => ({
-        skillSequenceId: cs.id, // Link to the created SkillSequence
-        detail: d.detail,
+      const detailsForSequence: Array<Pick<SequenceDetail, 'sequenceId' | 'detail'>> = 
+        sequenceInputs[i].detailsArray.map(d => ({
+          sequenceId: cs.id, 
+          detail: d.detail, // Assuming d.detail is always a string from sequenceInputs type
       }));
-      allSequenceDetails = allSequenceDetails.concat(detailsForSequence);
+      allSequenceDetails.push(...detailsForSequence); // Use push with spread operator
     });
 
     if (allSequenceDetails.length > 0) {
@@ -260,17 +267,17 @@ export const addUserSkillWithSequences = async ({
 // Delete UserSkill and related sequences/details (DB should handle cascade, but explicit calls can be added if not)
 export const deleteUserSkill = async (userSkillId: string) => {
   // 1. Delete SequenceDetails (if DB doesn't cascade)
-  // const { data: sequences } = await supabase.from('skill_sequences').select('id').eq('userSkillId', userSkillId);
+  // const { data: sequences } = await supabase.from('SkillSequence').select('id').eq('userSkillId', userSkillId);
   // if (sequences) {
   //   for (const seq of sequences) {
-  //     await supabase.from('sequence_details').delete().eq('skillSequenceId', seq.id);
+  //     await supabase.from('SequenceDetail').delete().eq('skillSequenceId', seq.id);
   //   }
   // }
   // 2. Delete SkillSequences (if DB doesn't cascade)
-  // await supabase.from('skill_sequences').delete().eq('userSkillId', userSkillId);
+  // await supabase.from('SkillSequence').delete().eq('userSkillId', userSkillId);
   
   // 3. Delete UserSkill
-  const { error } = await supabase.from('user_skills').delete().eq('id', userSkillId);
+  const { error } = await supabase.from('UserSkill').delete().eq('id', userSkillId);
   if (error) throw error;
   return true;
 };

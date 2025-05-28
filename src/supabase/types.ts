@@ -573,6 +573,7 @@ export type Database = {
           competitionId: string | null
           createdAt: string
           id: string
+          matchId: string | null
           note: string | null
           quantity: number
           skillId: string
@@ -585,6 +586,7 @@ export type Database = {
           competitionId?: string | null
           createdAt?: string
           id?: string
+          matchId?: string | null
           note?: string | null
           quantity?: number
           skillId: string
@@ -597,6 +599,7 @@ export type Database = {
           competitionId?: string | null
           createdAt?: string
           id?: string
+          matchId?: string | null
           note?: string | null
           quantity?: number
           skillId?: string
@@ -611,6 +614,13 @@ export type Database = {
             columns: ["competitionId"]
             isOneToOne: false
             referencedRelation: "Competition"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "UserSkillUsage_matchId_fkey"
+            columns: ["matchId"]
+            isOneToOne: false
+            referencedRelation: "Match"
             referencedColumns: ["id"]
           },
           {
@@ -638,11 +648,11 @@ export type Database = {
     }
     Enums: {
       Belts:
-        | "White"
-        | "Blue"
-        | "Purple"
-        | "Brown"
-        | "Black"
+        | "WHITE"
+        | "BLUE"
+        | "PURPLE"
+        | "BROWN"
+        | "BLACK"
         | "GRAY"
         | "YELLOW"
         | "ORANGE"
@@ -779,11 +789,11 @@ export const Constants = {
   public: {
     Enums: {
       Belts: [
-        "White",
-        "Blue",
-        "Purple",
-        "Brown",
-        "Black",
+        "WHITE",
+        "BLUE",
+        "PURPLE",
+        "BROWN",
+        "BLACK",
         "GRAY",
         "YELLOW",
         "ORANGE",

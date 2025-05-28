@@ -6,6 +6,16 @@
 const tintColorLight = '#0a7ea4';
 const tintColorDark = '#fff';
 
+export const themeColors = {
+  // Main theme colors
+    black: '#030712',      // black
+    white: '#F9FAFB',     // white
+    blue: '#2563EB',     // blue
+    red: '#B91C1C',    // red
+    lightBlue: '#93C5FD',     // light blue
+    lightRed: '#EF4444',    // light red
+ };
+
 export const Colors = {
   light: {
     text: '#11181C',

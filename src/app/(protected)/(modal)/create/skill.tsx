@@ -1,103 +1,116 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { View, ScrollView, Alert, StyleSheet, Platform, Text, TouchableOpacity } from 'react-native';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AuthContext } from '@/src/context/AuthContext';
-import {
-  fetchCategories,
-  fetchSkills,
-  addUserSkillWithSequences,
-  // We might need an updateUserSkillWithSequences or adapt addUserSkillWithSequences
-} from '@/src/features/skill/services/skillService';
-import { Category, Skill, UserSkillSourceEnum, CategoryEnum, SkillNameEnum, UserSkill } from '@/src/types/skills'; // Added UserSkill
-import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList'; // For edit mode
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
-import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import CategoryPicker from '@/src/features/skill/components/CategoryPicker';
+import SkillSequenceBuilder from '@/src/features/skill/components/sequence/SkillSequenceBuilder';
+import SkillPicker from '@/src/features/skill/components/SkillPicker';
+import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList';
+import {
+  addUserSkillWithSequences,
+  fetchCategories,
+} from '@/src/features/skill/services/skillService';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
+import { useAuthStore } from '@/src/store/authStore';
+import { useSkillDataStore } from '@/src/store/skillDataStore';
+import { getSkillFormDataForSubmission, SequenceStep, useUserSkillFormStore } from '@/src/store/userSkillFormStore';
+import { Category, CategoryEnum, SkillNameEnum, UserSkillSourceEnum } from '@/src/types/skills';
 import { Picker } from '@react-native-picker/picker';
-import { Switch } from 'react-native-paper';
-import { router, useLocalSearchParams } from 'expo-router'; // Added useLocalSearchParams
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useMemo } from 'react';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Switch } from 'react-native';
+import { AutocompleteDropdownContextProvider } from 'react-native-autocomplete-dropdown';
 
 export default function CreateSkillScreen() {
-  const auth = useContext(AuthContext);
+  const { session } = useAuthStore();
   const queryClient = useQueryClient();
-  const params = useLocalSearchParams(); // Get route parameters
+  const params = useLocalSearchParams();
+  const tintColor = useThemeColor({}, 'tint');
 
-  const [editingUserSkill, setEditingUserSkill] = useState<UserSkillWithDetails | null>(null);
+  const {
+    editingUserSkill,
+    selectedCategory,
+    newCategoryName,
+    newSkillName,
+    note,
+    source,
+    isFavorite,
+    videoUrl,
+    sequences,
+    initializeForEdit,
+    resetForm,
+    setSelectedCategoryDirectly,
+    setNewCategoryName,
+    setNote,
+    setSource,
+    setIsFavorite,
+    setVideoUrl,
+    setSequences,
+    handleCategorySelection,
+    handleSkillInput,
+  } = useUserSkillFormStore();
 
-  // Form State
-  const [userSkillId, setUserSkillId] = useState<string | null>(null); // For editing
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
-  const [newSkillName, setNewSkillName] = useState('');
-  const [note, setNote] = useState('');
-  const [source, setSource] = useState<UserSkillSourceEnum | string>(
-    UserSkillSourceEnum.CLASS
-  );
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [videoUrl, setVideoUrl] = useState('');
-  const [sequences, setSequences] = useState<Array<{ intention: string; detailsArray: Array<{ detail: string }> }>>([]);
+  const { allSkills, isLoadingAllSkills, errorAllSkills, fetchAllSkills } = useSkillDataStore();
 
-  const userId = auth?.session?.user?.id;
+  const userId = session?.user?.id;
+
+  useEffect(() => {
+    if (userId && allSkills.length === 0 && !isLoadingAllSkills && !errorAllSkills) {
+      fetchAllSkills(userId);
+    }
+  }, [userId, allSkills.length, isLoadingAllSkills, fetchAllSkills, errorAllSkills]);
 
   useEffect(() => {
     if (params.userSkill) {
       try {
         const skillToEdit = JSON.parse(params.userSkill as string) as UserSkillWithDetails;
-        setEditingUserSkill(skillToEdit);
-        setUserSkillId(skillToEdit.id); // Keep track of the ID for update
-        // Pre-fill form states
-        // Note: For category and skill, we set the ID. The Picker should then select it.
-        // If the skill/category was custom, this setup might need adjustment or rely on names.
-        setSelectedCategoryId(skillToEdit.skill.categoryId);
-        // setSelectedSkillId(skillToEdit.skillId); // This is tricky if the skill was custom and not in the predefined list.
-                                                // For simplicity, we'll rely on skillName and categoryId for addOrUpdateUserSkill to find/create.
-        setNewSkillName(skillToEdit.skill.name); // If it's an existing skill, addOrUpdate should find it by name + category
-        setNote(skillToEdit.note || '');
-        setSource(skillToEdit.source || UserSkillSourceEnum.CLASS);
-        setIsFavorite(skillToEdit.isFavorite || false);
-        setVideoUrl(skillToEdit.videoUrl || '');
-        
-        const loadedSequences = skillToEdit.sequences?.map(seq => ({
-          intention: seq.intention || '',
-          detailsArray: seq.details?.map(d => ({ detail: d.detail })) || [{ detail: '' }]
-        })) || [];
-        setSequences(loadedSequences.length > 0 ? loadedSequences : []);
-
+        initializeForEdit(skillToEdit, categoriesData);
       } catch (e) {
         console.error("Failed to parse userSkill for editing:", e);
         Alert.alert("Error", "Could not load skill data for editing.");
+        resetForm();
       }
+    } else {
+      resetForm();
     }
-  }, [params.userSkill]);
 
-  // Fetching Data with React Query
-  const { data: categories, isLoading: isLoadingCategories } = useQuery<Category[], Error>({
+    return () => {
+      resetForm();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.userSkill, initializeForEdit, resetForm]);
+
+  const { data: categoriesData, isLoading: isLoadingCategories, isSuccess: categoriesLoaded } = useQuery<Category[], Error>({
     queryKey: ['categories'],
-    queryKeyHash: 'categories',
     queryFn: fetchCategories,
   });
 
-  const { data: skills, isLoading: isLoadingSkills } = useQuery<Skill[], Error>({
-    queryKey: ['skills', selectedCategoryId], // Re-fetch if selectedCategoryId changes
-    queryKeyHash: `skills-${selectedCategoryId}`,
-    queryFn: () => fetchSkills(selectedCategoryId || undefined),
-    enabled: !!selectedCategoryId, // Only fetch skills if a category is selected
-  });
+  useEffect(() => {
+    if (editingUserSkill && categoriesLoaded && categoriesData && !selectedCategory) {
+      const categoryToSet = categoriesData.find(c => c.id === editingUserSkill.skill.categoryId);
+      if (categoryToSet) {
+        setSelectedCategoryDirectly(categoryToSet);
+      }
+    }
+  }, [editingUserSkill, categoriesData, categoriesLoaded, selectedCategory, setSelectedCategoryDirectly]);
 
-  // Mutation for adding/updating UserSkill
+  const filteredSkillsForPicker = useMemo(() => {
+    if (!selectedCategory) {
+      return allSkills.map(skill => ({ id: skill.id, title: skill.name }));
+    }
+    return allSkills
+      .filter(skill => skill.categoryId === selectedCategory.id)
+      .map(skill => ({ id: skill.id, title: skill.name }));
+  }, [allSkills, selectedCategory]);
+
   const mutation = useMutation({
-    // TODO: The service function needs to correctly handle updates.
-    // This might involve checking if userSkillId is present and calling a different Supabase function (e.g., upsert or update).
-    // For now, we assume addUserSkillWithSequences can handle this if `userSkillId` is part of the payload,
-    // or a new service function `updateUserSkillWithSequences` is created and used here.
-    mutationFn: (data: Parameters<typeof addUserSkillWithSequences>[0] & { userSkillId?: string | null }) => 
-                  addUserSkillWithSequences(data), // Pass userSkillId if available
+    mutationFn: (data: Parameters<typeof addUserSkillWithSequences>[0] & { userSkillId?: string | null }) =>
+                  addUserSkillWithSequences(data),
     onSuccess: () => {
       Alert.alert('Success', editingUserSkill ? 'Skill updated!' : 'Skill added to your profile!');
-      queryClient.invalidateQueries({ queryKey: ['userSkillsWithDetails', userId] }); // Ensure this key is used in UserSkillList
-      queryClient.invalidateQueries({ queryKey: ['skills'] });
+      queryClient.invalidateQueries({ queryKey: ['userSkillsWithDetails', userId] });
+      if (userId) fetchAllSkills(userId);
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       router.back();
     },
@@ -106,259 +119,140 @@ export default function CreateSkillScreen() {
     },
   });
 
-  // Sequence UI Handlers
-  const handleAddSequenceStep = () => {
-    setSequences([...sequences, { intention: '', detailsArray: [{ detail: '' }] }]);
-  };
-
-  const handleRemoveSequenceStep = (index: number) => {
-    const newSequences = [...sequences];
-    newSequences.splice(index, 1);
-    setSequences(newSequences);
-  };
-
-  const handleSequenceIntentionChange = (text: string, index: number) => {
-    const newSequences = [...sequences];
-    newSequences[index].intention = text;
-    setSequences(newSequences);
-  };
-
-  const handleAddDetailToStep = (seqIndex: number) => {
-    const newSequences = [...sequences];
-    newSequences[seqIndex].detailsArray.push({ detail: '' });
-    setSequences(newSequences);
-  };
-
-  const handleRemoveDetailFromStep = (seqIndex: number, detailIndex: number) => {
-    const newSequences = [...sequences];
-    newSequences[seqIndex].detailsArray.splice(detailIndex, 1);
-    setSequences(newSequences);
-  };
-
-  const handleSequenceDetailChange = (text: string, seqIndex: number, detailIndex: number) => {
-    const newSequences = [...sequences];
-    newSequences[seqIndex].detailsArray[detailIndex].detail = text;
-    setSequences(newSequences);
-  };
-
-
   const handleSubmit = () => {
     if (!userId) {
       Alert.alert('Error', 'You must be logged in.');
       return;
     }
 
-    let skillNameToSubmit = newSkillName; // Default to newSkillName
-    // If an existing skill was selected from picker, its name should be used.
-    // This logic might need refinement if editingUserSkill.skill.name is from a predefined list and selectedSkillId is used.
-    if (selectedSkillId && !newSkillName) { // If existing skill selected and newSkillName is not manually overridden
-        const existingSkill = skills?.find(s => s.id === selectedSkillId);
-        if (existingSkill) skillNameToSubmit = existingSkill.name;
-    } else if (editingUserSkill && !newSkillName && !selectedSkillId) { // If editing and no changes to skill name/selection
-        skillNameToSubmit = editingUserSkill.skill.name;
+    const currentSkillFormState = useUserSkillFormStore.getState();
+    const formData = getSkillFormDataForSubmission(currentSkillFormState);
+
+    if (!formData.skillName) {
+        Alert.alert('Validation Error', 'Please select or enter a skill name.');
+        return;
     }
-
-
-    let categoryIdToSubmit = selectedCategoryId;
-    let categoryNameToSubmit = newCategoryName; // Default to newCategoryName
-    // Similar logic for category
-    if (editingUserSkill && !newCategoryName && !selectedCategoryId) {
-        categoryIdToSubmit = editingUserSkill.skill.categoryId;
-    }
-
-
-    if (!categoryIdToSubmit && !categoryNameToSubmit) {
+    if (!formData.categoryId && !formData.categoryName) {
         Alert.alert('Validation Error', 'Please select or create a category.');
         return;
     }
-    if (!skillNameToSubmit) { // Check if skillNameToSubmit ended up empty
-        Alert.alert('Validation Error', 'Please select or create a skill name.');
+     if (formData.categoryId === null && !formData.categoryName) {
+        Alert.alert('Validation Error', 'Please enter a name for the new category.');
         return;
     }
-    
+
     const payload = {
       userId,
-      userSkillId: userSkillId, // Pass this for updates
-      skillName: skillNameToSubmit as SkillNameEnum | string,
-      categoryId: categoryIdToSubmit, 
-      categoryName: categoryNameToSubmit as CategoryEnum | string, // Pass this if selectedCategoryId is 'new_category'
-      note,
-      source,
-      isFavorite,
-      videoUrl,
-      sequences: sequences.filter(s => s.intention?.trim() || s.detailsArray.some(d => d.detail.trim())),
+      userSkillId: formData.userSkillId,
+      skillName: formData.skillName as SkillNameEnum | string,
+      categoryId: formData.categoryId,
+      categoryName: formData.categoryName as CategoryEnum | string,
+      note: formData.note,
+      source: formData.source,
+      isFavorite: formData.isFavorite,
+      videoUrl: formData.videoUrl,
+      sequences: formData.sequences,
     };
-    
+
     mutation.mutate(payload);
   };
 
-  // Predefined sources for Picker
   const sourceOptions = Object.values(UserSkillSourceEnum).map((s) => ({ label: s, value: s }));
-  const categoryOptions = Object.values(CategoryEnum).map(c => ({ label: c, value: c }));
-  const skillNameOptions = Object.values(SkillNameEnum).map(s => ({ label: s, value: s }));
-
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <ThemedView style={styles.innerContainer}>
-        <ThemedText style={styles.title}>{editingUserSkill ? 'Edit Skill' : 'Add New Skill'}</ThemedText>
+    <AutocompleteDropdownContextProvider>
+      <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+        <ThemedView style={styles.innerContainer}>
+          <ThemedText style={styles.title}>{editingUserSkill ? 'Edit Skill' : 'Add New Skill'}</ThemedText>
 
-        {/* Category Selection */}
-        <ThemedText style={styles.label}>Category:</ThemedText>
-        {isLoadingCategories ? (
-          <ActivityIndicator />
-        ) : (
+          <ThemedText style={styles.label}>Category:</ThemedText>
+          {isLoadingCategories ? (
+            <ActivityIndicator />
+          ) : (
+            <CategoryPicker
+              onSelectCategory={handleCategorySelection}
+              selectedCategory={selectedCategory}
+              categories={categoriesData ? categoriesData.map(c => ({id: c.id, name: c.name})) : []}
+            />
+          )}
+
+          <ThemedText style={styles.label}>Skill:</ThemedText>
+          {(isLoadingAllSkills && allSkills.length === 0) ? (
+            <ActivityIndicator />
+          ) : errorAllSkills ? (
+            <ThemedText style={{color: 'red'}}>Error loading skills.</ThemedText>
+          ) : (
+            <SkillPicker
+              selectedCategory={selectedCategory}
+              onSelectSkill={handleSkillInput}
+              initialValue={newSkillName}
+              categorySpecificSkills={filteredSkillsForPicker}
+              disabled={isLoadingAllSkills}
+            />
+          )}
+
+          <ThemedInput
+            label="Notes:"
+            value={note}
+            onChangeText={setNote}
+            multiline
+            numberOfLines={4}
+            placeholder="Enter details, setups, variations..."
+            style={[styles.input, styles.textArea]}
+          />
+
+          <ThemedText style={styles.label}>Source:</ThemedText>
           <Picker
-            selectedValue={selectedCategoryId}
-            onValueChange={(itemValue) => {
-                setSelectedCategoryId(itemValue);
-                setNewCategoryName(''); // Clear new category if selecting existing
-                setSelectedSkillId(null); // Reset skill selection
-                setNewSkillName('');
-            }}
+            selectedValue={source}
+            onValueChange={(itemValue) => setSource(itemValue)}
             style={styles.picker}
           >
-            <Picker.Item label="-- Select Existing Category --" value={null} />
-            {(categories || []).map((cat) => (
-              <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
+            {sourceOptions.map((opt) => (
+              <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
             ))}
-            <Picker.Item label="-- Create New Category --" value="new_category" />
           </Picker>
-        )}
-        {selectedCategoryId === 'new_category' && (
+
+          <ThemedView style={styles.switchContainer}>
+            <ThemedText style={styles.label}>Favorite:</ThemedText>
+            <Switch value={isFavorite} onValueChange={setIsFavorite} trackColor={{ false: "#767577", true: tintColor }} thumbColor={isFavorite ? tintColor : "#f4f3f4"} />
+          </ThemedView>
+
           <ThemedInput
-            label="New Category Name:"
-            value={newCategoryName}
-            onChangeText={setNewCategoryName}
-            placeholder="e.g., Leg Locks"
+            label="Video URL (optional):"
+            value={videoUrl}
+            onChangeText={setVideoUrl}
+            placeholder="https://youtube.com/example_video"
+            keyboardType="url"
+            autoCapitalize="none"
             style={styles.input}
           />
-        )}
 
-        {/* Skill Selection (based on category) or Creation */}
-        {(selectedCategoryId && selectedCategoryId !== 'new_category') && (
-          <>
-            <ThemedText style={styles.label}>Skill:</ThemedText>
-            {isLoadingSkills ? (
-              <ActivityIndicator />
-            ) : (
-              <Picker
-                selectedValue={selectedSkillId}
-                onValueChange={(itemValue) => {
-                    setSelectedSkillId(itemValue);
-                    setNewSkillName(''); // Clear new skill if selecting existing
-                }}
-                style={styles.picker}
-                enabled={!!selectedCategoryId && selectedCategoryId !== 'new_category'}
-              >
-                <Picker.Item label="-- Select Existing Skill --" value={null} />
-                {(skills || []).map((skill) => (
-                  <Picker.Item key={skill.id} label={skill.name} value={skill.id} />
-                ))}
-                <Picker.Item label="-- Create New Skill --" value="new_skill" />
-              </Picker>
-            )}
-          </>
-        )}
-        {(selectedCategoryId === 'new_category' || selectedSkillId === 'new_skill') && (
-            <ThemedInput
-                label={selectedSkillId === 'new_skill' ? "New Skill Name:" : "Skill Name for New Category:"}
-                value={newSkillName}
-                onChangeText={setNewSkillName}
-                placeholder="e.g., Heel Hook"
-                style={styles.input}
-            />
-        )}
+          <ThemedText style={styles.sectionTitle}>Skill Sequences/Steps (Optional)</ThemedText>
+          <SkillSequenceBuilder
+              sequences={sequences}
+              setSequences={(valueOrUpdater) => {
+                if (typeof valueOrUpdater === 'function') {
+                  const updater = valueOrUpdater as (prevState: SequenceStep[]) => SequenceStep[];
+                  const currentState = useUserSkillFormStore.getState().sequences;
+                  setSequences(updater(currentState));
+                } else {
+                  setSequences(valueOrUpdater);
+                }
+              }}
+          />
 
-
-        <ThemedInput
-          label="Notes:"
-          value={note}
-          onChangeText={setNote}
-          multiline
-          numberOfLines={4}
-          placeholder="Enter details, setups, variations..."
-          style={[styles.input, styles.textArea]}
-        />
-
-        <ThemedText style={styles.label}>Source:</ThemedText>
-        <Picker
-          selectedValue={source}
-          onValueChange={(itemValue) => setSource(itemValue)}
-          style={styles.picker}
-        >
-          {sourceOptions.map((opt) => (
-            <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
-          ))}
-        </Picker>
-
-        <View style={styles.switchContainer}>
-          <ThemedText style={styles.label}>Favorite:</ThemedText>
-          <Switch value={isFavorite} onValueChange={setIsFavorite} />
-        </View>
-
-        <ThemedInput
-          label="Video URL (optional):"
-          value={videoUrl}
-          onChangeText={setVideoUrl}
-          placeholder="https://youtube.com/example_video"
-          keyboardType="url"
-          autoCapitalize="none"
-          style={styles.input}
-        />
-
-        {/* Skill Sequences */}
-        <ThemedText style={styles.sectionTitle}>Skill Sequences/Steps (Optional)</ThemedText>
-        {sequences.map((sequence, seqIndex) => (
-          <View key={seqIndex} style={styles.sequenceStepContainer}>
-            <ThemedText style={styles.label}>Step {seqIndex + 1}</ThemedText>
-            <ThemedInput
-              label="Intention/Goal for this step:"
-              value={sequence.intention}
-              onChangeText={(text) => handleSequenceIntentionChange(text, seqIndex)}
-              placeholder="e.g., Create distance, Secure grip"
-              style={styles.input}
-            />
-            {sequence.detailsArray.map((detailItem, detailIndex) => (
-              <View key={detailIndex} style={styles.detailContainer}>
-                <ThemedInput
-                  label={`Detail ${detailIndex + 1}:`}
-                  value={detailItem.detail}
-                  onChangeText={(text) => handleSequenceDetailChange(text, seqIndex, detailIndex)}
-                  placeholder="e.g., Pummel for underhook"
-                  multiline
-                  style={styles.input}
-                />
-                {sequence.detailsArray.length > 1 && (
-                   <TouchableOpacity onPress={() => handleRemoveDetailFromStep(seqIndex, detailIndex)} style={styles.removeButtonSmall}>
-                    <Text style={styles.removeButtonTextSmall}>Remove Detail</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))}
-            <ThemedButton title="Add Detail to Step" onPress={() => handleAddDetailToStep(seqIndex)} style={styles.addButtonSmall} />
-             <TouchableOpacity onPress={() => handleRemoveSequenceStep(seqIndex)} style={styles.removeButton}>
-              <Text style={styles.removeButtonText}>Remove Step {seqIndex + 1}</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-        <ThemedButton title="Add Sequence Step" onPress={handleAddSequenceStep} style={styles.button} />
-
-
-        <ThemedButton
-          title={mutation.isPending ? (editingUserSkill ? 'Updating Skill...' : 'Adding Skill...') : (editingUserSkill ? 'Update Skill' : 'Add Skill')}
-          onPress={handleSubmit}
-          disabled={mutation.isPending || isLoadingCategories || isLoadingSkills}
-          style={styles.button}
-        />
-        {Platform.OS === 'ios' && <ThemedButton title="Close Modal" onPress={() => router.back()} style={styles.button} />}
-      </ThemedView>
-    </ScrollView>
+          <ThemedButton
+            title={mutation.isPending ? (editingUserSkill ? 'Updating Skill...' : 'Adding Skill...') : (editingUserSkill ? 'Update Skill' : 'Add Skill')}
+            onPress={handleSubmit}
+            disabled={mutation.isPending || isLoadingCategories || isLoadingAllSkills}
+            style={styles.button}
+          />
+          {Platform.OS === 'ios' && <ThemedButton title="Close Modal" onPress={() => router.back()} style={styles.button} />}
+        </ThemedView>
+      </ScrollView>
+    </AutocompleteDropdownContextProvider>
   );
 }
-
-// Using react-native ActivityIndicator now
-import { ActivityIndicator } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
@@ -406,42 +300,4 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 20,
   },
-  sequenceStepContainer: {
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    marginBottom: 15,
-  },
-  detailContainer: {
-    paddingLeft: 10,
-    marginTop: 5,
-  },
-  removeButton: {
-    marginTop: 10,
-    backgroundColor: '#ff6b6b',
-    padding: 8,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  removeButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  addButtonSmall: {
-    marginTop: 5,
-    // Use default ThemedButton styling or add specific small button styles
-  },
-   removeButtonSmall: {
-    marginTop: 5,
-    backgroundColor: '#ffaaaa', // Lighter red for smaller remove button
-    padding: 5,
-    borderRadius: 3,
-    alignItems: 'center',
-    alignSelf: 'flex-start', // Align to left
-  },
-  removeButtonTextSmall: {
-    color: '#555',
-    fontSize: 12,
-  }
 });

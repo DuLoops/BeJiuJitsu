@@ -1,6 +1,10 @@
+import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 
 interface GoalsItem {
   id: string;
@@ -19,6 +23,9 @@ export const GoalsList: React.FC<GoalsListProps> = ({
   title = "Goals"
 }) => {
   const [newItem, setNewItem] = useState('');
+  const iconColor = useThemeColor({}, 'icon');
+  const primaryBtnBg = useThemeColor({}, 'tint');
+  const textOnPrimary = useThemeColor({}, 'background');
 
   const addItem = () => {
     if (newItem.trim()) {
@@ -32,32 +39,31 @@ export const GoalsList: React.FC<GoalsListProps> = ({
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
+    <ThemedView style={styles.container}>
+      <ThemedText type="subtitle" style={styles.title}>{title}</ThemedText>
+      <ThemedView style={styles.inputContainer}>
+        <ThemedInput
           style={styles.input}
           value={newItem}
           onChangeText={setNewItem}
           placeholder="Add a new goal..."
           onSubmitEditing={addItem}
-          onBlur={addItem}
         />
-        <TouchableOpacity style={styles.addButton} onPress={addItem}>
-          <AntDesign name="plus" size={24} color="white" />
+        <TouchableOpacity style={[styles.addButton, { backgroundColor: primaryBtnBg }]} onPress={addItem}>
+          <AntDesign name="plus" size={24} color={textOnPrimary} />
         </TouchableOpacity>
-      </View>
-      <View style={styles.list}>
+      </ThemedView>
+      <ThemedView style={styles.list}>
         {items.map(item => (
-          <View key={item.id} style={styles.itemContainer}>
-            <Text style={styles.itemText}>{item.text}</Text>
-            <TouchableOpacity onPress={() => removeItem(item.id)}>
-              <AntDesign name="close" size={20} color="#666" />
+          <ThemedView key={item.id} style={styles.itemContainer}>
+            <ThemedText style={styles.itemText}>{item.text}</ThemedText>
+            <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.removeButton}>
+              <AntDesign name="close" size={20} color={iconColor} />
             </TouchableOpacity>
-          </View>
+          </ThemedView>
         ))}
-      </View>
-    </View>
+      </ThemedView>
+    </ThemedView>
   );
 };
 
@@ -66,25 +72,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#374151',
   },
   inputContainer: {
     flexDirection: 'row',
     gap: 8,
+    alignItems: 'center',
   },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
   },
   addButton: {
-    backgroundColor: '#000',
     width: 48,
+    height: 48,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -96,12 +95,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
     padding: 12,
     borderRadius: 8,
   },
   itemText: {
-    fontSize: 16,
-    color: '#374151',
+    flexShrink: 1,
+    marginRight: 8,
   },
+  removeButton: {
+    padding: 4,
+  }
 });

@@ -1,7 +1,7 @@
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
 
 export default function HomeScreenPlaceholder() {
   return (

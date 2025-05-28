@@ -1,14 +1,14 @@
+import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList'; // For fetching user skills
 import { supabase } from '@/src/lib/supabase';
 import {
-  TournamentBrand,
   Competition,
   CompetitionDivision,
-  Match,
   CompetitionFormData,
-  CompetitionWithDetails, // Using the new detailed type
+  CompetitionWithDetails,
+  Match,
+  TournamentBrand,
 } from '@/src/types/competition';
 import { UserSkillUsage } from '@/src/types/training';
-import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList'; // For fetching user skills
 
 // Fetch Tournament Brands
 export const fetchTournamentBrands = async (): Promise<TournamentBrand[]> => {
@@ -158,11 +158,11 @@ export const createFullCompetitionEntry = async (
 // Fetch Competitions for a user with all related details
 export const fetchCompetitionsForUser = async (userId: string) => {
   const { data, error } = await supabase
-    .from('Competition') // Ensure table name matches Supabase
+    .from('Competition') 
     .select(`
       *,
       tournament_brand:TournamentBrand(*),
-      divisions:CompetitionDivision(*, matches:Match(*, skill_usages:UserSkillUsage(*, user_skill:UserSkill!inner(skill:skills!inner(name)))))
+      divisions:CompetitionDivision(*, matches:Match(*, UserSkillUsage(*, user_skill:UserSkill!inner(skill:skills!inner(name)))))
     `)
     .eq('userId', userId)
     .order('date', { ascending: false });

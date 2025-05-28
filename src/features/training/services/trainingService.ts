@@ -1,6 +1,6 @@
-import { supabase } from '@/src/lib/supabase';
-import { Training, UserSkillUsage, TrainingWithDetails } from '@/src/types/training';
 import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList'; // For fetching user skills
+import { supabase } from '@/src/lib/supabase';
+import { Training, TrainingWithDetails, UserSkillUsage } from '@/src/types/training';
 
 // Fetch User Skills (adapted from skillService or assuming a similar function exists)
 // This is primarily for the UI to list skills that can be linked to a training session.
@@ -8,15 +8,17 @@ export const fetchUserSkillsForSelection = async (userId: string): Promise<UserS
   // This query should be similar to fetchUserSkillsWithDetails but might not need ALL details
   // if only name and id are needed for selection. For now, reusing the detailed one.
   const { data, error } = await supabase
-    .from('user_skills') // Make sure this is the correct table name for UserSkill entries
+    .from('UserSkill') // Make sure this is the correct table name for UserSkill entries
     .select(`
       id,
+      userId,
+      skillId,
       note,
       source,
       isFavorite,
       videoUrl,
-      skill:skills!inner(id, name, category:categories!inner(id, name)),
-      sequences:skill_sequences!left(id, stepNumber, intention, details:sequence_details!left(id, detail))
+      skill:Skill!inner(*, category:Category!inner(*)),
+      sequences:SkillSequence!left(*, details:SequenceDetail!left(*))
     `)
     .eq('userId', userId);
 
@@ -87,10 +89,10 @@ export const createTrainingSessionWithSkillUsages = async ({
 // Fetch Training sessions for a user, optionally with linked UserSkillUsages
 export const fetchTrainingsForUser = async (userId: string, includeSkillUsages: boolean = false) => {
   let query = supabase
-    .from('Training') // Ensure this matches your Supabase table name
-    .select(includeSkillUsages ? '*, user_skill_usages:UserSkillUsage(*, user_skill:UserSkill!inner(skill:skills!inner(name, category:categories!inner(name))))' : '*')
+    .from('Training')
+    .select(includeSkillUsages ? 'UserSkillUsage(*, user_skill:UserSkill!inner(*))' : '*')
     .eq('userId', userId)
-    .order('date', { ascending: false }); // Example: order by date
+    .order('date', { ascending: false });
 
   const { data, error } = await query;
 

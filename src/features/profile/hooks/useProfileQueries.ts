@@ -2,12 +2,12 @@ import { supabase } from '@/src/lib/supabase'; // For getting current user ID
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 import {
-    checkSupabaseUsername,
-    fetchProfileByUserId,
-    Profile,
-    UpsertProfileParams,
-    upsertSupabaseProfile,
-} from '../services/profileService';
+  checkSupabaseUsername,
+  fetchProfileByUserId,
+  Profile,
+  UpsertProfileParams,
+  upsertSupabaseProfile,
+} from '../../auth/services/profileService';
 
 export const PROFILE_QUERY_KEY_PREFIX = 'profile';
 
