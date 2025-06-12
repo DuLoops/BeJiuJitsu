@@ -1,3 +1,4 @@
+
 import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList';
 import { useAuthStore } from '@/src/store/authStore';
 import { Tables } from '@/src/supabase/types';
@@ -348,3 +349,4 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   }
 });
+

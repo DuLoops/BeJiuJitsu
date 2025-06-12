@@ -36,7 +36,6 @@ export default function ProtectedLayout() {
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(modal)" options={{ presentation: 'modal', headerShown: false }} />
-      <Stack.Screen name="profile/index" options={{ title: 'User Profile'}} />
       <Stack.Screen name="create-profile" options={{ title: 'Create Profile' }} />
     </Stack>
   );

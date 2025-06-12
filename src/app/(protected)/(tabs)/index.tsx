@@ -3,7 +3,7 @@ import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 
-export default function HomeScreenPlaceholder() {
+export default function HomeDashboard() {
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Welcome to BeJiuJitsu!</ThemedText>

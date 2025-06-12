@@ -1,76 +1,46 @@
-import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import Octicons from '@expo/vector-icons/Octicons';
 import { Tabs, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Modal, Pressable, TouchableOpacity, View } from 'react-native';
-
-
-
-
+import React from 'react';
+import { StyleSheet } from 'react-native';
 
 export default function ProtectedTabsLayout() {
-  const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
-
+  
   return (
-    <>
-
       <Tabs screenOptions={{ headerShown: false, tabBarShowLabel: false, tabBarStyle: { display: 'flex', flexDirection: 'row', alignItems: 'center' } }} initialRouteName='index'>
         <Tabs.Screen name="index" options={{
-          title: 'Home',
+          title: 'Dashboard',
           tabBarIcon: ({ focused }) =>
-            <Ionicons name={focused && !modalVisible ? 'home-sharp' : 'home-outline'} size={24} color={focused && !modalVisible ? '#000' : '#666'} />
+            <FontAwesome5 name={'scroll'} size={24} color={focused ? '#000' : '#666'} />
 
         }} />
         <Tabs.Screen
-          name='createModal'
+          name='createDashboard'
           options={{
             title: 'Create',
-            tabBarButton: () => (
-              <Pressable style={{ alignItems: 'center', margin: 'auto' }} onPress={() => setModalVisible(true)}>
-                <Ionicons name={modalVisible ? 'add-circle' : 'add-circle-outline'} size={modalVisible ? 30 : 30} color={modalVisible ? '#000' : '#666'} />
-              </Pressable>
+            tabBarIcon: ({ focused }) => (
+              <Octicons name={'diff-added'} size={26} color={focused ? '#000' : '#666'}  />
             ),
           }} />
-        <Tabs.Screen name="profile/index" options={{
-          title: 'Profile',
+        <Tabs.Screen name="community" options={{
+          title: 'Community',
           tabBarIcon: ({ focused }) => (
-            <FontAwesome name={focused && !modalVisible ? 'user' : 'user-o'} size={focused ? 26 : 24} color={focused && !modalVisible ? '#000' : '#666'} />
+            <FontAwesome5 name={'compass'} size={26} color={focused ? '#000' : '#666'} />
           )
         }} />
       </Tabs>
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <TouchableOpacity style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }} activeOpacity={1} onPressOut={() => setModalVisible(false)}>
-          <View style={{ width: 200, padding: 20, backgroundColor: 'white', borderRadius: 10, marginBottom: 80, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <TouchableOpacity
-              style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
-              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/training'); }}
-            >
-              <ThemedText>Training</ThemedText>
-            </TouchableOpacity>
-            <View style={{ height: 1, backgroundColor: '#ccc', width: '100%', marginVertical: 10 }} />
-            <TouchableOpacity
-              style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
-              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/competition'); }}
-            >
-              <ThemedText>Competition</ThemedText>
-            </TouchableOpacity>
-            <View style={{ height: 1, backgroundColor: '#ccc', width: '100%', marginVertical: 10 }} />
-            <TouchableOpacity
-              style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
-              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/skill'); }}
-            >
-              <ThemedText>Skill</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-    </>
+    
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  icon: {
+    
+  }
+});
