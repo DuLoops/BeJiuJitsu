@@ -66,6 +66,7 @@ export const createSkill = async (skillData: Pick<Skill, 'name' | 'categoryId'> 
 };
 
 export const createUserSkill = async (userSkillData: Pick<UserSkill, 'skillId'> & Partial<Omit<UserSkill, 'skillId'>>, userId: string) => {
+  console.log('userSkillData', userSkillData);
   const { data, error } = await supabase
     .from('UserSkill')
     .insert([{ 
