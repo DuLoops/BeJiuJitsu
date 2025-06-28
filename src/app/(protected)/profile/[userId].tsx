@@ -1,9 +1,9 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText'; // Corrected import path
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import PublicProfileScreen from '@/src/features/profile/screens/PublicProfileScreen';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { StyleSheet } from 'react-native';
+import PublicProfileScreen from '../../../_features/profile/screens/PublicProfileScreen';
 
 export default function UserProfilePage() {
   const { userId } = useLocalSearchParams<{ userId: string }>();

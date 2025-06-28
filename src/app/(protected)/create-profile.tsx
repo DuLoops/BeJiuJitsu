@@ -1,8 +1,8 @@
+import { createProfile } from '@/src/_features/profile/services/profileService';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { createProfile } from '@/src/features/profile/services/profileService';
 import { useAuthStore } from '@/src/store/authStore';
 import { Tables, TablesInsert } from '@/src/supabase/types';
 import { router } from 'expo-router';

@@ -1,25 +1,30 @@
-import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList';
+import { fetchCompetitionsForUser } from '@/src/_features/competition/services/competitionService';
+import { getProfile } from '@/src/_features/profile/services/profileService';
+import { FollowCounts, getFollowCounts } from '@/src/_features/profile/services/socialService';
+import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList';
+import { fetchUserSkillsWithDetails } from '@/src/_features/skill/services/skillService';
+import { fetchTrainingsForUser } from '@/src/_features/training/services/trainingService';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { useAuthStore } from '@/src/store/authStore';
 import { Tables } from '@/src/supabase/types';
 import { CompetitionWithDetails } from '@/src/types/competition';
 import { TrainingWithDetails } from '@/src/types/training';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, FlatList, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-
-import { fetchCompetitionsForUser } from '@/src/features/competition/services/competitionService';
-import { getProfile } from '@/src/features/profile/services/profileService';
-import { fetchUserSkillsWithDetails } from '@/src/features/skill/services/skillService';
-import { FollowCounts, getFollowCounts } from '@/src/features/social/services/socialService';
-import { fetchTrainingsForUser } from '@/src/features/training/services/trainingService';
+import {
+  ActivityIndicator,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { useThemeColor } from '@/src/hooks/useThemeColor';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { View } from 'react-native';
 
 export default function ProfileTabScreen() {
   const { session } = useAuthStore();
@@ -48,7 +53,6 @@ export default function ProfileTabScreen() {
 
   const { data: trainings, isLoading: isLoadingTrainings, error: errorTrainings } = useQuery<TrainingWithDetails[], Error>({
     queryKey: ['trainingsForUser', userId],
-    queryKeyHashFn: () => `trainingsForUser-${userId}`,
     queryFn: () => fetchTrainingsForUser(userId!, true),
     enabled: !!userId,
   });
@@ -94,6 +98,24 @@ export default function ProfileTabScreen() {
   // Handle follow counts error separately if needed, or group with general errors
   if (errorFollowCounts) console.error("Error fetching follow counts:", errorFollowCounts);
 
+  const renderCompetitionItem = ({ item }: { item: CompetitionWithDetails }) => (
+    <View style={styles.listItem}>
+      <ThemedText>{item.name}</ThemedText>
+      <ThemedText>
+        {item.date ? new Date(item.date).toLocaleDateString() : 'No date'}
+      </ThemedText>
+    </View>
+  );
+
+  const renderTrainingItem = ({ item }: { item: TrainingWithDetails }) => (
+    <View style={styles.listItem}>
+      <ThemedText>
+        {item.bjjType} ({item.intensity}) session on{' '}
+        {item.date ? new Date(item.date).toLocaleDateString() : 'No date'}
+      </ThemedText>
+      <ThemedText>Duration: {item.duration} minutes</ThemedText>
+    </View>
+  );
 
   return (
     <ScrollView style={styles.container}>
@@ -173,18 +195,7 @@ export default function ProfileTabScreen() {
             <FlatList
               data={trainings.slice(0, 3)} // Summary of recent 3
               keyExtractor={item => item.id}
-              renderItem={({ item }) => (
-                <ThemedView style={styles.listItem}>
-                  <ThemedText style={styles.listItemTitle}>Date: {new Date(item.date).toLocaleDateString()}</ThemedText>
-                  <ThemedText>Duration: {item.duration} mins</ThemedText>
-                  <ThemedText>Type: {item.bjjType}, Intensity: {item.intensity}</ThemedText>
-                  {item.user_skill_usages && item.user_skill_usages.length > 0 && (
-                    <ThemedText style={styles.listItemSubtitle}>
-                      Skills used: {item.user_skill_usages.map(usu => usu.user_skill?.skill.name).join(', ')}
-                    </ThemedText>
-                  )}
-                </ThemedView>
-              )}
+              renderItem={renderTrainingItem}
               ListEmptyComponent={<ThemedText>No training sessions logged yet.</ThemedText>}
             />
           ) : (
@@ -206,24 +217,7 @@ export default function ProfileTabScreen() {
             <FlatList
               data={competitions.slice(0, 3)} // Summary of recent 3
               keyExtractor={item => item.id}
-              renderItem={({ item }) => (
-                <ThemedView style={styles.listItem}>
-                  <ThemedText style={styles.listItemTitle}>{item.name} - {item.date ? new Date(item.date).toLocaleDateString() : 'Date N/A'}</ThemedText>
-                  <ThemedText>Brand: {item.tournament_brand?.name || 'N/A'}</ThemedText>
-                  {item.divisions?.map(div => (
-                    <View key={div.id} style={styles.divisionSummary}>
-                      <ThemedText style={styles.listItemSubtitle}>
-                        {div.beltRank} {div.weightClass || ''} ({div.bjjType}): {div.overallResultInDivision || 'N/A'}
-                      </ThemedText>
-                      {div.matches?.slice(0,1).map(match => ( // Show first match as example
-                         <ThemedText key={match.id} style={styles.matchSummaryText}>
-                           Match 1: {match.result} vs {match.opponentName || 'Unknown'} by {match.endingMethodDetail || match.endingMethod}
-                         </ThemedText>
-                      ))}
-                    </View>
-                  ))}
-                </ThemedView>
-              )}
+              renderItem={renderCompetitionItem}
               ListEmptyComponent={<ThemedText>No competitions logged yet.</ThemedText>}
             />
           ) : (

@@ -1,4 +1,4 @@
-import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList';
+import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList';
 import { Category, CategoryEnum, SkillNameEnum, UserSkillSourceEnum } from '@/src/types/skills';
 import { create } from 'zustand';
 

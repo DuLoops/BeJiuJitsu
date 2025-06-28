@@ -1,19 +1,14 @@
-import FollowingListScreen from '@/src/features/social/screens/FollowingListScreen';
+import { Stack } from 'expo-router';
 import React from 'react';
-import { Stack, useLocalSearchParams } from 'expo-router';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { ThemedText } from '@/src/components/ui/atoms/ThemedText';
+import FollowingListScreen from '../../../_features/profile/screens/FollowingListScreen';
 
 // This page can be used to display the "following" list for any user, by passing a userId param.
 // If no userId param is passed, FollowingListScreen will default to the current authenticated user.
-export default function FollowingListPage() {
-  const params = useLocalSearchParams<{ userId?: string; username?: string }>();
-  const title = params.username ? `${params.username}'s Following` : 'Following';
-
+export default function FollowingPage() {
   return (
     <>
-      <Stack.Screen options={{ title: title, headerBackTitleVisible: false }} />
-      <FollowingListScreen userIdProp={params.userId} />
+      <Stack.Screen options={{ title: 'Following' }} />
+      <FollowingListScreen />
     </>
   );
 }
