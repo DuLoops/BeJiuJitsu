@@ -1,12 +1,12 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'; // Devtools can be added later if needed
-import { getProfile } from '@/src/features/profile/services/profileService'; // Assuming this service exists
-import { useAuthStore } from '@/src/store/authStore';
 import { SplashScreen, Stack, router, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef } from 'react';
 import 'react-native-reanimated';
+import { getProfile } from '../_features/profile/services/profileService';
+import { useAuthStore } from '../store/authStore';
 
 // Create a client
 const queryClient = new QueryClient();

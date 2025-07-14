@@ -3,107 +3,108 @@ description: It's the product requirement document for this App. It contains cor
 globs: 
 alwaysApply: false
 ---
-# BeJiuJitsu - BJJ Progress Tracker PRD
+# BeJiuJitsu - Product Requirements Document (PRD)
 
-## Overview
-BeJiuJitsu is a mobile application designed to help Brazilian Jiu-Jitsu practitioners track their training progress, manage their skills repertoire, record competition results, and connect with the BJJ community. The app aims to create a comprehensive ecosystem for BJJ enthusiasts to improve their practice through data-driven insights and social learning.
+## 1. Overview
+BeJiuJitsu is a mobile application that serves as an all-in-one companion for the modern Brazilian Jiu-Jitsu practitioner. The app is built on three core pillars: **Learn**, **Journal**, and **Engage**. It aims to provide a comprehensive digital ecosystem where users can study the art, meticulously track their personal progress, and connect with a global community of fellow enthusiasts, fostering growth both on and off the mats.
 
-## Target Users
-- BJJ practitioners of all levels (white belt to black belt)
-- BJJ instructors
-- BJJ competition participants
-- BJJ academies and teams
+## 2. Target Audience
+- **Primary:** BJJ practitioners of all levels (from new white belts to seasoned black belts).
+- **Secondary:** BJJ instructors, coaches, and academy owners.
+- **Tertiary:** BJJ competition participants and fans of the sport.
 
-## Core Features
+## 3. Foundational Features
 
-### 1. User Authentication & Profile Management
-- Email/password authentication
-- Social authentication (Google, Apple)
-- User profile with:
-  - Username
-  - Belt rank & stripes
+### 3.1. User Authentication & Profile Management
+- **Authentication:** Secure sign-up and sign-in using email/password and social providers (Google, Apple), managed via Supabase Auth.
+- **User Profile:** A central hub for the user's BJJ identity, including:
+  - Username and display name
+  - Profile picture
+  - Belt rank and stripes
   - Academy affiliation
   - Weight class
-  - Training goals
-  - Profile picture
+  - Personal bio and training goals
 
-### 2. Skill Management
-- Browse predefined BJJ skills organized by categories:
-  - Takedowns
-  - Passes
-  - Controls
-  - Submissions
-  - Escapes
-  - Guards
-  - Sweeps
-  - Systems/Concepts
-- Add skills to personal collection with:
-  - Notes
-  - Sequence steps (detailed breakdown of technique)
-  - Success metrics
-  - Video reference (future implementation with Cloudinary)
-- Create custom skills when needed
+## 4. Core Feature Pillars
 
-### 3. Training Logs
-- Record training sessions with:
-  - Date and duration
-  - Gi or No-Gi
-  - Intensity level
-  - Skills practiced
-  - Notes
-- Calendar view of training history
-- Training statistics and trends
+### 4.1. Learn: Master the Gentle Art
+This pillar focuses on providing users with the resources to study and understand BJJ techniques and concepts.
+- **Feature: Technique Library**
+  - **Description:** A comprehensive, ever-growing library of BJJ techniques, categorized by position (guard, mount, etc.), submission, sweep, and escape.
+  - **User Stories:**
+    - As a user, I want to browse and search for specific techniques to study.
+    - As a user, I want to view instructional content, including descriptions and video links, for each technique.
+- **Feature: Community-Sourced Knowledge**
+  - **Description:** Users can contribute to the learning ecosystem by sharing their own insights, variations on techniques, and asking questions within the community feed.
+  - **User Stories:**
+    - As a user, I want to ask the community a question about a technique I'm struggling with.
+    - As a user, I want to share a video of a technique I've successfully applied and get feedback.
 
-### 4. Competition Tracking
-- Log competition results:
-  - Event details
-  - Match records (wins/losses)
-  - Performance metrics
-  - Techniques used
-  - Notes and reflections
-- Competition statistics and performance analysis
+### 4.2. Journal: Track Your Unique Journey
+This pillar is dedicated to empowering users to meticulously log, track, and visualize their progress.
+- **Feature: Centralized Logging**
+  - **Description:** A single point of entry to log all BJJ-related activities.
+  - **User Stories:**
+    - As a user, I want to quickly log a training session with details like date, duration, Gi/No-Gi, and personal notes.
+    - As a user, I want to record my competition results, including event, opponent, outcome, and method of victory/loss.
+    - As a user, I want to log specific techniques I drilled or attempted in live rolling.
+- **Feature: Visual Skill Tree**
+  - **Description:** An interactive, visual representation of a user's BJJ skillset. Users can see which areas of their game are well-developed and which need more attention.
+  - **User Stories:**
+    - As a user, I want to see all the techniques I've learned organized in a skill tree.
+    - As a user, I want to track my proficiency level for each technique (e.g., Learning, Proficient, Mastering).
+    - As a user, I want my skill tree to update automatically as I log new techniques and training sessions.
+- **Feature: Progress Dashboard**
+  - **Description:** A dashboard providing data-driven insights into a user's training habits and performance over time.
+  - **User Stories:**
+    - As a user, I want to see a calendar view of my training consistency.
+    - As a user, I want to view stats like my most-used submissions and win/loss ratio in competitions.
 
-### 5. Progress Visualization
-- Calendar view of training frequency
-- Skill usage and success rate visualization
-- Belt progression timeline
-- Custom goals tracking
+### 4.3. Engage: Connect with the Community
+This pillar focuses on building a vibrant, interactive, and supportive community.
+- **Feature: Community Feed**
+  - **Description:** A central, scrollable feed where users can share progress, post media, ask questions, and interact with content from others.
+  - **User Stories:**
+    - As a user, I want to share a photo or note from my latest training session.
+    - As a user, I want to see what other practitioners at my belt level are working on.
+    - As a user, I want to comment on and like posts from people I follow.
+- **Feature: Social Connectivity**
+  - **Description:** Tools for users to find and connect with other practitioners.
+  - **User Stories:**
+    - As a user, I want to search for and follow other users.
+    - As a user, I want to find potential training partners in my geographical area.
 
-### 6. Social & Community Features
-- Follow other practitioners
-- Activity feed with skill-related content
-- Comment on shared techniques
-- Search functionality by technique or practitioner
-- Skill sharing capabilities
+## 5. User Experience & Design
+- **Navigation:** Intuitive, tab-based navigation for primary sections (Home, Journal, Learn, Profile).
+- **UI/UX:** A clean, modern, and uncluttered interface that prioritizes ease of use. Data entry should be fast and efficient.
+- **Responsiveness:** A fully responsive design that works seamlessly across various mobile device sizes.
+- **Offline Capabilities:** Core journaling features should be accessible offline, with data syncing once a connection is re-established.
 
-## Future Enhancements
-- Video uploads for technique demonstrations via Cloudinary
-- Live training partner finding
-- Academy/gym finder
-- Private coach-student communication
-- Tournament notifications and registration
-- Technique video analysis tools
+## 6. Technical Stack & Considerations
+- **Frontend:** React Native with Expo, TypeScript.
+- **State Management:** Zustand for global client-side state management (e.g., auth state).
+- **Backend-as-a-Service (BaaS):** Supabase for authentication, database (PostgreSQL), and storage.
+- **Styling:** A custom, theme-able component library to ensure a consistent design system.
+- **Data Privacy:** All user data must be handled securely, with clear privacy policies in place.
 
-## User Experience Requirements
-- Intuitive navigation with minimal learning curve
-- Quick entry of training sessions (<1 min)
-- Seamless skill browsing and filtering
-- Clean data visualization
-- Smooth social interactions
-- Offline functionality for core features
+## 7. Success Metrics
+- **Engagement:**
+  - Daily Active Users (DAU) / Monthly Active Users (MAU).
+  - Average number of sessions per user per week.
+  - Content creation rate (number of journal entries, posts, comments per user).
+- **Adoption:**
+  - Rate of profile completion.
+  - Number of skills added to personal skill trees.
+  - Number of competition results logged.
+- **Retention:**
+  - Day 1, Day 7, and Day 30 user retention rates.
+- **User Satisfaction:**
+  - App Store ratings and reviews.
+  - Direct user feedback and surveys (Net Promoter Score - NPS).
 
-## Technical Considerations
-- Mobile-first approach using React Native with Expo
-- Backend using Node.js, Express, and Prisma with PostgreSQL
-- Cloud storage for media files (Cloudinary)
-- Responsive design for different device sizes
-- Performance optimization for media-heavy content
-- Secure authentication and data privacy
-
-## Success Metrics
-- User retention rate (30-day)
-- Average weekly active sessions per user
-- Number of techniques logged per user
-- Session logging completion rate
-- Social engagement metrics (follows, comments)
-- User-reported improvement in BJJ progression
+## 8. Future Enhancements
+- Video upload and analysis tools.
+- Academy/Team-specific pages and private groups.
+- Direct messaging between users.
+- Integration with wearables for heart rate and calorie tracking during training.
+- Advanced analytics on technique effectiveness (e.g., submission success rate).

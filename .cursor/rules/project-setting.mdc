@@ -25,27 +25,35 @@ Our goal is to build a robust and maintainable UI. Please follow these principle
 
 * **Single Source of Truth for Theming**:
     * **Colors**: All color definitions MUST be centralized in `src/constants/Colors.ts`. Avoid hardcoding color values directly in components.
-    * **Themed Components**: Utilize the provided `ThemedText.tsx`, `ThemedView.tsx`, and `ThemedButton.tsx` for standard UI elements. These components are pre-configured to adapt to our light/dark theme.
+    * **Themed Components**: Utilize the provided `@/src/components/ui/atoms/ThemedText.tsx`, `@/src/components/ui/atoms/ThemedView.tsx`, and `@/src/components/ui/atoms/ThemedButton.tsx` for standard UI elements. These components are pre-configured to adapt to our light/dark theme.
     * **Custom Theming**: For any custom component requiring theme-aware styling, always use the `useThemeColor.ts` hook. This hook, in conjunction with `Colors.ts`, ensures consistent adaptation to theme changes.
 
 * **Component Reusability & Structure**:
     * **Atomic Design Principles**: Strive to break down UI into smaller, reusable pieces.
-        * **Atoms (`components/ui/atoms`)**: Smallest, indivisible UI elements (e.g., a simple button, a text input, an icon). These should be highly reusable and independent.
-        * **Molecules (`components/ui/molecules`)**: Combinations of atoms that function together as a unit (e.g., a search bar, a navigation item with an icon and text).
+        * **Atoms (`@/src/components/ui/atoms`)**: Smallest, indivisible UI elements (e.g., a simple button, a text input, an icon). These should be highly reusable and independent.
+        * **Molecules (`@/src/components/ui/molecules`)**: Combinations of atoms that function together as a unit (e.g., a search bar, a navigation item with an icon and text).
     * **Layout Components (`components/layout`)**: Components specifically designed for structural layout (e.g., `ScreenContainer`, `FlexRow`, `Spacer`). These help maintain consistent spacing and alignment across the application.
     * **Avoid Duplication**: Before creating a new component, thoroughly check existing components in the `/components` directory. If a similar component exists, extend or reuse it rather than creating a duplicate.
 * **Authentication Flow**:
-    * **Centralized Authentication Logic**: All authentication-related logic and state management should be handled through `src/hooks/useAuth.tsx`. Avoid scattered authentication checks or direct Supabase calls within UI components.
+    * **Centralized Authentication Logic**: All authentication-related logic and state management should be handled through `@/src/store/authStore.tsx`. Avoid scattered authentication checks or direct Supabase calls within UI components.
 
 ## 🗃️ Data & Constants
 
 * **Single Source of Truth**:
-    * **Supabase Types & Constants**: Always import types and constants directly from `src/supabase/types.ts` and `src/supabase/constants.ts` respectively. This ensures data consistency and reduces errors related to schema mismatches.
+    * **Supabase Types & Constants**: Always import types and constants directly from `@/src/supabase/types.ts` and `@/src/supabase/constants.ts` respectively. This ensures data consistency and reduces errors related to schema mismatches.
+    * Use `@/src` for profject alias for imports
 
 ## 📂 Directory Structure (`src`)
 
 src
 ├── app
+├── _features                       # Domain-specific modules (e.g., 'user-management', 'competitions')
+│   └── 'feature name'             # Encapsulates related components, screens, services, and utils
+│       ├── components             # Feature-specific components
+│       ├── screens                # Feature-specific screens
+│       ├── services               # API calls related to the feature
+│       ├── utils                  # Utility functions specific to the feature
+│       └── index.ts                  # Barrel file to export reusable components
 │   ├── (auth)                     # Authentication related screens (e.g., sign-in, sign-up)
 │   ├── (protected)                # Screens requiring authentication
 │   │   ├── (modal)                # Modal screens (e.g., create competition, skill, training)
@@ -75,19 +83,13 @@ src
 │   └── Skills.ts                  # Application-specific skill constants
 ├── context                        # React Context providers (e.g., AuthContext)
 │   └── AuthContext.tsx
-├── features                       # Domain-specific modules (e.g., 'user-management', 'competitions')
-│   └── 'feature name'             # Encapsulates related components, screens, services, and utils
-│       ├── components             # Feature-specific components
-│       ├── screens                # Feature-specific screens
-│       ├── services               # API calls related to the feature
-│       └── utils                  # Utility functions specific to the feature
 ├── hooks                          # Custom React Hooks
-│   └── useAuth.tsx                # Authentication hook
 │   └── useThemeColor.ts           # Hook for dynamic theme-aware colors
 ├── lib                            # Third-party library configurations/initializations
 │   └── supabase.ts                # Supabase client initialization
 ├── services                       # General API services (not tied to a specific feature)
 ├── store/                #Zustand stores
+│   └── authStore.tsx                # Authentication Store, 
 └── supabase                       # Supabase related configurations and definitions
     └── constants.ts               # Supabase-specific constants
     └── types.ts               # Supabase-specific types

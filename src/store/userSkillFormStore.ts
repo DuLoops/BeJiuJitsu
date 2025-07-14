@@ -1,5 +1,4 @@
-import { UserSkillWithDetails } from '@/src/features/skill/components/UserSkillList';
-import { Category, CategoryEnum, SkillNameEnum, UserSkillSourceEnum } from '@/src/types/skills';
+import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList';
 import { create } from 'zustand';
 
 // Define the structure for a sequence step
@@ -19,28 +18,28 @@ interface UserSkillFormState { // Renamed from SkillState
   // Form data
   editingUserSkill: UserSkillWithDetails | null;
   userSkillId: string | null;
-  selectedCategory: Category | null; 
+  selectedCategory: Tables<'Category'> | null; 
   newCategoryName: string;
   selectedSkillName: string; 
   newSkillName: string;      
   note: string;
-  source: UserSkillSourceEnum | string;
+  source: Database["public"]["Enums"]["SkillSource"] | string;
   isFavorite: boolean;
   videoUrl: string;
   sequences: SequenceStep[];
 
   // Actions
-  initializeForEdit: (skillToEdit: UserSkillWithDetails, categories?: Category[]) => void;
+  initializeForEdit: (skillToEdit: UserSkillWithDetails, categories?: Tables<'Category'>[]) => void;
   resetForm: () => void;
   
   setEditingUserSkill: (skill: UserSkillWithDetails | null) => void;
   setUserSkillId: (id: string | null) => void;
-  setSelectedCategoryDirectly: (category: Category | null) => void; 
+  setSelectedCategoryDirectly: (category: Tables<'Category'> | null) => void; 
   setNewCategoryName: (name: string) => void;
   setSelectedSkillName: (name: string) => void;
   setNewSkillName: (name: string) => void;
   setNote: (note: string) => void;
-  setSource: (source: UserSkillSourceEnum | string) => void;
+  setSource: (source: Database["public"]["Enums"]["SkillSource"] | string) => void;
   setIsFavorite: (isFavorite: boolean) => void;
   setVideoUrl: (url: string) => void;
   setSequences: (sequences: SequenceStep[]) => void;
@@ -57,7 +56,7 @@ const initialState: Omit<UserSkillFormState, 'initializeForEdit' | 'resetForm' |
   selectedSkillName: '',
   newSkillName: '',
   note: '',
-  source: UserSkillSourceEnum.CLASS,
+  source: 'INDEPENDENT',
   isFavorite: false,
   videoUrl: '',
   sequences: [],
@@ -67,7 +66,7 @@ export const useUserSkillFormStore = create<UserSkillFormState>((set, get) => ({
   ...initialState,
 
   initializeForEdit: (skillToEdit, categories) => {
-    let categoryObjectToSet: Category | null = null;
+    let categoryObjectToSet: Tables<'Category'> | null = null;
     if (categories) {
         categoryObjectToSet = categories.find(c => c.id === skillToEdit.skill.categoryId) || null;
     }
@@ -80,7 +79,7 @@ export const useUserSkillFormStore = create<UserSkillFormState>((set, get) => ({
       selectedSkillName: skillToEdit.skill.name, 
       newSkillName: skillToEdit.skill.name,      
       note: skillToEdit.note || '',
-      source: skillToEdit.source || UserSkillSourceEnum.CLASS,
+      source: skillToEdit.source || 'INDEPENDENT',
       isFavorite: skillToEdit.isFavorite || false,
       videoUrl: skillToEdit.videoUrl || '',
       sequences: skillToEdit.sequences?.map(seq => ({
