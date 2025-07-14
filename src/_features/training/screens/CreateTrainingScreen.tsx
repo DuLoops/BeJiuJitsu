@@ -1,8 +1,8 @@
 import {
-  BjjTypeEnum,
-  BjjTypesArray,
-  TrainingIntensitiesArray,
-  TrainingIntensityEnum,
+    BjjTypeEnum,
+    BjjTypesArray,
+    TrainingIntensitiesArray,
+    TrainingIntensityEnum,
 } from '@/src/supabase/constants';
 import { Tables } from '@/src/supabase/types';
 import { UserSkillUsage } from '@/src/types/training';
@@ -11,19 +11,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  TouchableOpacity
+    ActivityIndicator,
+    Alert,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    TouchableOpacity
 } from 'react-native';
 
 import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList';
 import {
-  createTrainingSessionWithSkillUsages,
-  fetchUserSkillsForSelection,
+    createTrainingSessionWithSkillUsages,
+    fetchUserSkillsForSelection,
 } from '@/src/_features/training/services/trainingService';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
@@ -139,24 +139,23 @@ export default function CreateTrainingScreen() {
       return;
     }
 
-    const trainingDataPayload: Omit<Training, 'id' | 'created_at' | 'updated_at'> = {
+    const trainingDataPayload = {
       userId: userId!,
       date: date.toISOString().split('T')[0],
       duration: Number(duration),
       bjjType: bjjType,
       intensity: intensity,
       note: note || null,
-      type: bjjType as any,
-    };
+    } as Omit<Training, 'id' | 'created_at' | 'updated_at'>;
 
-    const skillUsagesPayload: Omit<UserSkillUsage, 'id' | 'trainingId' | 'created_at' | 'updated_at' | 'usageType'>[] = selectedSkillsUsage.map((s) => ({
+    const skillUsagesPayload = selectedSkillsUsage.map((s) => ({
       skillId: s.userSkillId, // UserSkillUsage.skillId is FK to UserSkill.id
       quantity: Number(s.quantity) || 0,
       success: s.success,
       note: null,
       competitionId: null,
       matchId: null,
-    }));
+    })) as Omit<UserSkillUsage, 'id' | 'trainingId' | 'created_at' | 'updated_at' | 'usageType'>[];
 
     mutation.mutate({ trainingData: trainingDataPayload, skillUsagesData: skillUsagesPayload });
   };
@@ -222,7 +221,15 @@ export default function CreateTrainingScreen() {
           style={[styles.input, styles.textArea]}
         />
 
-        <ThemedText style={styles.sectionTitle}>Skills Practiced/Used</ThemedText>
+        <ThemedView style={styles.sectionHeaderContainer}>
+            <ThemedText style={styles.sectionTitle}>Skills Practiced/Used</ThemedText>
+            <ThemedButton title="Add New Skill" onPress={() => router.push({
+                pathname: '/(protected)/(modal)/create/skill',
+                params: { source: 'TRAINING' }
+            })}
+            />
+        </ThemedView>
+
         {isLoadingUserSkills ? (
           <ActivityIndicator />
         ) : userSkills && userSkills.length > 0 ? (
@@ -300,6 +307,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 20,
+    marginBottom: 10,
+  },
+  sectionHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 10,
   },
   label: {

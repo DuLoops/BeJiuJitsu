@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    padding: 5,
+    padding: 4,
   },
   tag: {
     backgroundColor: '#F9FAFB',

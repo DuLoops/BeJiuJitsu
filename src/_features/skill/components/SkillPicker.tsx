@@ -121,7 +121,6 @@ export default SkillPicker;
 const styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',
-    padding: 16,
     position: 'relative',
     zIndex: 10,
   },
@@ -135,7 +134,7 @@ const styles = StyleSheet.create({
     borderColor: '#DDDDDD',
     borderWidth: 0.5,
     paddingHorizontal: 8,
-    margin: 6,
+    paddingRight: 16,
   },
   suggestionsContainer: {
     backgroundColor: '#fff',

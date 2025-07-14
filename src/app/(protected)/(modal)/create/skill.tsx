@@ -1,3 +1,3 @@
-import CreateSkillScreen from '@/src/_features/skill/screens/create.skill.screen';
+import CreateSkillScreen from '@/src/_features/skill/screens/CreateSkillScreen';
 
 export default CreateSkillScreen;

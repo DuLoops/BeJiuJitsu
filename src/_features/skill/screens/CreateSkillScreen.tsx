@@ -7,25 +7,22 @@ import {
     fetchCategories,
 } from '@/src/_features/skill/services/skillService';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
-import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { useAuthStore } from '@/src/store/authStore';
 import { useSkillDataStore } from '@/src/store/skillDataStore';
 import { getSkillFormDataForSubmission, SequenceStep, useUserSkillFormStore } from '@/src/store/userSkillFormStore';
-import { Category, CategoryEnum, SkillNameEnum, UserSkillSourceEnum } from '@/src/types/skills';
-import { Picker } from '@react-native-picker/picker';
+import { Tables } from '@/src/supabase/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
-import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Switch } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, TextInput } from 'react-native';
 import { AutocompleteDropdownContextProvider } from 'react-native-autocomplete-dropdown';
 
 export default function CreateSkillScreen() {
   const { session } = useAuthStore();
   const queryClient = useQueryClient();
-  const params = useLocalSearchParams();
+  const params = useLocalSearchParams<{ userSkill?: string, source?: 'TRAINING' | 'COMPETITION' }>();
   const tintColor = useThemeColor({}, 'tint');
 
   const {
@@ -56,6 +53,14 @@ export default function CreateSkillScreen() {
   const userId = session?.user?.id;
 
   useEffect(() => {
+    if (params.source) {
+      setSource(params.source);
+    } else {
+      setSource('INDEPENDENT');
+    }
+  }, [params.source, setSource]);
+
+  useEffect(() => {
     if (userId && allSkills.length === 0 && !isLoadingAllSkills && !errorAllSkills) {
       fetchAllSkills(userId);
     }
@@ -81,14 +86,14 @@ export default function CreateSkillScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.userSkill, initializeForEdit, resetForm]);
 
-  const { data: categoriesData, isLoading: isLoadingCategories, isSuccess: categoriesLoaded } = useQuery<Category[], Error>({
+  const { data: categoriesData, isLoading: isLoadingCategories, isSuccess: categoriesLoaded } = useQuery({
     queryKey: ['categories'],
     queryFn: fetchCategories,
   });
 
   useEffect(() => {
     if (editingUserSkill && categoriesLoaded && categoriesData && !selectedCategory) {
-      const categoryToSet = categoriesData.find(c => c.id === editingUserSkill.skill.categoryId);
+      const categoryToSet = (categoriesData as Tables<'Category'>[]).find((c: Tables<'Category'>) => c.id === editingUserSkill.skill.categoryId);
       if (categoryToSet) {
         setSelectedCategoryDirectly(categoryToSet);
       }
@@ -112,7 +117,11 @@ export default function CreateSkillScreen() {
       queryClient.invalidateQueries({ queryKey: ['userSkillsWithDetails', userId] });
       if (userId) fetchAllSkills(userId);
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.push('/(protected)/(tabs)');
+      }
     },
     onError: (error: Error) => {
       Alert.alert('Error', `Failed to ${editingUserSkill ? 'update' : 'add'} skill: ${error.message}`);
@@ -144,9 +153,9 @@ export default function CreateSkillScreen() {
     const payload = {
       userId,
       userSkillId: formData.userSkillId,
-      skillName: formData.skillName as SkillNameEnum | string,
+      skillName: formData.skillName,
       categoryId: formData.categoryId,
-      categoryName: formData.categoryName as CategoryEnum | string,
+      categoryName: formData.categoryName,
       note: formData.note,
       source: formData.source,
       isFavorite: formData.isFavorite,
@@ -157,26 +166,26 @@ export default function CreateSkillScreen() {
     mutation.mutate(payload);
   };
 
-  const sourceOptions = Object.values(UserSkillSourceEnum).map((s) => ({ label: s, value: s }));
+  const sourceOptions = ['TRAINING', 'COMPETITION', 'INDEPENDENT'].map((s) => ({ label: s, value: s }));
 
   return (
     <AutocompleteDropdownContextProvider>
       <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-        <ThemedView style={styles.innerContainer}>
-          <ThemedText style={styles.title}>{editingUserSkill ? 'Edit Skill' : 'Add New Skill'}</ThemedText>
 
-          <ThemedText style={styles.label}>Category:</ThemedText>
+          <ThemedText style={styles.title}>{editingUserSkill ? 'Edit Skill' : 'New Skill'}</ThemedText>
+
+          <ThemedText style={styles.sectionTitle}>Category:</ThemedText>
           {isLoadingCategories ? (
             <ActivityIndicator />
           ) : (
             <CategoryPicker
               onSelectCategory={handleCategorySelection}
               selectedCategory={selectedCategory}
-              categories={categoriesData ? categoriesData.map(c => ({id: c.id, name: c.name})) : []}
+              categories={categoriesData ? (categoriesData as Tables<'Category'>[]).map((c: Tables<'Category'>) => ({id: c.id, name: c.name})) : []}
             />
           )}
 
-          <ThemedText style={styles.label}>Skill:</ThemedText>
+          <ThemedText style={[styles.label, styles.sectionTitle]}>Skill:</ThemedText>
           {(isLoadingAllSkills && allSkills.length === 0) ? (
             <ActivityIndicator />
           ) : errorAllSkills ? (
@@ -191,39 +200,13 @@ export default function CreateSkillScreen() {
             />
           )}
 
-          <ThemedInput
-            label="Notes:"
+          <ThemedText style={[styles.label, styles.sectionTitle]}>Notes:</ThemedText>
+          <TextInput
             value={note}
             onChangeText={setNote}
             multiline
             numberOfLines={4}
             placeholder="Enter details, setups, variations..."
-            style={[styles.input, styles.textArea]}
-          />
-
-          <ThemedText style={styles.label}>Source:</ThemedText>
-          <Picker
-            selectedValue={source}
-            onValueChange={(itemValue) => setSource(itemValue)}
-            style={styles.picker}
-          >
-            {sourceOptions.map((opt) => (
-              <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
-            ))}
-          </Picker>
-
-          <ThemedView style={styles.switchContainer}>
-            <ThemedText style={styles.label}>Favorite:</ThemedText>
-            <Switch value={isFavorite} onValueChange={setIsFavorite} trackColor={{ false: "#767577", true: tintColor }} thumbColor={isFavorite ? tintColor : "#f4f3f4"} />
-          </ThemedView>
-
-          <ThemedInput
-            label="Video URL (optional):"
-            value={videoUrl}
-            onChangeText={setVideoUrl}
-            placeholder="https://youtube.com/example_video"
-            keyboardType="url"
-            autoCapitalize="none"
             style={styles.input}
           />
 
@@ -247,8 +230,14 @@ export default function CreateSkillScreen() {
             disabled={mutation.isPending || isLoadingCategories || isLoadingAllSkills}
             style={styles.button}
           />
-          {Platform.OS === 'ios' && <ThemedButton title="Close Modal" onPress={() => router.back()} style={styles.button} />}
-        </ThemedView>
+          {Platform.OS === 'ios' && <ThemedButton title="Close Modal" onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.push('/(protected)/(tabs)');
+            }
+          }} style={styles.button} />}
+
       </ScrollView>
     </AutocompleteDropdownContextProvider>
   );
@@ -257,21 +246,20 @@ export default function CreateSkillScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  innerContainer: {
     padding: 20,
+    columnGap: 100,
   },
+
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
     textAlign: 'center',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 20,
-    marginBottom: 10,
+    marginBottom: 5,
   },
   label: {
     fontSize: 16,
@@ -279,9 +267,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   input: {
-    marginBottom: 15,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
   textArea: {
+    backgroundColor: 'white',
     minHeight: 100,
     textAlignVertical: 'top',
   },

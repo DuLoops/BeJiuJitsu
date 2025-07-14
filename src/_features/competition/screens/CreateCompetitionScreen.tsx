@@ -1,7 +1,7 @@
 import {
-    createFullCompetitionEntry,
-    fetchTournamentBrands,
-    fetchUserSkillsForCompetitionSelection,
+  createFullCompetitionEntry,
+  fetchTournamentBrands,
+  fetchUserSkillsForCompetitionSelection,
 } from '@/src/_features/competition/services/competitionService';
 import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
@@ -11,16 +11,16 @@ import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { useAuthStore } from '@/src/store/authStore';
 import {
-    BeltsArray,
-    BjjTypesArray,
-    MatchMethodTypesArray,
-    MatchOutcomeTypesArray,
+  BeltsArray,
+  BjjTypesArray,
+  MatchMethodTypesArray,
+  MatchOutcomeTypesArray,
 } from '@/src/supabase/constants';
 import {
-    CompetitionDivisionFormData,
-    CompetitionFormData,
-    MatchFormData,
-    TournamentBrand,
+  CompetitionDivisionFormData,
+  CompetitionFormData,
+  MatchFormData,
+  TournamentBrand,
 } from '@/src/types/competition';
 import { UserSkillUsageFormData } from '@/src/types/training';
 import { Ionicons } from '@expo/vector-icons';
@@ -368,7 +368,14 @@ export default function CreateCompetitionScreen() {
                 <ThemedInput label="Video URL (Optional):" value={match.videoUrl || ''} onChangeText={(value) => handleMatchChange(division.tempId, match.tempId, 'videoUrl', value)} keyboardType="url" style={styles.input} />
 
                 {/* Skill Usages for this Match */}
-                <ThemedText style={styles.subSectionTitle}>Skills Used/Attempted</ThemedText>
+                <ThemedView style={styles.sectionHeaderContainer}>
+                  <ThemedText style={styles.subSectionTitle}>Skills Used/Attempted</ThemedText>
+                  <ThemedButton title="Add New Skill" onPress={() => router.push({
+                      pathname: '/(protected)/(modal)/create/skill',
+                      params: { source: 'COMPETITION' }
+                  })}
+                  icon={<Ionicons name="add" size={20} color={iconColor}/>} />
+                </ThemedView>
                 {isLoadingUserSkills ? <ActivityIndicator /> : userSkills && userSkills.length > 0 ? (
                   userSkills.map(skillDetail => {
                     const currentSkillUsage = match.skillUsages.find(su => su.userSkillId === skillDetail.id);
