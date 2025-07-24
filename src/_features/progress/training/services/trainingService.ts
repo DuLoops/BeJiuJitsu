@@ -1,7 +1,6 @@
-import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList'; // For fetching user skills
+import { UserSkillWithDetails } from '@/src/_features/progress/skill/components/UserSkillList'; // For fetching user skills
 import { supabase } from '@/src/lib/supabase';
-import { TrainingWithDetails, UserSkillUsage } from '@/src/types/training';
-import { Training } from '@/src/types/trainings';
+import { Training, TrainingWithDetails, UserSkillUsage } from '@/src/types/training';
 
 // Fetch User Skills (adapted from skillService or assuming a similar function exists)
 // This is primarily for the UI to list skills that can be linked to a training session.

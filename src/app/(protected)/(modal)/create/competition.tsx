@@ -1,3 +1,3 @@
-import CreateCompetitionScreen from '@/src/_features/competition/screens/CreateCompetitionScreen';
+import CreateCompetitionScreen from '@/src/_features/progress/competition/screens/CreateCompetitionScreen';
 
 export default CreateCompetitionScreen;

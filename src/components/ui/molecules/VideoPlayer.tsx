@@ -1,14 +1,14 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-const createModal = () => {
+const VideoPlayer = () => {
   return (
     <View>
-      <Text>createModal</Text>
+      <Text>VideoPlayer</Text>
     </View>
   )
 }
 
-export default createModal
+export default VideoPlayer
 
 const styles = StyleSheet.create({})

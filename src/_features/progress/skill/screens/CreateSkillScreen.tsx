@@ -1,13 +1,14 @@
-import CategoryPicker from '@/src/_features/skill/components/CategoryPicker';
-import SkillSequenceBuilder from '@/src/_features/skill/components/sequence/SkillSequenceBuilder';
-import SkillPicker from '@/src/_features/skill/components/SkillPicker';
-import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList';
+import CategoryPicker from '@/src/_features/progress/skill/components/CategoryPicker';
+import SkillSequenceBuilder from '@/src/_features/progress/skill/components/sequence/SkillSequenceBuilder';
+import SkillPicker from '@/src/_features/progress/skill/components/SkillPicker';
+import { UserSkillWithDetails } from '@/src/_features/progress/skill/components/UserSkillList';
 import {
-    addUserSkillWithSequences,
-    fetchCategories,
-} from '@/src/_features/skill/services/skillService';
+  addUserSkillWithSequences,
+  fetchCategories,
+} from '@/src/_features/progress/skill/services/skillService';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ModalHeader from '@/src/components/ui/molecules/ModalHeader';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { useAuthStore } from '@/src/store/authStore';
 import { useSkillDataStore } from '@/src/store/skillDataStore';
@@ -16,7 +17,7 @@ import { Tables } from '@/src/supabase/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
-import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { ActivityIndicator, Alert, Platform, SafeAreaView, ScrollView, StyleSheet, TextInput } from 'react-native';
 import { AutocompleteDropdownContextProvider } from 'react-native-autocomplete-dropdown';
 
 export default function CreateSkillScreen() {
@@ -24,6 +25,7 @@ export default function CreateSkillScreen() {
   const queryClient = useQueryClient();
   const params = useLocalSearchParams<{ userSkill?: string, source?: 'TRAINING' | 'COMPETITION' }>();
   const tintColor = useThemeColor({}, 'tint');
+  const backgroundColor = useThemeColor({}, 'background');
 
   const {
     editingUserSkill,
@@ -169,11 +171,15 @@ export default function CreateSkillScreen() {
   const sourceOptions = ['TRAINING', 'COMPETITION', 'INDEPENDENT'].map((s) => ({ label: s, value: s }));
 
   return (
-    <AutocompleteDropdownContextProvider>
-      <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-
-          <ThemedText style={styles.title}>{editingUserSkill ? 'Edit Skill' : 'New Skill'}</ThemedText>
-
+    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+      <ModalHeader 
+        title={editingUserSkill ? 'Edit Skill' : 'New Skill'}
+        onSave={handleSubmit}
+        saveDisabled={mutation.isPending || isLoadingCategories || isLoadingAllSkills}
+      />
+      
+      <AutocompleteDropdownContextProvider>
+        <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
           <ThemedText style={styles.sectionTitle}>Category:</ThemedText>
           {isLoadingCategories ? (
             <ActivityIndicator />
@@ -224,36 +230,33 @@ export default function CreateSkillScreen() {
               }}
           />
 
-          <ThemedButton
-            title={mutation.isPending ? (editingUserSkill ? 'Updating Skill...' : 'Adding Skill...') : (editingUserSkill ? 'Update Skill' : 'Add Skill')}
-            onPress={handleSubmit}
-            disabled={mutation.isPending || isLoadingCategories || isLoadingAllSkills}
-            style={styles.button}
-          />
-          {Platform.OS === 'ios' && <ThemedButton title="Close Modal" onPress={() => {
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.push('/(protected)/(tabs)');
-            }
-          }} style={styles.button} />}
-
-      </ScrollView>
-    </AutocompleteDropdownContextProvider>
+          {Platform.OS === 'ios' && (
+            <ThemedButton 
+              title="Close Modal" 
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  router.push('/(protected)/(tabs)');
+                }
+              }} 
+              style={styles.button} 
+            />
+          )}
+        </ScrollView>
+      </AutocompleteDropdownContextProvider>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     padding: 20,
     columnGap: 100,
-  },
-
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
   sectionTitle: {
     fontSize: 18,

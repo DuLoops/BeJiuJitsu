@@ -1,8 +1,8 @@
 import {
-    BjjTypeEnum,
-    BjjTypesArray,
-    TrainingIntensitiesArray,
-    TrainingIntensityEnum,
+  BjjTypeEnum,
+  BjjTypesArray,
+  TrainingIntensitiesArray,
+  TrainingIntensityEnum,
 } from '@/src/supabase/constants';
 import { Tables } from '@/src/supabase/types';
 import { UserSkillUsage } from '@/src/types/training';
@@ -11,24 +11,26 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    TouchableOpacity
+  ActivityIndicator,
+  Alert,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TouchableOpacity
 } from 'react-native';
 
-import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList';
+import { UserSkillWithDetails } from '@/src/_features/progress/skill/components/UserSkillList';
 import {
-    createTrainingSessionWithSkillUsages,
-    fetchUserSkillsForSelection,
-} from '@/src/_features/training/services/trainingService';
+  createTrainingSessionWithSkillUsages,
+  fetchUserSkillsForSelection,
+} from '@/src/_features/progress/training/services/trainingService';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ModalHeader from '@/src/components/ui/molecules/ModalHeader';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { useAuthStore } from '@/src/store/authStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,6 +54,7 @@ export default function CreateTrainingScreen() {
   const tintColor = useThemeColor({}, 'tint');
   const iconColor = useThemeColor({}, 'icon');
   const successColor = useThemeColor({}, 'success');
+  const backgroundColor = useThemeColor({}, 'background');
 
   // Form State - Training Details
   const [date, setDate] = useState(new Date());
@@ -86,7 +89,11 @@ export default function CreateTrainingScreen() {
       Alert.alert('Success', 'Training session logged!');
       queryClient.invalidateQueries({ queryKey: ['trainingsForUser', userId] });
       queryClient.invalidateQueries({ queryKey: ['userSkillsWithDetails', userId] });
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.push('/(protected)/(tabs)');
+      }
     },
     onError: (error: Error) => {
       Alert.alert('Error', `Failed to log training: ${error.message}`);
@@ -161,147 +168,156 @@ export default function CreateTrainingScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <ThemedView style={styles.innerContainer}>
-        <ThemedText style={styles.title}>Log Training Session</ThemedText>
-
-        {/* Date Picker */}
-        <ThemedText style={styles.label}>Date:</ThemedText>
-        {Platform.OS !== 'ios' && (
-          <ThemedButton onPress={() => setShowDatePicker(true)} title={`Selected: ${date.toLocaleDateString()}`} />
-        )}
-        {showDatePicker && (
-          <DateTimePicker
-            testID="dateTimePicker"
-            value={date}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={onDateChange}
-          />
-        )}
-
-        <ThemedInput
-          label="Duration (minutes):"
-          value={duration}
-          onChangeText={setDuration}
-          keyboardType="numeric"
-          placeholder="e.g., 90"
-          style={styles.input}
-        />
-
-        <ThemedText style={styles.label}>Type:</ThemedText>
-        <Picker
-          selectedValue={bjjType}
-          onValueChange={(itemValue: BjjTypeEnum) => setBjjType(itemValue)}
-          style={styles.picker}
-        >
-          {BjjTypesArray.map((type: BjjTypeEnum) => (
-            <Picker.Item key={type} label={type} value={type} />
-          ))}
-        </Picker>
-
-        <ThemedText style={styles.label}>Intensity:</ThemedText>
-        <Picker
-          selectedValue={intensity}
-          onValueChange={(itemValue: TrainingIntensityEnum) => setIntensity(itemValue)}
-          style={styles.picker}
-        >
-          {TrainingIntensitiesArray.map((level: TrainingIntensityEnum) => (
-            <Picker.Item key={level} label={level} value={level} />
-          ))}
-        </Picker>
-
-        <ThemedInput
-          label="Notes (Optional):"
-          value={note}
-          onChangeText={setNote}
-          multiline
-          numberOfLines={3}
-          placeholder="General notes about the session..."
-          style={[styles.input, styles.textArea]}
-        />
-
-        <ThemedView style={styles.sectionHeaderContainer}>
-            <ThemedText style={styles.sectionTitle}>Skills Practiced/Used</ThemedText>
-            <ThemedButton title="Add New Skill" onPress={() => router.push({
-                pathname: '/(protected)/(modal)/create/skill',
-                params: { source: 'TRAINING' }
-            })}
+    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+      <ModalHeader 
+        title="Log Training Session"
+        onSave={handleSubmit}
+        saveDisabled={mutation.isPending || isLoadingUserSkills}
+      />
+      
+      <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+        <ThemedView style={styles.innerContainer}>
+          {/* Date Picker */}
+          <ThemedText style={styles.label}>Date:</ThemedText>
+          {Platform.OS !== 'ios' && (
+            <ThemedButton onPress={() => setShowDatePicker(true)} title={`Selected: ${date.toLocaleDateString()}`} />
+          )}
+          {showDatePicker && (
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={date}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={onDateChange}
             />
-        </ThemedView>
+          )}
 
-        {isLoadingUserSkills ? (
-          <ActivityIndicator />
-        ) : userSkills && userSkills.length > 0 ? (
-          userSkills.map((skill) => {
-            const currentSkillUsage = selectedSkillsUsage.find((s) => s.userSkillId === skill.id);
-            const isSkillSelected = !!currentSkillUsage;
-            return (
-              <ThemedView key={skill.id} style={styles.skillUsageContainer}>
-                <TouchableOpacity
-                  style={styles.skillToggle}
-                  onPress={() => handleToggleSkillUsage(skill)}
-                >
-                  <Ionicons
-                    name={isSkillSelected ? 'checkbox-outline' : 'square-outline'}
-                    size={24}
-                    color={isSkillSelected ? successColor : iconColor}
-                  />
-                  <ThemedText style={styles.skillNameText}>
-                    {skill.skill.name} ({skill.skill.category.name})
-                  </ThemedText>
-                </TouchableOpacity>
-                {isSkillSelected && currentSkillUsage && (
-                  <ThemedView style={styles.skillUsageInputs}>
-                    <ThemedInput
-                      label="Quantity/Reps:"
-                      value={currentSkillUsage.quantity || '1'}
-                      onChangeText={(text) => handleSkillUsageChange(skill.id, 'quantity', text)}
-                      keyboardType="numeric"
-                      style={styles.smallInput}
+          <ThemedInput
+            label="Duration (minutes):"
+            value={duration}
+            onChangeText={setDuration}
+            keyboardType="numeric"
+            placeholder="e.g., 90"
+            style={styles.input}
+          />
+
+          <ThemedText style={styles.label}>Type:</ThemedText>
+          <Picker
+            selectedValue={bjjType}
+            onValueChange={(itemValue: BjjTypeEnum) => setBjjType(itemValue)}
+            style={styles.picker}
+          >
+            {BjjTypesArray.map((type: BjjTypeEnum) => (
+              <Picker.Item key={type} label={type} value={type} />
+            ))}
+          </Picker>
+
+          <ThemedText style={styles.label}>Intensity:</ThemedText>
+          <Picker
+            selectedValue={intensity}
+            onValueChange={(itemValue: TrainingIntensityEnum) => setIntensity(itemValue)}
+            style={styles.picker}
+          >
+            {TrainingIntensitiesArray.map((level: TrainingIntensityEnum) => (
+              <Picker.Item key={level} label={level} value={level} />
+            ))}
+          </Picker>
+
+          <ThemedInput
+            label="Notes (Optional):"
+            value={note}
+            onChangeText={setNote}
+            multiline
+            numberOfLines={3}
+            placeholder="General notes about the session..."
+            style={[styles.input, styles.textArea]}
+          />
+
+          <ThemedView style={styles.sectionHeaderContainer}>
+              <ThemedText style={styles.sectionTitle}>Skills Practiced/Used</ThemedText>
+              <ThemedButton title="Add New Skill" onPress={() => router.push({
+                  pathname: '/(protected)/(modal)/create/skill',
+                  params: { source: 'TRAINING' }
+              })}
+              />
+          </ThemedView>
+
+          {isLoadingUserSkills ? (
+            <ActivityIndicator />
+          ) : userSkills && userSkills.length > 0 ? (
+            userSkills.map((skill) => {
+              const currentSkillUsage = selectedSkillsUsage.find((s) => s.userSkillId === skill.id);
+              const isSkillSelected = !!currentSkillUsage;
+              return (
+                <ThemedView key={skill.id} style={styles.skillUsageContainer}>
+                  <TouchableOpacity
+                    style={styles.skillToggle}
+                    onPress={() => handleToggleSkillUsage(skill)}
+                  >
+                    <Ionicons
+                      name={isSkillSelected ? 'checkbox-outline' : 'square-outline'}
+                      size={24}
+                      color={isSkillSelected ? successColor : iconColor}
                     />
-                    <ThemedView style={styles.switchRow}>
-                      <ThemedText style={styles.label}>Successful?</ThemedText>
-                      <Switch
-                        value={currentSkillUsage.success || false}
-                        onValueChange={(val) => handleSkillUsageChange(skill.id, 'success', val)}
-                        trackColor={{ false: '#767577', true: tintColor }}
-                        thumbColor={currentSkillUsage.success ? tintColor : '#f4f3f4'}
+                    <ThemedText style={styles.skillNameText}>
+                      {skill.skill.name} ({skill.skill.category.name})
+                    </ThemedText>
+                  </TouchableOpacity>
+                  {isSkillSelected && currentSkillUsage && (
+                    <ThemedView style={styles.skillUsageInputs}>
+                      <ThemedInput
+                        label="Quantity/Reps:"
+                        value={currentSkillUsage.quantity || '1'}
+                        onChangeText={(text) => handleSkillUsageChange(skill.id, 'quantity', text)}
+                        keyboardType="numeric"
+                        style={styles.smallInput}
                       />
+                      <ThemedView style={styles.switchRow}>
+                        <ThemedText style={styles.label}>Successful?</ThemedText>
+                        <Switch
+                          value={currentSkillUsage.success || false}
+                          onValueChange={(val) => handleSkillUsageChange(skill.id, 'success', val)}
+                          trackColor={{ false: '#767577', true: tintColor }}
+                          thumbColor={currentSkillUsage.success ? tintColor : '#f4f3f4'}
+                        />
+                      </ThemedView>
                     </ThemedView>
-                  </ThemedView>
-                )}
-              </ThemedView>
-            );
-          })
-        ) : (
-          <ThemedText>You haven't added any skills yet. Add skills first to track their usage.</ThemedText>
-        )}
+                  )}
+                </ThemedView>
+              );
+            })
+          ) : (
+            <ThemedText>You haven't added any skills yet. Add skills first to track their usage.</ThemedText>
+          )}
 
-        <ThemedButton
-          title={mutation.isPending ? 'Logging Training...' : 'Log Training'}
-          onPress={handleSubmit}
-          disabled={mutation.isPending || isLoadingUserSkills}
-          style={styles.button}
-        />
-        {Platform.OS === 'ios' && <ThemedButton title="Close Modal" onPress={() => router.back()} style={styles.button} />}
-      </ThemedView>
-    </ScrollView>
+          {Platform.OS === 'ios' && (
+            <ThemedButton 
+              title="Close Modal" 
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  router.push('/(protected)/(tabs)');
+                }
+              }} 
+              style={styles.button} 
+            />
+          )}
+        </ThemedView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
+    flex: 1,
+  },
+  container: {  
     flex: 1,
   },
   innerContainer: {
     padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
   },
   sectionTitle: {
     fontSize: 18,

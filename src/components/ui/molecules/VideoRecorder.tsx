@@ -1,14 +1,14 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-const createModal = () => {
+const VideoRecorder = () => {
   return (
     <View>
-      <Text>createModal</Text>
+      <Text>VideoRecorder</Text>
     </View>
   )
 }
 
-export default createModal
+export default VideoRecorder
 
 const styles = StyleSheet.create({})

@@ -191,7 +191,7 @@ export const addOrUpdateUserSkill = async ({
     {
       skillId: finalSkillId,
       note,
-      source: source || 'INDEPENDENT', // Default to INDEPENDENT for manually added skills
+      source: source ? source as Database['public']['Enums']['SkillSource'] : 'INDEPENDENT', // Default to INDEPENDENT for manually added skills
       isFavorite,
       videoUrl,
       trainingId: null, // Explicitly set to null for manually added skills

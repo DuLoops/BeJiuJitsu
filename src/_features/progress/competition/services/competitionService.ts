@@ -1,6 +1,6 @@
-import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList'; // For fetching user skills
+import { UserSkillWithDetails } from '@/src/_features/progress/skill/components/UserSkillList'; // For fetching user skills
 import { supabase } from '@/src/lib/supabase';
-import { Tables } from '@/src/supabase/types';
+import { Database } from '@/src/supabase/types';
 import {
   Competition,
   CompetitionDivision,
@@ -39,7 +39,7 @@ export const fetchUserSkillsForCompetitionSelection = async (userId: string): Pr
 };
 
 // Create Competition entry
-const createCompetition = async (competitionData: Tables<'Competition'>['Insert']): Promise<Competition> => {
+const createCompetition = async (competitionData: Database['public']['Tables']['Competition']['Insert']): Promise<Competition> => {
   const { data, error } = await supabase
     .from('Competition') // Ensure table name matches Supabase
     .insert([{ ...competitionData, updated_at: new Date().toISOString() }])
@@ -50,7 +50,7 @@ const createCompetition = async (competitionData: Tables<'Competition'>['Insert'
 };
 
 // Batch create CompetitionDivision entries
-const createCompetitionDivisions = async (divisionsData: Tables<'CompetitionDivision'>['Insert'][]): Promise<CompetitionDivision[]> => {
+const createCompetitionDivisions = async (divisionsData: Database['public']['Tables']['CompetitionDivision']['Insert'][]): Promise<CompetitionDivision[]> => {
   const divisionsToInsert = divisionsData.map(div => ({...div, updated_at: new Date().toISOString()})); // matches are handled separately
   const { data, error } = await supabase
     .from('CompetitionDivision') // Ensure table name matches Supabase
@@ -61,7 +61,7 @@ const createCompetitionDivisions = async (divisionsData: Tables<'CompetitionDivi
 };
 
 // Batch create Match entries
-const createMatches = async (matchesData: Tables<'Match'>['Insert'][]): Promise<Match[]> => {
+const createMatches = async (matchesData: Database['public']['Tables']['Match']['Insert'][]): Promise<Match[]> => {
   const matchesToInsert = matchesData.map(match => ({...match, updated_at: new Date().toISOString()})); // skillUsages are handled separately
   const { data, error } = await supabase
     .from('Match') // Ensure table name matches Supabase
@@ -72,7 +72,7 @@ const createMatches = async (matchesData: Tables<'Match'>['Insert'][]): Promise<
 };
 
 // Batch create UserSkillUsage entries
-const createUserSkillUsagesForCompetition = async (usagesData: Tables<'UserSkillUsage'>['Insert'][]): Promise<UserSkillUsage[]> => {
+const createUserSkillUsagesForCompetition = async (usagesData: Database['public']['Tables']['UserSkillUsage']['Insert'][]): Promise<UserSkillUsage[]> => {
   const usagesToInsert = usagesData.map(usage => ({ ...usage, usageType: 'COMPETITION' as const, updated_at: new Date().toISOString() }));
   const { data, error } = await supabase
     .from('UserSkillUsage') // Ensure table name matches Supabase
@@ -99,7 +99,7 @@ export const createFullCompetitionEntry = async (
 
   if (!newCompetition || !newCompetition.id) throw new Error('Failed to create competition entry.');
 
-  const allSkillUsagesToCreate: Tables<'UserSkillUsage'>['Insert'][] = [];
+  const allSkillUsagesToCreate: Database['public']['Tables']['UserSkillUsage']['Insert'][] = [];
 
   // 2. Process Divisions and their Matches
   for (const divisionFormData of competitionFormData.divisions) {

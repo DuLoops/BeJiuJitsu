@@ -1,9 +1,9 @@
-import { fetchCompetitionsForUser } from '@/src/_features/competition/services/competitionService';
 import { getProfile } from '@/src/_features/profile/services/profileService';
 import { FollowCounts, getFollowCounts } from '@/src/_features/profile/services/socialService';
-import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList';
-import { fetchUserSkillsWithDetails } from '@/src/_features/skill/services/skillService';
-import { fetchTrainingsForUser } from '@/src/_features/training/services/trainingService';
+import { fetchCompetitionsForUser } from '@/src/_features/progress/competition/services/competitionService';
+import { UserSkillWithDetails } from '@/src/_features/progress/skill/components/UserSkillList';
+import { fetchUserSkillsWithDetails } from '@/src/_features/progress/skill/services/skillService';
+import { fetchTrainingsForUser } from '@/src/_features/progress/training/services/trainingService';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { useAuthStore } from '@/src/store/authStore';
 import { Tables } from '@/src/supabase/types';
@@ -14,12 +14,12 @@ import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import React from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    FlatList,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';

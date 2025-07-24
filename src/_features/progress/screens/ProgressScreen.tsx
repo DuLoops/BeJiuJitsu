@@ -1,14 +1,14 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-const createModal = () => {
+const ProgressScreen = () => {
   return (
     <View>
-      <Text>createModal</Text>
+      <Text>ProgressScreen</Text>
     </View>
   )
 }
 
-export default createModal
+export default ProgressScreen
 
 const styles = StyleSheet.create({})

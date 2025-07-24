@@ -34,8 +34,8 @@ Our goal is to build a robust and maintainable UI. Please follow these principle
         * **Molecules (`@/src/components/ui/molecules`)**: Combinations of atoms that function together as a unit (e.g., a search bar, a navigation item with an icon and text).
     * **Layout Components (`components/layout`)**: Components specifically designed for structural layout (e.g., `ScreenContainer`, `FlexRow`, `Spacer`). These help maintain consistent spacing and alignment across the application.
     * **Avoid Duplication**: Before creating a new component, thoroughly check existing components in the `/components` directory. If a similar component exists, extend or reuse it rather than creating a duplicate.
-* **Authentication Flow**:
-    * **Centralized Authentication Logic**: All authentication-related logic and state management should be handled through `@/src/store/authStore.tsx`. Avoid scattered authentication checks or direct Supabase calls within UI components.
+* **Decouple and not have single large file**:
+    * Break down big screen into multiple decoupled components into `../comoponents` directory
 
 ## 🗃️ Data & Constants
 

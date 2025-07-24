@@ -1,7 +1,7 @@
 import {
-    deleteUserSkill,
-    fetchUserSkillsWithDetails,
-} from '@/src/_features/skill/services/skillService';
+  deleteUserSkill,
+  fetchUserSkillsWithDetails,
+} from '@/src/_features/progress/skill/services/skillService';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';

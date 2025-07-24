@@ -1,14 +1,14 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-const createModal = () => {
+const ExploreScreen = () => {
   return (
     <View>
-      <Text>createModal</Text>
+      <Text>ExploreScreen</Text>
     </View>
   )
 }
 
-export default createModal
+export default ExploreScreen
 
 const styles = StyleSheet.create({})
