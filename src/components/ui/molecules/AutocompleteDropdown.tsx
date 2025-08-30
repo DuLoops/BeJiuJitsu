@@ -3,7 +3,7 @@ import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View, TouchableWithoutFeedback } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 // Custom Context for AutocompleteDropdown
 interface AutocompleteDropdownContextType {
@@ -87,7 +87,15 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
   const [filteredData, setFilteredData] = useState<AutocompleteDropdownItem[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [inputPosition, setInputPosition] = useState<{ x: number; y: number; width: number; height: number }>({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
+  
   const inputRef = useRef<TextInput>(null);
+  const containerRef = useRef<View>(null);
   
   const textColor = useThemeColor({}, 'text');
   const iconColor = useThemeColor({}, 'icon');
@@ -153,11 +161,78 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
     return queryIndex === query.length;
   };
 
-  // No re-measuring: dropdown is rendered inline just below the input
+  // Measure input position for dropdown placement
+  const measureInputPosition = () => {
+    if (containerRef.current) {
+      containerRef.current.measureInWindow((x, y, width, height) => {
+        setInputPosition({ x, y, width, height });
+      });
+    }
+  };
+
+  // Update dropdown content in context
+  useEffect(() => {
+    if (showDropdown && filteredData.length > 0 && isFocused) {
+      const dropdownContent = (
+        <View 
+          style={[
+            styles.contextDropdownContainer,
+            {
+              top: inputPosition.y + inputPosition.height + 5,
+              left: inputPosition.x,
+              width: inputPosition.width,
+              zIndex: 9999,
+            }
+          ]}
+        >
+          <TouchableWithoutFeedback onPress={() => {}}>
+            <ThemedView style={styles.dropdownCard}>
+              <ScrollView 
+                style={styles.scrollView}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true}
+              >
+                {filteredData.map((item, index) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[
+                      styles.dropdownItem,
+                      index === filteredData.length - 1 && styles.lastDropdownItem
+                    ]}
+                    onPress={() => handleSelectItem(item)}
+                    activeOpacity={0.7}
+                  >
+                    <ThemedText style={styles.dropdownItemText}>
+                      {item.title}
+                    </ThemedText>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </ThemedView>
+          </TouchableWithoutFeedback>
+        </View>
+      );
+      setContent(dropdownContent);
+    } else {
+      setContent(undefined);
+    }
+  }, [showDropdown, filteredData, isFocused, inputPosition, setContent]);
+
+  // Continuously re-measure while dropdown is open to keep alignment during scroll
+  useEffect(() => {
+    if (!showDropdown) return;
+    const interval = setInterval(() => {
+      measureInputPosition();
+    }, 120);
+    return () => clearInterval(interval);
+  }, [showDropdown]);
 
   // Update active input container ref
   useEffect(() => {
-    activeInputContainerRef.current = null;
+    if (containerRef.current) {
+      activeInputContainerRef.current = containerRef.current;
+    }
   }, [activeInputContainerRef]);
 
   // Filter data when value changes
@@ -168,8 +243,7 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
 
   const handleTextChange = (text: string) => {
     onChangeText(text);
-    const hasMatches = filterData(text);
-    setShowDropdown(hasMatches && isFocused);
+    measureInputPosition();
   };
 
   const handleSelectItem = (item: AutocompleteDropdownItem) => {
@@ -189,6 +263,7 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
 
   const handleFocus = () => {
     setIsFocused(true);
+    measureInputPosition();
     const hasMatches = filterData(value, true);
     setShowDropdown(hasMatches);
   };
@@ -200,7 +275,21 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
     }, 200);
   };
 
-  // Inline dropdown; no outer overlay handling needed
+  const handleContainerPress = () => {
+    blurInput();
+  };
+
+  const handleInputContainerPress = (e: any) => {
+    e.stopPropagation();
+    inputRef.current?.focus();
+  };
+
+  // Clean up content on unmount or when dropdown closes
+  useEffect(() => {
+    if (!showDropdown || !isFocused) {
+      setContent(undefined);
+    }
+  }, [showDropdown, isFocused, setContent]);
 
   // Clean up content on unmount
   useEffect(() => {
@@ -210,69 +299,50 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
   }, [setContent]);
 
   return (
-    <View style={[styles.container, style]}>
-      <View 
-        style={[styles.inputContainer, { borderColor: isFocused ? '#007AFF' : '#e1e5e9' }, inputContainerStyle]}
-      >
-        <TextInput
-          ref={inputRef}
-          style={[styles.textInput, { color: textColor }]}
-          value={value}
-          onChangeText={handleTextChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          placeholder={placeholder}
-          placeholderTextColor="#999"
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-        {value.length > 0 ? (
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={handleClear}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+    <TouchableWithoutFeedback onPress={handleContainerPress}>
+      <View style={[styles.container, style]}>
+        <TouchableWithoutFeedback onPress={handleInputContainerPress}>
+          <View 
+            ref={containerRef}
+            style={[styles.inputContainer, { borderColor: isFocused ? '#007AFF' : '#e1e5e9' }, inputContainerStyle]}
+            onLayout={measureInputPosition}
           >
-            <Ionicons name="close-circle" size={20} color="#999" />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.iconButton}>
-            <Ionicons name="search" size={20} color="#999" />
-          </View>
-        )}
-      </View>
-
-      {showDropdown && filteredData.length > 0 && (
-        <ThemedView style={[styles.dropdownCard, styles.inlineDropdown]}>
-          <ScrollView 
-            style={styles.scrollView}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            nestedScrollEnabled={true}
-          >
-            {filteredData.map((item, index) => (
+            <TextInput
+              ref={inputRef}
+              style={[styles.textInput, { color: textColor }]}
+              value={value}
+              onChangeText={handleTextChange}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              placeholder={placeholder}
+              placeholderTextColor="#999"
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
+            
+            {value.length > 0 ? (
               <TouchableOpacity
-                key={item.id}
-                style={[
-                  styles.dropdownItem,
-                  index === filteredData.length - 1 && styles.lastDropdownItem
-                ]}
-                onPress={() => handleSelectItem(item)}
-                activeOpacity={0.7}
+                style={styles.iconButton}
+                onPress={handleClear}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <ThemedText style={styles.dropdownItemText}>
-                  {item.title}
-                </ThemedText>
+                <Ionicons name="close-circle" size={20} color="#999" />
               </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </ThemedView>
-      )}
-    </View>
+            ) : (
+              <View style={styles.iconButton}>
+                <Ionicons name="search" size={20} color="#999" />
+              </View>
+            )}
+          </View>
+        </TouchableWithoutFeedback>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    position: 'relative',
     zIndex: 1000,
   },
   inputContainer: {
@@ -298,6 +368,18 @@ const styles = StyleSheet.create({
     padding: 4,
     marginLeft: 8,
   },
+  overlayContainer: {
+    position: 'absolute',
+    top: -100,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 99999,
+  },
+  contextDropdownContainer: {
+    position: 'absolute',
+    zIndex: 100000,
+  },
   dropdownCard: {
     backgroundColor: '#ffffff',
     borderRadius: 8,
@@ -307,17 +389,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     maxHeight: 200,
-  },
-  overlayContainer: {
-    position: 'absolute',
-    top: -100,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 99999,
-  },
-  inlineDropdown: {
-    marginTop: 6,
   },
   scrollView: {
     maxHeight: 200,
