@@ -19,6 +19,12 @@ For tasks requiring direct interaction with our backend services—such as datab
 
 Project ID: ejzgwpqhsrnazpckndkb
 
+    * **Supabase Types & Constants**: Always import types and constants directly from `@/src/supabase/types.ts` and `@/src/supabase/constants.ts` respectively. This ensures data consistency and reduces errors related to schema mismatches.
+    *Do not modify `@/src/supabase/types.ts`. Instead run 'npx supabase gen types typescript --linked > src/supabase/types.ts;' to update the types file.
+
+## Zustand
+Utilize Zustand when appropreiate in `src/stores` directory  
+
 ## 🎨 Design System & Component Usage Guidelines
 
 Our goal is to build a robust and maintainable UI. Please follow these principles when creating new features and components:
@@ -39,11 +45,9 @@ Our goal is to build a robust and maintainable UI. Please follow these principle
 
 ## 🗃️ Data & Constants
 
-* **Single Source of Truth**:
-    * **Supabase Types & Constants**: Always import types and constants directly from `@/src/supabase/types.ts` and `@/src/supabase/constants.ts` respectively. This ensures data consistency and reduces errors related to schema mismatches.
-    * Use `@/src` for profject alias for imports
 
 ## 📂 Directory Structure (`src`)
+    * Use `@/src` for profject alias for imports
 
 src
 ├── app
@@ -88,7 +92,7 @@ src
 ├── lib                            # Third-party library configurations/initializations
 │   └── supabase.ts                # Supabase client initialization
 ├── services                       # General API services (not tied to a specific feature)
-├── store/                #Zustand stores
+├── stores/                #Zustand stores
 │   └── authStore.tsx                # Authentication Store, 
 └── supabase                       # Supabase related configurations and definitions
     └── constants.ts               # Supabase-specific constants

@@ -1,10 +1,10 @@
 import {
-  followUser,
-  getFollowStatus,
-  unfollowUser,
+    followUser,
+    getFollowStatus,
+    unfollowUser,
 } from '@/src/_features/profile/services/socialService';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
-import { useAuthStore } from '@/src/store/authStore';
+import { useAuthStore } from '@/src/stores/authStore';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 import { Alert } from 'react-native';

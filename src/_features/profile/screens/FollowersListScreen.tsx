@@ -1,6 +1,6 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { useAuthStore } from '@/src/store/authStore';
+import { useAuthStore } from '@/src/stores/authStore';
 import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';

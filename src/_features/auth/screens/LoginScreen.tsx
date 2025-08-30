@@ -2,9 +2,9 @@ import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { useAuthStore } from '@/src/store/authStore';
+import { useAuthStore } from '@/src/stores/authStore';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
+import { router, useGlobalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
@@ -13,12 +13,18 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { loading, signInWithEmail, session, isInitialized } = useAuthStore();
+  const params = useGlobalSearchParams<{ redirect?: string }>();
+  const redirectParam = Array.isArray(params.redirect) ? params.redirect?.[0] : params.redirect;
 
   useEffect(() => {
     if (isInitialized && session) {
-      router.replace('/(protected)/(tabs)');
+      if (redirectParam && redirectParam.startsWith('/')) {
+        router.replace(redirectParam);
+      } else {
+        router.replace('/(protected)/(tabs)');
+      }
     }
-  }, [session, isInitialized]);
+  }, [session, isInitialized, redirectParam]);
 
   const handleSignIn = async () => {
     setErrorMessage(null);

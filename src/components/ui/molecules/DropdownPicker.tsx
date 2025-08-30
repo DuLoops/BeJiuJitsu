@@ -1,7 +1,7 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface DropdownOption {
@@ -15,22 +15,38 @@ interface DropdownPickerProps {
   onValueChange: (value: string) => void;
   placeholder?: string;
   style?: any;
+  autoOpen?: boolean;
+  // Optional color provider for options; useful for showing belt colors, etc.
+  getOptionColor?: (value: string) => string | undefined;
 }
 
-const DropdownPicker: React.FC<DropdownPickerProps> = ({
+export interface DropdownPickerRef {
+  open: () => void;
+  close: () => void;
+}
+
+const DropdownPicker = forwardRef<DropdownPickerRef, DropdownPickerProps>(({
   options,
   selectedValue,
   onValueChange,
   placeholder = "Select an option",
   style,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
+  autoOpen = false,
+  getOptionColor,
+}, ref) => {
+  const [isOpen, setIsOpen] = useState(autoOpen);
   const tintColor = useThemeColor({}, 'tint');
   const iconColor = useThemeColor({}, 'icon');
   const backgroundColor = useThemeColor({}, 'background');
 
   const selectedOption = options.find(option => option.value === selectedValue);
   const displayText = selectedOption ? selectedOption.label : placeholder;
+  const selectedColor = selectedOption && getOptionColor ? getOptionColor(selectedOption.value) : undefined;
+
+  useImperativeHandle(ref, () => ({
+    open: () => setIsOpen(true),
+    close: () => setIsOpen(false),
+  }));
 
   const handleSelect = (value: string) => {
     onValueChange(value);
@@ -52,6 +68,7 @@ const DropdownPicker: React.FC<DropdownPickerProps> = ({
         onPress={() => setIsOpen(true)}
         activeOpacity={0.7}
       >
+        {selectedColor ? <View style={[styles.colorDot, { backgroundColor: selectedColor }]} /> : null}
         <ThemedText style={styles.dropdownText}>
           {displayText}
         </ThemedText>
@@ -100,6 +117,9 @@ const DropdownPicker: React.FC<DropdownPickerProps> = ({
                     onPress={() => handleSelect(option.value)}
                     activeOpacity={0.7}
                   >
+                    {getOptionColor ? (
+                      <View style={[styles.colorDot, { backgroundColor: getOptionColor(option.value) }]} />
+                    ) : null}
                     <ThemedText 
                       style={[
                         styles.optionText,
@@ -127,7 +147,9 @@ const DropdownPicker: React.FC<DropdownPickerProps> = ({
       </Modal>
     </>
   );
-};
+});
+
+DropdownPicker.displayName = 'DropdownPicker';
 
 export default DropdownPicker;
 
@@ -153,6 +175,14 @@ const styles = StyleSheet.create({
   },
   dropdownIconOpen: {
     transform: [{ rotate: '180deg' }],
+  },
+  colorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   backdrop: {
     flex: 1,

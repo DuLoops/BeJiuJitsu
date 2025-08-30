@@ -48,11 +48,14 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         disabled={saveDisabled}
       >
-        <Ionicons 
-          name="checkmark" 
-          size={24} 
-          color={saveDisabled ? '#ccc' : '#007AFF'} 
-        />
+        <ThemedText 
+          style={[
+            styles.saveButtonText, 
+            { color: saveDisabled ? '#ccc' : '#007AFF' }
+          ]}
+        >
+          {saveTitle}
+        </ThemedText>
       </TouchableOpacity>
     </ThemedView>
   );
@@ -80,6 +83,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

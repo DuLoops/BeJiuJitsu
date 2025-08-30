@@ -4,7 +4,7 @@ import React from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedText from '../../../components/ui/atoms/ThemedText';
 import ThemedView from '../../../components/ui/atoms/ThemedView';
-import { useAuthStore } from '../../../store/authStore';
+import { useAuthStore } from '../../../stores/authStore';
 import FollowButton from '../components/FollowButton';
 import { getFollowingList, SearchedUserProfile } from '../services/socialService';
 

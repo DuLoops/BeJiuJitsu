@@ -1,7 +1,7 @@
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { useAuthStore } from '@/src/store/authStore';
+import { useAuthStore } from '@/src/stores/authStore';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, TextInput } from 'react-native';

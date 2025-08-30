@@ -1,11 +1,11 @@
+import { fetchCompetitionsForUser } from '@/src/_features/competition/services/competitionService';
 import { getProfile } from '@/src/_features/profile/services/profileService';
 import { FollowCounts, getFollowCounts } from '@/src/_features/profile/services/socialService';
-import { fetchCompetitionsForUser } from '@/src/_features/progress/competition/services/competitionService';
-import { UserSkillWithDetails } from '@/src/_features/progress/skill/components/UserSkillList';
-import { fetchUserSkillsWithDetails } from '@/src/_features/progress/skill/services/skillService';
-import { fetchTrainingsForUser } from '@/src/_features/progress/training/services/trainingService';
+import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList';
+import { fetchUserSkillsWithDetails } from '@/src/_features/skill/services/skillService';
+import { fetchTrainingsForUser } from '@/src/_features/training/services/trainingService';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
-import { useAuthStore } from '@/src/store/authStore';
+import { useAuthStore } from '@/src/stores/authStore';
 import { Tables } from '@/src/supabase/types';
 import { CompetitionWithDetails } from '@/src/types/competition';
 import { TrainingWithDetails } from '@/src/types/training';

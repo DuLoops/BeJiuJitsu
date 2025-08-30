@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 export default function NotFoundScreen() {
   return (
     <View style={styles.container}>
-      <Link href="/LoginScreen" style={styles.button}>
+      <Link href="/" style={styles.button}>
         Go back to Home screen!
       </Link>
     </View>

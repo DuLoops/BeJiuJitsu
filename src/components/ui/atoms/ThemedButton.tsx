@@ -25,10 +25,34 @@ const ThemedButton = ({
   icon
 }: ButtonProps) => {
   // Use only valid color keys from Colors
-  const backgroundColor = variant === 'outline' ? 'transparent' : useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const borderColor = variant === 'outline' ? useThemeColor({}, 'tint') : undefined;
+  const tintColor = useThemeColor({}, 'tint');
+  const themeTextColor = useThemeColor({}, 'text');
+  const themeBackgroundColor = useThemeColor({}, 'background');
   const shadowColor = useThemeColor({}, 'icon');
+
+  const backgroundColor = (() => {
+    switch (variant) {
+      case 'primary':
+        return tintColor;
+      case 'outline':
+        return 'transparent';
+      default:
+        return themeBackgroundColor;
+    }
+  })();
+
+  const textColor = (() => {
+    switch (variant) {
+      case 'primary':
+        return 'white';
+      case 'outline':
+        return tintColor;
+      default:
+        return themeTextColor;
+    }
+  })();
+
+  const borderColor = variant === 'outline' ? tintColor : undefined;
 
   const styles = StyleSheet.create({
     button: {

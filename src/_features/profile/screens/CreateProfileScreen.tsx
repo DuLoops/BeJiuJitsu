@@ -1,4 +1,4 @@
-import { UpsertProfileParams } from '@/src/_features/auth/services/profileService';
+import { UpsertProfileParams } from '@/src/_features/profile/services/profileService';
 import { useAddGoal } from '@/src/_features/goals/hooks/useGoalHooks';
 import { GoalsList } from '@/src/_features/profile/components/GoalsList';
 import { SelectRank } from '@/src/_features/profile/components/SelectRank';

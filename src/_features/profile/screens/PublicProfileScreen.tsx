@@ -1,10 +1,10 @@
-import { useAuthStore } from '@/src/store/authStore';
+import { useAuthStore } from '@/src/stores/authStore';
 import { useQuery } from '@tanstack/react-query';
 import React from 'react';
 import {
-  ActivityIndicator,
-  Image,
-  StyleSheet,
+    ActivityIndicator,
+    Image,
+    StyleSheet,
 } from 'react-native'; // Removed View, Text
 // import { Profile } from '@/src/types'; // Removed
 import FollowButton from '@/src/_features/profile/components/FollowButton';

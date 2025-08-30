@@ -53,23 +53,23 @@ export default function ProtectedTabsLayout() {
           <View style={{ width: 200, padding: 20, backgroundColor: 'white', borderRadius: 10, marginBottom: 80, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <TouchableOpacity
               style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
-              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/training'); }}
+              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/record'); }}
             >
-              <ThemedText>Training</ThemedText>
+              <ThemedText>Record</ThemedText>
             </TouchableOpacity>
             <View style={{ height: 1, backgroundColor: '#ccc', width: '100%', marginVertical: 10 }} />
             <TouchableOpacity
               style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
-              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/competition'); }}
+              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/post'); }}
             >
-              <ThemedText>Competition</ThemedText>
+              <ThemedText>Post</ThemedText>
             </TouchableOpacity>
             <View style={{ height: 1, backgroundColor: '#ccc', width: '100%', marginVertical: 10 }} />
             <TouchableOpacity
               style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
-              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/skill'); }}
+              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create'); }}
             >
-              <ThemedText>Skill</ThemedText>
+              <ThemedText>Log</ThemedText>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

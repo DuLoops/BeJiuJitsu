@@ -7,7 +7,7 @@ import {
   Profile,
   UpsertProfileParams,
   upsertSupabaseProfile,
-} from '../../auth/services/profileService';
+} from '../services/profileService';
 
 export const PROFILE_QUERY_KEY_PREFIX = 'profile';
 

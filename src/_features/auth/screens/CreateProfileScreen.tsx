@@ -1,5 +1,5 @@
-import { useCheckUsernameAvailability, useUpsertProfile } from '@/src/_features/auth/hooks/useProfileQueries';
-import { UpsertProfileParams } from '@/src/_features/auth/services/profileService'; // Import params type
+import { useCheckUsernameAvailability, useUpsertProfile } from '@/src/_features/profile/hooks/useProfileQueries';
+import { UpsertProfileParams } from '@/src/_features/profile/services/profileService';
 import { useAddGoal } from '@/src/_features/goals/hooks/useGoalHooks';
 import { GoalsList } from '@/src/_features/profile/components/GoalsList';
 import { SelectRank } from '@/src/_features/profile/components/SelectRank';
@@ -9,7 +9,7 @@ import ThemedButton from '@/src/components/ui/atoms/ThemedButton'; // For Toucha
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput'; // For TextInput
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { useAuthStore } from '@/src/store/authStore'; // Import Zustand store
+import { useAuthStore } from '@/src/stores/authStore'; // Import Zustand store
 import { Enums } from '@/src/supabase/types'; // Added for Belt enum
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react'; // Removed useContext

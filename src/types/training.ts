@@ -2,8 +2,8 @@ import { Tables } from '@/src/supabase/types';
 import { Category, Skill, UserSkill } from './skills'; // Assuming these are still needed for UserSkillUsageWithDetails
 
 // Base types from Supabase
-export type Training = Tables<'Training'>;
-export type UserSkillUsage = Tables<'UserSkillUsage'>;
+export type Training = Tables<'trainings'>;
+export type UserSkillUsage = Tables<'user_skill_usages'>;
 
 // For displaying training sessions with details about skills used
 export interface UserSkillUsageWithDetails extends UserSkillUsage {
@@ -26,7 +26,7 @@ export interface UserSkillUsageFormData {
 }
 
 // If you have a specific Training form, define it here, e.g.:
-export interface TrainingFormData extends Omit<Training, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'user_skill_usages'> {
+export interface TrainingFormData extends Omit<Training, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'user_skill_usages'> {
   // Ensure all necessary fields for creating/updating a training session are here
   // Example: user_skill_usages might be handled differently, e.g. an array of UserSkillUsageFormData
   skillUsages: UserSkillUsageFormData[]; 

@@ -2,16 +2,16 @@ import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import ThemedText from '../../../components/ui/atoms/ThemedText';
 import ThemedView from '../../../components/ui/atoms/ThemedView';
-import { useAuthStore } from '../../../store/authStore';
+import { useAuthStore } from '../../../stores/authStore';
 import { SearchedUserProfile, searchProfiles } from '../../social/services/socialService';
 import FollowButton from '../components/FollowButton';
 

@@ -4,19 +4,19 @@ export default function StackLayout() {
   return (
     <Stack>
       <Stack.Screen 
-        name="create/competition" 
+        name="create/record" 
         options={{ 
           headerShown: false
         }} 
       />
       <Stack.Screen 
-        name="create/skill" 
+        name="create/post" 
         options={{ 
           headerShown: false
         }} 
       />
       <Stack.Screen 
-        name="create/training" 
+      name="create/index" 
         options={{ 
           headerShown: false
         }} 
