@@ -3,97 +3,46 @@ description:
 globs: 
 alwaysApply: true
 ---
-# Project Settings and Architecture Guidelines
+# Project Guidelines
 
-This document outlines the core technical stack, component usage, and directory structure for our project. Adhering to these guidelines will promote consistency, reduce redundancy, and streamline development.
+## Tech Stack
+- **Frontend**: Expo React Native
+- **Backend**: Supabase (Project ID: ejzgwpqhsrnazpckndkb)
+- **State**: React Query (Backend), Zustand (Frontend)
+- **Styling**: Themed Components with `useThemeColor`
 
-## 🚀 Tech Stack
+## Key Rules
+- Use `@/src` for imports
+- Import types from `@/src/supabase/types.ts` (don't modify - regenerate with `npx supabase gen types`)
+- All colors in `src/constants/Colors.ts` - no hardcoded colors
+- Use `ThemedText`, `ThemedView`, `ThemedButton` components
+- Break large screens into decoupled components in `../components` directory
+- Follow atomic design: atoms → molecules → features
 
-* **Frontend**: Expo React Native
-* **Backend**: Supabase
-* **State Manager**: React Query (Backend), Zustand (Frontend)
-* **Styling**: Themed Components (leveraging `useThemeColor` for dynamic theming)
+## Structure
+```
+src/
+├── app/                    # Screens & routing
+├── _features/              # Domain modules  
+├── components/
+│   ├── ui/atoms/          # Basic components
+│   ├── ui/molecules/      # Combined components
+│   └── layout/            # Structure components
+├── constants/             # Colors.ts, Skills.ts
+├── hooks/                 # useThemeColor.ts
+├── stores/                # Zustand stores
+└── supabase/              # types.ts, constants.ts
+```
 
-## Supabase Management
-For tasks requiring direct interaction with our backend services—such as database inspection, running test queries, managing storage, or viewing API logs—you can use the Supabase Management Console.
+## Supabase Database
+For tasks requiring direct interaction with our backend services—such as database inspection, running test queries, managing storage, or viewing API logs—you can use the Supabase MCP
 
 Project ID: ejzgwpqhsrnazpckndkb
 
     * **Supabase Types & Constants**: Always import types and constants directly from `@/src/supabase/types.ts` and `@/src/supabase/constants.ts` respectively. This ensures data consistency and reduces errors related to schema mismatches.
     *Do not modify `@/src/supabase/types.ts`. Instead run 'npx supabase gen types typescript --linked > src/supabase/types.ts;' to update the types file.
 
-## Zustand
-Utilize Zustand when appropreiate in `src/stores` directory  
 
-## 🎨 Design System & Component Usage Guidelines
-
-Our goal is to build a robust and maintainable UI. Please follow these principles when creating new features and components:
-
-* **Single Source of Truth for Theming**:
-    * **Colors**: All color definitions MUST be centralized in `src/constants/Colors.ts`. Avoid hardcoding color values directly in components.
-    * **Themed Components**: Utilize the provided `@/src/components/ui/atoms/ThemedText.tsx`, `@/src/components/ui/atoms/ThemedView.tsx`, and `@/src/components/ui/atoms/ThemedButton.tsx` for standard UI elements. These components are pre-configured to adapt to our light/dark theme.
-    * **Custom Theming**: For any custom component requiring theme-aware styling, always use the `useThemeColor.ts` hook. This hook, in conjunction with `Colors.ts`, ensures consistent adaptation to theme changes.
-
-* **Component Reusability & Structure**:
-    * **Atomic Design Principles**: Strive to break down UI into smaller, reusable pieces.
-        * **Atoms (`@/src/components/ui/atoms`)**: Smallest, indivisible UI elements (e.g., a simple button, a text input, an icon). These should be highly reusable and independent.
-        * **Molecules (`@/src/components/ui/molecules`)**: Combinations of atoms that function together as a unit (e.g., a search bar, a navigation item with an icon and text).
-    * **Layout Components (`components/layout`)**: Components specifically designed for structural layout (e.g., `ScreenContainer`, `FlexRow`, `Spacer`). These help maintain consistent spacing and alignment across the application.
-    * **Avoid Duplication**: Before creating a new component, thoroughly check existing components in the `/components` directory. If a similar component exists, extend or reuse it rather than creating a duplicate.
-* **Decouple and not have single large file**:
-    * Break down big screen into multiple decoupled components into `../comoponents` directory
-
-## 🗃️ Data & Constants
-
-
-## 📂 Directory Structure (`src`)
-    * Use `@/src` for profject alias for imports
-
-src
-├── app
-├── _features                       # Domain-specific modules (e.g., 'user-management', 'competitions')
-│   └── 'feature name'             # Encapsulates related components, screens, services, and utils
-│       ├── components             # Feature-specific components
-│       ├── screens                # Feature-specific screens
-│       ├── services               # API calls related to the feature
-│       ├── utils                  # Utility functions specific to the feature
-│       └── index.ts                  # Barrel file to export reusable components
-│   ├── (auth)                     # Authentication related screens (e.g., sign-in, sign-up)
-│   ├── (protected)                # Screens requiring authentication
-│   │   ├── (modal)                # Modal screens (e.g., create competition, skill, training)
-│   │   │   └── create
-│   │   │       ├── competition.tsx
-│   │   │       ├── skill.tsx
-│   │   │       └── training.tsx
-│   │   ├── (tabs)                 # Tabbed navigation screens
-│   │   │   ├── _layout.tsx        # Layout for tab navigation
-│   │   │   ├── index.tsx          # Home screen (default tab)
-│   │   │   └── profile            # User profile screen
-│   │   ├── _layout.tsx            # Layout for protected routes
-│   │   └── create-profile.tsx     # Screen for initial user profile creation
-│   ├── +not-found.tsx             # 404 Not Found screen
-│   └── _layout.tsx                # Main app layout (e.g., for global navigation, providers)
-├── assets                         # Static assets (images, fonts, etc.)
-├── components                     # Reusable UI components (our design system)
-│   ├── layout                     # Components for overall page structure and spacing
-│   │   └── ThemedView.tsx         # Themed container view
-│   ├── ui                         # Atomic design system components
-│   │   ├── atoms                  # Smallest, reusable UI elements (e.g., ThemedText, ThemedButton)
-│   │   │   ├── ThemedButton.tsx   # Themed button component
-│   │   │   └── ThemedText.tsx     # Themed text component
-│   │   └── molecules              # Combinations of atoms (e.g., form inputs, navigation items)
-├── constants                      # Application-wide constants
-│   ├── Colors.ts                  # Centralized color definitions for theming
-│   └── Skills.ts                  # Application-specific skill constants
-├── context                        # React Context providers (e.g., AuthContext)
-│   └── AuthContext.tsx
-├── hooks                          # Custom React Hooks
-│   └── useThemeColor.ts           # Hook for dynamic theme-aware colors
-├── lib                            # Third-party library configurations/initializations
-│   └── supabase.ts                # Supabase client initialization
-├── services                       # General API services (not tied to a specific feature)
-├── stores/                #Zustand stores
-│   └── authStore.tsx                # Authentication Store, 
-└── supabase                       # Supabase related configurations and definitions
-    └── constants.ts               # Supabase-specific constants
-    └── types.ts               # Supabase-specific types
+## Testing
+- Utilize maestro mcp
+- Reference `maestro/claude.md` for reference

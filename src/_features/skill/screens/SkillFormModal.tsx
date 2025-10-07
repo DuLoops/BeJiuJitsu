@@ -10,18 +10,19 @@ import { Database, Tables } from '@/src/supabase/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Modal, ScrollView, StyleSheet, TextInput, TouchableWithoutFeedback, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, TextInput, TouchableWithoutFeedback, View } from 'react-native';
 import { addUserSkillWithNotesAndVideos, fetchAllSkills, fetchUserSkillNotes, fetchUserSkills, fetchUserSkillVideos, replaceUserSkillNotesAndVideos } from '../services/skillService';
 
 interface SkillFormModalProps {
   visible: boolean;
   onClose: () => void;
-  source: 'TRAINING' | 'COMPETITION';
+  source: 'TRAINING' | 'COMPETITION' | 'POST';
   trainingActivityId?: string;
   matchId?: string;
+  postId?: string;
 }
 
-const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, source, trainingActivityId, matchId }) => {
+const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, source, trainingActivityId, matchId, postId }) => {
   const { session } = useAuthStore();
   const queryClient = useQueryClient();
   const userId = session?.user?.id;
@@ -73,6 +74,10 @@ const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, sourc
   const [videos, setVideos] = useState<string[]>([]);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [pendingNoteIndex, setPendingNoteIndex] = useState<number | null>(null);
+  const [loadingUserSkillData, setLoadingUserSkillData] = useState(false);
+  const [savedSkillInfo, setSavedSkillInfo] = useState<{ name: string; category: string; isNew: boolean } | null>(null);
+  const [loadedNotesData, setLoadedNotesData] = useState<Tables<'user_skill_notes'>[]>([]);
+  const [loadedVideosData, setLoadedVideosData] = useState<Tables<'user_skill_videos'>[]>([]);
 
   useEffect(() => {
     if (selectedSkill?.categoryId) {
@@ -88,6 +93,7 @@ const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, sourc
       setSelectedCategoryId(null);
       setNotes(['']);
       setVideos([]);
+      setSavedSkillInfo(null);
     } else {
       // ensure at least one note when opening
       setNotes((prev) => (prev.length === 0 ? [''] : prev));
@@ -111,6 +117,7 @@ const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, sourc
           source,
           trainingActivityId,
           matchId,
+          postId,
         });
         return { id: existingUserSkillId } as Tables<'user_skills'>;
       }
@@ -122,15 +129,26 @@ const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, sourc
         source,
         trainingActivityId,
         matchId,
+        postId,
         notes,
         videoUrls: videos,
       });
     },
-    onSuccess: () => {
-      Alert.alert('Success', 'Skill added');
+    onSuccess: (result) => {
+      const categoryToUse = (selectedCategoryId || (selectedSkill?.categoryId as Database['public']['Enums']['Category'] | undefined)) || 'Unknown';
+      const existingUserSkillId = selectedSkill ? skillIdToUserSkillId.get(selectedSkill.id) : undefined;
+      const isNew = !existingUserSkillId;
+
+      setSavedSkillInfo({
+        name: skillName.trim(),
+        category: categoryToUse as string,
+        isNew,
+      });
+
       queryClient.invalidateQueries({ queryKey: ['userSkillsWithDetails', userId] });
       queryClient.invalidateQueries({ queryKey: ['userSkills', userId] });
-      onClose();
+
+      // Don't close immediately - show success state
     },
     onError: (e: any) => Alert.alert('Error', e.message || 'Failed to add skill'),
   });
@@ -157,6 +175,21 @@ const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, sourc
   const updateVideo = (idx: number, url: string) => setVideos((prev) => prev.map((v, i) => (i === idx ? url : v)));
   const removeVideo = (idx: number) => setVideos((prev) => prev.filter((_, i) => i !== idx));
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <ConfirmAlert
@@ -177,32 +210,74 @@ const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, sourc
         <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
           <ThemedView style={[styles.card, { backgroundColor }]}>            
             <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-              <ThemedText style={styles.title}>Skill</ThemedText>
+              <ThemedText style={styles.title}>{savedSkillInfo ? 'Success!' : 'Skill'}</ThemedText>
 
-              <AutocompleteDropdownWithFilter
-                data={skillItems}
-                categories={categoryChips}
-                value={skillName}
-                onChangeText={(t) => { setSkillName(t); setSelectedSkill(null); }}
-                onSelectItem={(item) => {
+              {savedSkillInfo && (
+                <View style={styles.successCard}>
+                  <View style={styles.successHeader}>
+                    <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
+                    <ThemedText style={styles.successTitle}>
+                      {savedSkillInfo.isNew ? 'Skill Created!' : 'Skill Updated!'}
+                    </ThemedText>
+                  </View>
+                  <View style={styles.successDetails}>
+                    <View style={styles.successRow}>
+                      <ThemedText style={styles.successLabel}>Name:</ThemedText>
+                      <ThemedText style={styles.successValue}>{savedSkillInfo.name}</ThemedText>
+                    </View>
+                    <View style={styles.successRow}>
+                      <ThemedText style={styles.successLabel}>Category:</ThemedText>
+                      <ThemedText style={styles.successValue}>{savedSkillInfo.category}</ThemedText>
+                    </View>
+                    <View style={styles.successRow}>
+                      <ThemedText style={styles.successLabel}>Notes:</ThemedText>
+                      <ThemedText style={styles.successValue}>{notes.filter(n => n.trim()).length}</ThemedText>
+                    </View>
+                    <View style={styles.successRow}>
+                      <ThemedText style={styles.successLabel}>Videos:</ThemedText>
+                      <ThemedText style={styles.successValue}>{videos.filter(v => v.trim()).length}</ThemedText>
+                    </View>
+                  </View>
+                  <ThemedButton
+                    title="Done"
+                    onPress={onClose}
+                    style={styles.doneButton}
+                  />
+                </View>
+              )}
+
+              {!savedSkillInfo && (
+                <>
+                  <AutocompleteDropdownWithFilter
+                    data={skillItems}
+                    categories={categoryChips}
+                    value={skillName}
+                    onChangeText={(t) => { setSkillName(t); setSelectedSkill(null); }}
+                    onSelectItem={(item) => {
                   setSelectedSkill(item);
                   setSkillName(item?.title || '');
                   // If item is one of user's skills, load existing notes/videos
                   if (item && mySkillIdSet.has(item.id)) {
                     const userSkillId = skillIdToUserSkillId.get(item.id);
                     if (userSkillId) {
+                      setLoadingUserSkillData(true);
                       Promise.all([
                         fetchUserSkillNotes(userSkillId),
                         fetchUserSkillVideos(userSkillId),
                       ])
                         .then(([existingNotes, existingVideos]) => {
-                          setNotes(existingNotes.length > 0 ? existingNotes.sort((a,b)=> (a.note_order||0)-(b.note_order||0)).map(n => n.note) : ['']);
-                          setVideos(existingVideos.length > 0 ? existingVideos.sort((a,b)=> (a.video_order||0)-(b.video_order||0)).map(v => v.video_url) : []);
+                          const sortedNotes = existingNotes.sort((a,b)=> (a.note_order||0)-(b.note_order||0));
+                          const sortedVideos = existingVideos.sort((a,b)=> (a.video_order||0)-(b.video_order||0));
+                          setLoadedNotesData(sortedNotes);
+                          setLoadedVideosData(sortedVideos);
+                          setNotes(sortedNotes.length > 0 ? sortedNotes.map(n => n.note) : ['']);
+                          setVideos(sortedVideos.length > 0 ? sortedVideos.map(v => v.video_url) : []);
                         })
                         .catch(() => {
                           setNotes(['']);
                           setVideos([]);
-                        });
+                        })
+                        .finally(() => setLoadingUserSkillData(false));
                     }
                   } else {
                     setNotes((prev)=> prev.length? prev: ['']);
@@ -213,6 +288,22 @@ const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, sourc
                 showCategoryChips={true}
                 showMineChip={true}
               />
+
+              {loadingUserSkillData && (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" />
+                  <ThemedText style={styles.loadingText}>Loading skill data...</ThemedText>
+                </View>
+              )}
+
+              {selectedSkill && mySkillIdSet.has(selectedSkill.id) && !loadingUserSkillData && (
+                <View style={styles.infoContainer}>
+                  <Ionicons name="information-circle" size={16} color="#007AFF" />
+                  <ThemedText style={styles.infoText}>
+                    Loaded {notes.filter(n => n.trim()).length} note(s) and {videos.filter(v => v.trim()).length} video(s) from your saved skill
+                  </ThemedText>
+                </View>
+              )}
 
               <View style={styles.spacer} />
               <ThemedText style={styles.label}>Category</ThemedText>
@@ -225,47 +316,71 @@ const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, sourc
 
               <View style={styles.section}>
                 <ThemedText style={styles.label}>Notes</ThemedText>
-                {notes.map((n, idx) => (
-                  <View key={`note_${idx}`} style={styles.noteContainer}>
-                    <TextInput
-                      style={styles.textArea}
-                      value={n}
-                      onChangeText={(t) => updateNote(idx, t)}
-                      placeholder={`Note ${idx + 1}`}
-                      multiline
-                    />
-                    <TouchableWithoutFeedback onPress={() => requestRemoveNote(idx)}>
-                      <View style={styles.noteTrashIcon}>
-                        <Ionicons name="trash" size={18} color="#dc3545" />
-                      </View>
-                    </TouchableWithoutFeedback>
-                  </View>
-                ))}
+                {notes.map((n, idx) => {
+                  const noteData = loadedNotesData[idx];
+                  const lastEdited = noteData?.updated_at || noteData?.created_at;
+                  return (
+                    <View key={`note_${idx}`} style={styles.noteContainer}>
+                      {lastEdited && (
+                        <ThemedText style={styles.timestampText}>
+                          Last edited: {formatDate(lastEdited)}
+                        </ThemedText>
+                      )}
+                      <TextInput
+                        style={styles.textArea}
+                        value={n}
+                        onChangeText={(t) => updateNote(idx, t)}
+                        placeholder={`Note ${idx + 1}`}
+                        multiline
+                      />
+                      <TouchableWithoutFeedback onPress={() => requestRemoveNote(idx)}>
+                        <View style={styles.noteTrashIcon}>
+                          <Ionicons name="trash" size={18} color="#dc3545" />
+                        </View>
+                      </TouchableWithoutFeedback>
+                    </View>
+                  );
+                })}
                 <ThemedButton title="Add Note" onPress={addNote} />
               </View>
 
               <View style={styles.section}>
                 <ThemedText style={styles.label}>Videos</ThemedText>
-                {videos.map((v, idx) => (
-                  <View key={`vid_${idx}`} style={styles.row}>                    
-                    <TextInput
-                      style={styles.textInput}
-                      value={v}
-                      onChangeText={(t) => updateVideo(idx, t)}
-                      placeholder="Video URL"
-                      autoCapitalize="none"
-                    />
-                    <ThemedButton title="Remove" onPress={() => removeVideo(idx)} style={styles.removeBtn} />
-                  </View>
-                ))}
+                {videos.map((v, idx) => {
+                  const videoData = loadedVideosData[idx];
+                  const lastEdited = videoData?.updated_at || videoData?.created_at;
+                  return (
+                    <View key={`vid_${idx}`}>
+                      {lastEdited && (
+                        <ThemedText style={styles.timestampText}>
+                          Last edited: {formatDate(lastEdited)}
+                        </ThemedText>
+                      )}
+                      <View style={styles.row}>
+                        <TextInput
+                          style={styles.textInput}
+                          value={v}
+                          onChangeText={(t) => updateVideo(idx, t)}
+                          placeholder="Video URL"
+                          autoCapitalize="none"
+                        />
+                        <ThemedButton title="Remove" onPress={() => removeVideo(idx)} style={styles.removeBtn} />
+                      </View>
+                    </View>
+                  );
+                })}
                 <ThemedButton title="Add Video" onPress={addVideo} />
               </View>
 
+                </>
+              )}
             </ScrollView>
-            <View style={styles.actions}>
-              <ThemedButton title="Cancel" variant="secondary" onPress={onClose} />
-              <ThemedButton title="Save" onPress={() => mutation.mutate()} disabled={mutation.isPending || loadingSkills} />
-            </View>
+            {!savedSkillInfo && (
+              <View style={styles.actions}>
+                <ThemedButton title="Cancel" variant="secondary" onPress={onClose} />
+                <ThemedButton title="Save" onPress={() => mutation.mutate()} disabled={mutation.isPending || loadingSkills} />
+              </View>
+            )}
           </ThemedView>
         </TouchableWithoutFeedback>
       </View>
@@ -337,6 +452,19 @@ const styles = StyleSheet.create({
   noteTrashIcon: { position: 'absolute', right: 8, bottom: 8 },
   removeBtn: { minWidth: 90 },
   actions: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 16, gap: 12 },
+  loadingContainer: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8 },
+  loadingText: { fontSize: 14, color: '#666' },
+  infoContainer: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#E3F2FD', borderRadius: 8, marginTop: 8 },
+  infoText: { fontSize: 13, color: '#1976D2', flex: 1 },
+  successCard: { backgroundColor: '#F1F8F4', borderRadius: 12, padding: 20, marginBottom: 16 },
+  successHeader: { alignItems: 'center', marginBottom: 20 },
+  successTitle: { fontSize: 20, fontWeight: '600', color: '#4CAF50', marginTop: 8 },
+  successDetails: { gap: 12, marginBottom: 20 },
+  successRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  successLabel: { fontSize: 14, color: '#666', fontWeight: '500' },
+  successValue: { fontSize: 14, color: '#333', fontWeight: '600' },
+  doneButton: { marginTop: 8 },
+  timestampText: { fontSize: 11, color: '#888', marginBottom: 4, fontStyle: 'italic' },
 });
 
 export default SkillFormModal;

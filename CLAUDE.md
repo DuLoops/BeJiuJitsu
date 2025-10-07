@@ -16,6 +16,10 @@ npx expo start --web
 # Code quality
 npm run lint       # Run ESLint
 
+# Testing
+maestro test maestro/flows/                    # Run all E2E tests
+maestro test maestro/flows/01-app-launch.yaml  # Run specific test
+
 # Reset project (clean setup)
 npm run reset-project
 ```
@@ -64,6 +68,7 @@ Each feature contains:
 - Update types with: `npx supabase gen types typescript --linked > src/supabase/types.ts`
 - Constants and enums in `src/supabase/constants.ts`
 - Client configured in `src/lib/supabase.ts`
+- Utilize default Supabase features such as auto UUID
 
 **State Management**:
 - Zustand stores in `src/stores/` for client-side state
@@ -78,10 +83,36 @@ File-based routing with Expo Router:
   - `(modal)/`: Modal screens for creation flows
   - `profile/`: Dynamic profile routes
 
-## Testing
+## Testing & Test-Driven Development
 
-Uses Playwright for E2E testing. Configuration in `playwright.config.ts`.
-- Always view the project in a mobile view.
+Uses Maestro for React Native E2E testing. **See `maestro/CLAUDE.md` for comprehensive testing guidance.**
+
+### TestID-First Development
+
+**ALWAYS** add testIDs to interactive components during development:
+
+```tsx
+// ✅ Required for all buttons
+<ThemedButton
+  title="Save"
+  onPress={handleSave}
+  testID="save-training-button"  // for testing
+/>
+
+// ✅ Required for all form inputs
+<TextInput
+  placeholder="Enter title"
+  value={title}
+  onChangeText={setTitle}
+  testID="title-input"  // for testing
+/>
+
+```
+
+### TestID Naming Convention
+- Use `kebab-case`: `add-activity-button`, `title-input`
+- Be descriptive: `{action}-{target}-{type}`
+- Follow patterns in `maestro/CLAUDE.md`
 
 ## Visual Development
 
@@ -93,12 +124,12 @@ Uses Playwright for E2E testing. Configuration in `playwright.config.ts`.
 ### Quick Visual Check
 IMMEDIATELY after implementing any front-end change:
 1. **Identify what changed** - Review the modified components/pages
-2. **Navigate to affected pages** - Use `mcp__playwright__browser_navigate` to visit each changed view
+2. **Navigate to affected pages** - Use Maestro MCP tools to navigate and test changed views
 3. **Verify design compliance** - Compare against `docs/design-principles.md` and `docs/style-guide.md`
 4. **Validate feature implementation** - Ensure the change fulfills the user's specific request
 5. **Check acceptance criteria** - Review any provided context files or requirements
 6. **Capture evidence** - Take full page screenshot of each changed view
-7. **Check for errors** - Run `mcp__playwright__browser_console_messages`
+7. **Check for errors** - Use `mcp__maestro__inspect_view_hierarchy` and console output
 
 This verification ensures changes meet design standards and user requirements.
 
@@ -107,6 +138,12 @@ Invoke the `design-review` agent for thorough design validation when:
 - Completing significant UI/UX features
 - Before finalizing PRs with visual changes
 - Needing comprehensive accessibility and responsiveness testing
+
+### Maestro Testing Integration
+When implementing new features or fixing bugs:
+1. **Run existing tests** - Ensure `maestro test maestro/flows/` passes
+2. **Create new tests** - Add test coverage for new functionality
+3. **Update test documentation** - Keep `maestro/README.md` current
 
 ## Database Schema
 
@@ -124,3 +161,4 @@ BJJ-focused schema with:
 - Repository: `DuLoops/BeJiuJitsu`
 - Current branch: `sprint2`
 - Use GitHub CLI (`gh`) for repository operations
+- use uuid from react-native-get-random-values package

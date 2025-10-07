@@ -1,0 +1,27 @@
+Implementation Review
+
+Auth foundation manages Supabase sessions, app state refresh, and dev auto-login while exposing sign-in/out actions to UI flows (src/stores/authStore.ts:19); the current login form wraps these actions in Expo inputs and buttons (src/_features/auth/screens/LoginScreen.tsx:1).
+Bottom tabs replicate the Explore / Create / Progress navigation described in the product brief, with a modal entry point into logging and posting flows (src/app/(protected)/(tabs)/_layout.tsx:16); the Explore tab itself is still a placeholder view (src/_features/explore/screens/ExploreScreen.tsx:1).
+Training logging delivers dynamic activity cards, Supabase mutations, and value/unit tracking that align with the “Log training” epic (docs/features.md:41) by persisting to trainings and related tables (src/_features/training/screens/CreateTrainingScreen.tsx:50, src/_features/training/components/TrainingActivityForm.tsx:1, src/_features/training/services/trainingService.ts:1).
+Competition logging mirrors the second milestone: tournaments, divisions, and match records feed into Supabase via a comprehensive save routine, covering “Log competition” stories from the feature plan (src/_features/competition/screens/CreateCompetitionScreen.tsx:52).
+Progress tracking unifies trainings, competitions, and skill footage into a calendar + list experience that matches the PRD Log tab requirements (docs/product-requirements-document.md:55), powered by React Query hooks and Supabase aggregations (src/_features/progress/screens/ProgressScreen.tsx:16, src/_features/progress/hooks/useProgressData.ts:8, src/_features/progress/services/progressService.ts:4); activity typing is backed by the generated enums in Supabase TrainingType/TrainingUnit (src/supabase/types.ts:520, src/supabase/types.ts:980).
+Alignment With PRD & Features
+
+The Create modal already exposes “Log Training” and “Log Competition,” matching the required actions list (docs/product-requirements-document.md:46) and the detailed flows in docs/features.md:41.
+Progress’ filter chips and calendar satisfy the “Training Calendar” and tag-count expectations from docs/features.md:59, but the Skill tab promised in that section is not yet implemented.
+Persona goals for Evan (analytics-heavy competitor) are partially met via activity aggregation and footage logging, while Chloe’s social feed expectations remain unmet until the Home/Explore work is tackled (docs/product-requirements-document.md:78, docs/features.md:87).
+Supabase schema coverage includes user_follows, user_skill_*, and competition tables, giving headroom for Explore/social features and aligning with the multi-epic scope defined in docs/product-requirements-document.md:64.
+Gaps & Risks
+
+Skill-side progress view, roll recorder, and social posting are still stubs, leaving large portions of the Explore & Learn and Roll Recorder epics unaddressed.
+Progress list items stop at console logging for navigation (src/_features/progress/screens/ProgressScreen.tsx:63), so drilling into details or editing logs is not yet supported.
+Activity fetching lacks pagination, timezone handling, and optimistic cache updates; heavy histories could strain mobile memory, and integrating Strava-style metrics will require summarization endpoints.
+Training activity duration parsing assumes values in minutes/hours only (src/_features/progress/services/progressService.ts:40); units like rounds or submissions are ignored in summaries, which may confuse users once non-time-based logs become common.
+Home Screen Roadmap
+
+Discovery & schema prep: consolidate personas, follow graphs, and content needs from docs/product-requirements-document.md:64; extend Supabase with posts, post_reactions, media_assets, and gym-channel relations so we can represent Reddit-like threads, Instagram-style posts, and TeamSnap announcements; index by category tags defined in docs/features.md:6.
+Content capture pipeline: enhance the existing Create modal to support media upload, multi-tag selection, and skill linkage; leverage Supabase Storage for video/photo hosting; ensure posts can reference trainings, competitions, or skills similar to Strava’s workout summaries.
+Feed & discovery services: build query endpoints or edge functions that mix Hot/Following/Fundamentals filters (docs/features.md:6); prototype ranking heuristics inspired by Reddit (freshness + engagement), Instagram (following + recommendations), and Strava (club/team boosts); add follow suggestions surfaced from shared gyms or training frequency.
+Social UX & moderation: design card components with likes, comments, saves, and share actions; incorporate reels-style video playback for Paul’s visual learning and role highlight reels; provide gym pages for John with post pinning and event promotion tools, echoing TeamSnap’s roster announcements.
+Analytics, guardrails, and iteration: instrument post engagement and scroll depth, add reporting/moderation queues, and run cohort tests on recommendation weights; close the loop with progress analytics by allowing posts to embed training stats or match clips, reinforcing the journey-tracking narrative.
+Next step ideas: 1) Model the posts and post_reactions tables in Supabase alongside row-level security. 2) Flesh out the Skill tab in Progress so the Home feed can reference skill collections.

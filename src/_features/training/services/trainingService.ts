@@ -1,5 +1,11 @@
 import { supabase } from '@/src/lib/supabase';
 import { Tables, TablesInsert } from '@/src/supabase/types';
+import { v4 as uuidv4 } from 'uuid';
+
+// Generate a UUID using uuid library
+const generateUUID = () => {
+  return uuidv4();
+};
 
 type Training = Tables<'trainings'>;
 type TrainingActivity = Tables<'training_activities'>;
@@ -30,14 +36,14 @@ export const fetchUserSkillsForSelection = async (userId: string): Promise<any[]
 // Create Training entry
 export const createTraining = async (trainingData: { title: string; useId?: string | null }): Promise<Training> => {
   const insertData: TablesInsert<'trainings'> = {
-    id: crypto.randomUUID(),
+    id: generateUUID(),
     title: trainingData.title,
     useId: trainingData.useId || null,
   };
 
   const { data, error } = await supabase
-    .from('trainings') // Ensure this matches your Supabase table name for Training
-    .insert([insertData])
+    .from('trainings')
+    .insert(insertData)
     .select()
     .single();
 
@@ -62,7 +68,6 @@ export const createTrainingActivities = async (
     return {
       ...activityData,
       training_id: trainingId,
-      id: crypto.randomUUID(),
     };
   }) as TablesInsert<'training_activities'>[];
 
@@ -101,7 +106,7 @@ export const createTrainingActivityValues = async (
   }
 
   const valuesToInsert = valuesData.map(valueData => ({
-    id: crypto.randomUUID(),
+    id: generateUUID(),
     training_activity_id: trainingActivityId,
     value: valueData.value,
     unit: valueData.unit,

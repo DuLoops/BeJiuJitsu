@@ -1,0 +1,30 @@
+appId: host.exp.Exponent
+---
+# Debug competition test step by step
+
+# 1. NAVIGATE: Launch app and go to Competition screen
+- runFlow: ../navigation/navigate-to-competition.yaml
+
+# 2. Wait and assert we're on the competition screen
+- waitForAnimationToEnd
+- assertVisible:
+    id: "log-competition-tab"
+
+# 3. Enter competition title
+- tapOn:
+    id: "competition-title-input"
+- waitForAnimationToEnd
+- inputText: "Test Competition"
+
+# 4. Verify save button exists
+- assertVisible:
+    id: "save-button"
+
+# 5. Add a match
+- tapOn:
+    id: "add-match-button"
+- waitForAnimationToEnd
+
+# 6. Save
+- tapOn:
+    id: "save-button"

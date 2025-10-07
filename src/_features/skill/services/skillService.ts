@@ -3,6 +3,22 @@ import { Database, Tables } from '@/src/supabase/types';
 
 // Fetch Functions
 
+// Fetch categories as predefined list from Category enum
+export const fetchCategories = async (): Promise<Array<{ id: string; name: string }>> => {
+  // Return the Category enum values as a list
+  const categories: Database['public']['Enums']['Category'][] = [
+    'Submission',
+    'Takedown',
+    'Pass',
+    'Control',
+    'Escape',
+    'Guard',
+    'Sweep',
+    'System',
+  ];
+  return categories.map(cat => ({ id: cat, name: cat }));
+};
+
 export const fetchSkills = async (category?: Database['public']['Enums']['Category']) => {
   let query = supabase.from('skills').select('*');
   if (category) {
@@ -76,6 +92,7 @@ export const replaceUserSkillNotesAndVideos = async ({
   source,
   trainingActivityId,
   matchId,
+  postId,
 }: {
   userSkillId: string;
   notes?: string[];
@@ -83,6 +100,7 @@ export const replaceUserSkillNotesAndVideos = async ({
   source?: Database['public']['Enums']['SkillSource'] | string;
   trainingActivityId?: string;
   matchId?: string;
+  postId?: string;
 }) => {
   // Delete existing rows to fully replace (ensures removed entries are cleaned up)
   const { error: notesDelError } = await supabase.from('user_skill_notes').delete().eq('user_skill_id', userSkillId);
@@ -92,41 +110,65 @@ export const replaceUserSkillNotesAndVideos = async ({
 
   // Insert new notes
   if (notes.length > 0) {
-    const baseOrder = Date.now();
     const noteRows = notes
       .filter((n) => n && n.trim().length > 0)
       .map((n, idx) => ({
         user_skill_id: userSkillId,
         note: n.trim(),
-        note_order: baseOrder + idx, // ensure global uniqueness to avoid conflicts
+        note_order: idx,
         source: (source as any) || 'INDEPENDENT',
-        training_activity_id: trainingActivityId || null,
-        match_id: matchId || null,
-      } as Tables<'user_skill_notes'>));
-    const { error } = await supabase
+      }));
+
+    const { data: insertedNotes, error: notesError } = await supabase
       .from('user_skill_notes')
-      .insert(noteRows);
-    if (error) throw error;
+      .insert(noteRows)
+      .select('id');
+    if (notesError) throw notesError;
+
+    // Create junction table entries if parent entity is specified
+    if (insertedNotes && (trainingActivityId || matchId || postId)) {
+      const linkRows = insertedNotes.map(note => {
+        const link: any = { user_skill_note_id: note.id };
+        if (trainingActivityId) link.training_activity_id = trainingActivityId;
+        if (matchId) link.match_id = matchId;
+        if (postId) link.post_id = postId;
+        return link;
+      });
+      const { error: linkError } = await supabase.from('skill_content_links').insert(linkRows);
+      if (linkError) throw linkError;
+    }
   }
 
   // Insert new videos
   if (videoUrls.length > 0) {
-    const baseOrder = Date.now();
     const videoRows = videoUrls
       .filter((v) => v && v.trim().length > 0)
       .map((v, idx) => ({
         user_skill_id: userSkillId,
         video_url: v.trim(),
-        video_order: baseOrder + idx, // ensure global uniqueness to avoid conflicts
+        video_order: idx,
         source: (source as any) || 'INDEPENDENT',
-        training_activity_id: trainingActivityId || null,
-        match_id: matchId || null,
         note: null,
-      } as Tables<'user_skill_videos'>));
-    const { error } = await supabase
+      }));
+
+    const { data: insertedVideos, error: videosError } = await supabase
       .from('user_skill_videos')
-      .insert(videoRows);
-    if (error) throw error;
+      .insert(videoRows)
+      .select('id');
+    if (videosError) throw videosError;
+
+    // Create junction table entries if parent entity is specified
+    if (insertedVideos && (trainingActivityId || matchId || postId)) {
+      const linkRows = insertedVideos.map(video => {
+        const link: any = { user_skill_video_id: video.id };
+        if (trainingActivityId) link.training_activity_id = trainingActivityId;
+        if (matchId) link.match_id = matchId;
+        if (postId) link.post_id = postId;
+        return link;
+      });
+      const { error: linkError } = await supabase.from('skill_content_links').insert(linkRows);
+      if (linkError) throw linkError;
+    }
   }
 
   return true;
@@ -242,6 +284,7 @@ export const addUserSkillWithNotesAndVideos = async ({
   source,
   trainingActivityId,
   matchId,
+  postId,
   notes = [],
   videoUrls = [],
 }: {
@@ -251,6 +294,7 @@ export const addUserSkillWithNotesAndVideos = async ({
   source?: Database['public']['Enums']['SkillSource'] | string;
   trainingActivityId?: string;
   matchId?: string;
+  postId?: string;
   notes?: string[];
   videoUrls?: string[];
 }) => {
@@ -269,6 +313,7 @@ export const addUserSkillWithNotesAndVideos = async ({
     source,
     trainingActivityId,
     matchId,
+    postId,
   });
 
   return userSkill;
@@ -279,4 +324,69 @@ export const deleteUserSkill = async (userSkillId: string) => {
   const { error } = await supabase.from('user_skills').delete().eq('id', userSkillId);
   if (error) throw error;
   return true;
+};
+
+// Add or update UserSkill with sequences (sequences are currently not stored)
+export const addUserSkillWithSequences = async ({
+  userId,
+  userSkillId,
+  skillName,
+  categoryId,
+  categoryName,
+  note,
+  source,
+  isFavorite,
+  videoUrl,
+  sequences,
+  trainingActivityId,
+  matchId,
+  postId,
+}: {
+  userId: string;
+  userSkillId?: string | null;
+  skillName: string;
+  categoryId?: string | null;
+  categoryName?: string;
+  note?: string;
+  source?: Database['public']['Enums']['SkillSource'] | string;
+  isFavorite?: boolean;
+  videoUrl?: string;
+  sequences?: any[];
+  trainingActivityId?: string;
+  matchId?: string;
+  postId?: string;
+}) => {
+  // Determine the category to use
+  let finalCategory: Database['public']['Enums']['Category'];
+
+  if (categoryId) {
+    finalCategory = categoryId as Database['public']['Enums']['Category'];
+  } else if (categoryName) {
+    finalCategory = categoryName as Database['public']['Enums']['Category'];
+  } else {
+    throw new Error('Category is required');
+  }
+
+  // If editing, we don't use userSkillId yet - we just create/link the skill
+  const userSkill = await addOrUpdateUserSkill({
+    userId,
+    skillName,
+    category: finalCategory,
+  });
+
+  // Store note and videoUrl as notes and videos
+  const notes = note ? [note] : [];
+  const videoUrls = videoUrl ? [videoUrl] : [];
+
+  await replaceUserSkillNotesAndVideos({
+    userSkillId: userSkill.id,
+    notes,
+    videoUrls,
+    source: source as Database['public']['Enums']['SkillSource'],
+    trainingActivityId,
+    matchId,
+    postId,
+  });
+
+  return userSkill;
 };

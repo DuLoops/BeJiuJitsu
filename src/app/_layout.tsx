@@ -1,7 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'; // Devtools can be added later if needed
-import { SplashScreen, Stack, usePathname } from 'expo-router';
+import { SplashScreen, Stack, router, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef } from 'react';
 import 'react-native-reanimated';
@@ -12,7 +12,7 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   const { session, loading, isInitialized, initializeAuth } = useAuthStore();
-  const pathname = usePathname();
+  const segments = useSegments();
   const isMounted = useRef(false); // To prevent splash hide on unmount or during initial fast transitions
 
   useEffect(() => {
@@ -21,25 +21,47 @@ function RootLayoutNav() {
     return () => {
       isMounted.current = false;
     };
-  }, []); // Remove initializeAuth dependency to prevent re-initialization on every render
+  }, [initializeAuth]);
 
   useEffect(() => {
     if (!isMounted.current) return;
+
+    const hideSplashSafely = () => {
+      if (isMounted.current) {
+        SplashScreen.hideAsync();
+      }
+    };
 
     if (loading || !isInitialized) {
       SplashScreen.preventAutoHideAsync();
       return;
     }
 
-    // DEVELOPMENT: Route protection disabled for easier testing
-    console.log('Dev mode - allowing all routes, pathname:', pathname);
-    if (isMounted.current) {
-      SplashScreen.hideAsync();
+    const inAuthGroup = segments[0] === '(auth)';
+    const inProtectedGroup = segments[0] === '(protected)';
+    const isPotentiallyAtRootOrAppEntry = !inAuthGroup && !inProtectedGroup;
+
+    console.log('Auth check - session:', !!session, 'segments:', segments);
+
+    if (session) {
+      // User is authenticated
+      if (inAuthGroup || isPotentiallyAtRootOrAppEntry) {
+        console.log('Redirecting authenticated user to protected area');
+        router.replace('/(protected)/(tabs)');
+      } else {
+        hideSplashSafely();
+      }
+    } else {
+      // User is not authenticated
+      if (!inAuthGroup) {
+        console.log('Redirecting unauthenticated user to login');
+        router.replace('/(auth)/login');
+      } else {
+        hideSplashSafely();
+      }
     }
 
-    // TODO: Re-enable route protection logic here when ready for production
-
-  }, [session, loading, isInitialized, pathname]);
+  }, [session, loading, isInitialized, segments, initializeAuth]);
 
   if (loading || !isInitialized) {
     return null;

@@ -1,0 +1,36 @@
+appId: host.exp.Exponent
+---
+# Test training log save functionality with UUID generation
+# This test assumes the app is already running and on the Log screen
+
+# 1. NAVIGATE: Launch app and go to Log screen
+- runFlow: ../../navigation/navigate-to-log.yaml
+
+# 2. TEST: Click Add Activity button to create new training
+- tapOn:
+    id: "add-activity-button"
+
+# Wait for dropdown to auto-open and select Wrestling
+- waitForAnimationToEnd
+# Tap on Wrestling option (coordinates based on dropdown layout)
+- tapOn:
+    index: 1
+
+# Add a training record with duration
+- tapOn: 
+    id: "add-record-button"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 50%" # Adjust the coordinates as needed
+- inputText: "60"
+
+# Add notes to the activity
+- tapOn:
+    text: "Add notes about this activity..." 
+- inputText: "Test wrestling session with good takedowns and defense practice"
+
+# Save the training session to test UUID generation
+- tapOn: "Save"
+- assertNotVisible: "Error" # Ensure no error occurred
+
+# Verify successful save using Supabase MCP

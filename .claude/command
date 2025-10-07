@@ -1,0 +1,22 @@
+# BeJiuJitsu Development Server + Playwright Setup
+
+## Optimal Command Sequence:
+```bash
+# 1. Kill any existing expo processes to prevent port conflicts
+pkill -f "expo start" 2>/dev/null || true
+
+# 2. Start the web development server
+npm run web
+```
+
+## After server starts (look for "Bundled" messages), open Playwright:
+- Navigate to: http://localhost:8081
+- Set mobile viewport: 375x667 (iPhone SE size)
+- Take screenshot if needed for visual verification
+
+## Notes:
+- The `pkill` command prevents port 8081 conflicts
+- `2>/dev/null || true` ensures graceful handling if no processes exist
+- Server typically takes 10-15 seconds to fully bundle and be ready
+- Look for "Bundled" and "Waiting on http://localhost:8081" messages
+- Warnings about deprecated shadow props and missing record.tsx export are expected

@@ -40,6 +40,7 @@ export default function TitleAndDateInput({
           onChangeText={onTitleChange}
           placeholder={titlePlaceholder}
           style={styles.titleInput}
+          testID="competition-title-input"
         />
       </ThemedView>
 

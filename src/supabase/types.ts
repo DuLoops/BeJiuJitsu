@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       academy: {
@@ -303,7 +328,7 @@ export type Database = {
           belt?: Database["public"]["Enums"]["Belts"] | null
           created_at?: string | null
           full_name?: string | null
-          id: string
+          id?: string
           role?: string | null
           stripes?: number | null
           updated_at?: string | null
@@ -329,6 +354,72 @@ export type Database = {
             columns: ["academy_id"]
             isOneToOne: false
             referencedRelation: "academy"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_content_links: {
+        Row: {
+          created_at: string | null
+          id: string
+          match_id: string | null
+          post_id: string | null
+          training_activity_id: string | null
+          user_skill_note_id: string | null
+          user_skill_video_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          match_id?: string | null
+          post_id?: string | null
+          training_activity_id?: string | null
+          user_skill_note_id?: string | null
+          user_skill_video_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          match_id?: string | null
+          post_id?: string | null
+          training_activity_id?: string | null
+          user_skill_note_id?: string | null
+          user_skill_video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_content_links_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "competition_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_content_links_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_content_links_training_activity_id_fkey"
+            columns: ["training_activity_id"]
+            isOneToOne: false
+            referencedRelation: "training_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_content_links_user_skill_note_id_fkey"
+            columns: ["user_skill_note_id"]
+            isOneToOne: false
+            referencedRelation: "user_skill_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_content_links_user_skill_video_id_fkey"
+            columns: ["user_skill_video_id"]
+            isOneToOne: false
+            referencedRelation: "user_skill_videos"
             referencedColumns: ["id"]
           },
         ]
@@ -401,7 +492,7 @@ export type Database = {
         Insert: {
           activity_order: number
           created_at?: string
-          id: string
+          id?: string
           notes?: string | null
           training_id: string
           type: Database["public"]["Enums"]["TrainingType"]
@@ -440,7 +531,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          id: string
+          id?: string
           training_activity_id: string
           unit: Database["public"]["Enums"]["TrainingUnit"]
           updated_at?: string
@@ -476,7 +567,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          id: string
+          id?: string
           title: string
           updated_at?: string
           useId?: string | null
@@ -527,51 +618,31 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          match_id: string | null
           note: string
           note_order: number
           source: Database["public"]["Enums"]["SkillSource"] | null
-          training_activity_id: string | null
           updated_at: string
           user_skill_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          match_id?: string | null
           note: string
           note_order?: number
           source?: Database["public"]["Enums"]["SkillSource"] | null
-          training_activity_id?: string | null
           updated_at?: string
           user_skill_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          match_id?: string | null
           note?: string
           note_order?: number
           source?: Database["public"]["Enums"]["SkillSource"] | null
-          training_activity_id?: string | null
           updated_at?: string
           user_skill_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "user_skill_notes_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "competition_matches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_skill_notes_training_activity_id_fkey"
-            columns: ["training_activity_id"]
-            isOneToOne: false
-            referencedRelation: "training_activities"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "user_skill_notes_user_skill_id_fkey"
             columns: ["user_skill_id"]
@@ -585,10 +656,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          match_id: string | null
           note: string | null
           source: Database["public"]["Enums"]["SkillSource"] | null
-          training_activity_id: string | null
           updated_at: string
           user_skill_id: string
           video_order: number
@@ -597,10 +666,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          match_id?: string | null
           note?: string | null
           source?: Database["public"]["Enums"]["SkillSource"] | null
-          training_activity_id?: string | null
           updated_at?: string
           user_skill_id: string
           video_order?: number
@@ -609,30 +676,14 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          match_id?: string | null
           note?: string | null
           source?: Database["public"]["Enums"]["SkillSource"] | null
-          training_activity_id?: string | null
           updated_at?: string
           user_skill_id?: string
           video_order?: number
           video_url?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "user_skill_videos_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "competition_matches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_skill_videos_training_activity_id_fkey"
-            columns: ["training_activity_id"]
-            isOneToOne: false
-            referencedRelation: "training_activities"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "user_skill_videos_user_skill_id_fkey"
             columns: ["user_skill_id"]
@@ -868,6 +919,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       Belts: [

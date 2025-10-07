@@ -26,13 +26,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       set({ session, loading: false, isInitialized: true });
-      if (session) {
-        SplashScreen.hideAsync();
-      } else if (get().isInitialized) { // Only hide if initialized and no session
-        SplashScreen.hideAsync();
+
+      // Developer auto-login - only if no session exists in dev mode
+      if (__DEV__ && !session) {
+        console.log('No session found in dev mode, attempting auto-login...');
+        get().signInWithEmail('test@test.com', 'testing')
+          .then(() => {
+            console.log('Dev auto-login successful');
+          })
+          .catch(error => {
+            console.error('Dev auto-login failed:', error);
+            // Still hide splash even if auto-login fails
+            if (get().isInitialized) {
+              SplashScreen.hideAsync();
+            }
+          });
+      } else {
+        if (session) {
+          SplashScreen.hideAsync();
+        } else if (get().isInitialized) {
+          SplashScreen.hideAsync();
+        }
       }
     }).catch(() => {
-      set({ loading: false, isInitialized: true }); // Ensure loading is false even on error
+      set({ loading: false, isInitialized: true });
       SplashScreen.hideAsync();
     });
 
@@ -55,15 +72,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     });
     
-    // Developer auto-login - only runs once per session
-    if (__DEV__ && !get().session) {
-        console.log('Signing in for dev environment via Zustand store...');
-        get().signInWithEmail('test@test.com', 'testing')
-            .then(() => {
-                console.log('Dev sign-in successful');
-            })
-            .catch(error => console.error('Dev sign-in failed:', error));
-    }
 
 
     // Cleanup function

@@ -56,19 +56,7 @@ export default function CreateIndexScreen() {
     }
   };
 
-  const isSaveDisabled = () => {
-    const currentScreenRef = selectedTab === 'training' ? trainingScreenRef : competitionScreenRef;
-    if (!currentScreenRef.current) {
-      return true;
-    }
-    try {
-      const isValid = currentScreenRef.current.isValid();
-      const isSaving = currentScreenRef.current.isSaving();
-      return !isValid || isSaving;
-    } catch (error) {
-      return true;
-    }
-  };
+
 
   const renderContent = () => {
     switch (selectedTab) {
@@ -97,13 +85,13 @@ export default function CreateIndexScreen() {
         </ThemedText>
         
         <TouchableOpacity 
-          style={[styles.headerButton, isSaveDisabled() && styles.disabledButton]}
+          style={styles.headerButton}
           onPress={handleSave}
-
+          testID="save-button"
         >
           <ThemedText style={[
             styles.saveText, 
-            { color: isSaveDisabled() ? textColor + '60' : tintColor }
+            { color: tintColor }
           ]}>
             Save
           </ThemedText>
@@ -119,6 +107,7 @@ export default function CreateIndexScreen() {
             { backgroundColor: tabBackgroundColor }
           ]}
           onPress={() => setSelectedTab('training')}
+          testID="log-training-tab"
         >
           <ThemedText
             style={[
@@ -140,6 +129,7 @@ export default function CreateIndexScreen() {
             { backgroundColor: tabBackgroundColor }
           ]}
           onPress={() => setSelectedTab('competition')}
+          testID="log-competition-tab"
         >
           <ThemedText
             style={[

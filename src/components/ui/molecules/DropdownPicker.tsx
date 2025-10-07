@@ -16,6 +16,7 @@ interface DropdownPickerProps {
   placeholder?: string;
   style?: any;
   autoOpen?: boolean;
+  testID?: string;
   // Optional color provider for options; useful for showing belt colors, etc.
   getOptionColor?: (value: string) => string | undefined;
 }
@@ -32,6 +33,7 @@ const DropdownPicker = forwardRef<DropdownPickerRef, DropdownPickerProps>(({
   placeholder = "Select an option",
   style,
   autoOpen = false,
+  testID,
   getOptionColor,
 }, ref) => {
   const [isOpen, setIsOpen] = useState(autoOpen);
@@ -67,6 +69,7 @@ const DropdownPicker = forwardRef<DropdownPickerRef, DropdownPickerProps>(({
         ]}
         onPress={() => setIsOpen(true)}
         activeOpacity={0.7}
+        testID={testID}
       >
         {selectedColor ? <View style={[styles.colorDot, { backgroundColor: selectedColor }]} /> : null}
         <ThemedText style={styles.dropdownText}>
@@ -116,6 +119,7 @@ const DropdownPicker = forwardRef<DropdownPickerRef, DropdownPickerProps>(({
                     ]}
                     onPress={() => handleSelect(option.value)}
                     activeOpacity={0.7}
+                    testID={`${testID}-option-${option.value}`}
                   >
                     {getOptionColor ? (
                       <View style={[styles.colorDot, { backgroundColor: getOptionColor(option.value) }]} />
@@ -158,7 +162,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,

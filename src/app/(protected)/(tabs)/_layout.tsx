@@ -23,7 +23,7 @@ export default function ProtectedTabsLayout() {
           options={{
             title: 'Explore',
             tabBarIcon: ({ focused }) => (
-              <Ionicons name={focused ? 'bulb' : 'bulb-outline'} size={30} color={focused ? '#000' : '#666'} />
+              <Ionicons name={focused ? 'bulb' : 'bulb-outline'} size={30} color={focused ? '#000' : '#666'} testID="explore-tab" />
             ),
           }} />
         <Tabs.Screen
@@ -31,7 +31,7 @@ export default function ProtectedTabsLayout() {
           options={{
             title: 'Create',
             tabBarButton: () => (
-              <Pressable style={{ alignItems: 'center', margin: 'auto' }} onPress={() => setModalVisible(true)}>
+              <Pressable style={{ alignItems: 'center', margin: 'auto' }} onPress={() => setModalVisible(true)} testID="create-tab">
                 <Ionicons name={modalVisible ? 'add-circle' : 'add-circle-outline'} size={40} color={modalVisible ? '#000' : '#666'} />
               </Pressable>
             ),
@@ -39,7 +39,7 @@ export default function ProtectedTabsLayout() {
         <Tabs.Screen name="progress" options={{
           title: 'Progress',
           tabBarIcon: ({ focused }) =>
-            <MaterialCommunityIcons name={focused ? 'signal-cellular-3' : 'signal-cellular-1'} size={30} color={focused ? '#000' : '#666'} />
+            <MaterialCommunityIcons name={focused ? 'signal-cellular-3' : 'signal-cellular-1'} size={30} color={focused ? '#000' : '#666'} testID="progress-tab" />
 
         }} />
       </Tabs>
@@ -51,23 +51,26 @@ export default function ProtectedTabsLayout() {
       >
         <TouchableOpacity style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }} activeOpacity={1} onPressOut={() => setModalVisible(false)}>
           <View style={{ width: 200, padding: 20, backgroundColor: 'white', borderRadius: 10, marginBottom: 80, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
               onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/record'); }}
+              testID="record-option"
             >
               <ThemedText>Record</ThemedText>
             </TouchableOpacity>
-            <View style={{ height: 1, backgroundColor: '#ccc', width: '100%', marginVertical: 10 }} />
+            <View style={{ height: 1, backgroundColor: '#ccc', width: '100%', marginVertical: 10 }} /> */}
             <TouchableOpacity
               style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
               onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/post'); }}
+              testID="post-option"
             >
               <ThemedText>Post</ThemedText>
             </TouchableOpacity>
             <View style={{ height: 1, backgroundColor: '#ccc', width: '100%', marginVertical: 10 }} />
             <TouchableOpacity
               style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
-              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create'); }}
+              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/log'); }}
+              testID="log-option"
             >
               <ThemedText>Log</ThemedText>
             </TouchableOpacity>

@@ -234,6 +234,7 @@ const CreateTrainingScreen = forwardRef<CreateTrainingScreenRef, CreateTrainingS
             variant="primary"
             onPress={addActivity}
             icon={<Ionicons name="add" size={20} color="white" />}
+            testID="add-activity-button"
           />
         </ThemedView>
       </ScrollView>

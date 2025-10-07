@@ -1,6 +1,6 @@
 // Skill feature exports
 export * from './components/CategoryPicker';
-export * from './components/SkillFormModal';
+export * from './screens/SkillFormModal';
 export * from './components/SkillPicker';
 export * from './components/UserSkillList';
 export * from './components/sequence/SkillSequenceBuilder';

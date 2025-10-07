@@ -1,0 +1,10 @@
+appId: host.exp.Exponent
+---
+# Debug: Find create tab
+
+# 1. Launch app
+- runFlow: ../smoke/app-launch.yaml
+
+# 2. Try to find create tab by tapping in center area
+- tapOn:
+    point: "50%, 85%" # Middle of bottom area where tabs should be

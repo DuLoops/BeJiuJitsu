@@ -16,15 +16,15 @@ export default function LoginScreen() {
   const params = useGlobalSearchParams<{ redirect?: string }>();
   const redirectParam = Array.isArray(params.redirect) ? params.redirect?.[0] : params.redirect;
 
-  useEffect(() => {
-    if (isInitialized && session) {
-      if (redirectParam && redirectParam.startsWith('/')) {
-        router.replace(redirectParam);
-      } else {
-        router.replace('/(protected)/(tabs)');
-      }
-    }
-  }, [session, isInitialized, redirectParam]);
+  // useEffect(() => {
+  //   if (isInitialized && session) {
+  //     if (redirectParam && redirectParam.startsWith('/')) {
+  //       router.replace(redirectParam);
+  //     } else {
+  //       router.replace('/(protected)/(tabs)');
+  //     }
+  //   }
+  // }, [session, isInitialized, redirectParam]);
 
   const handleSignIn = async () => {
     setErrorMessage(null);

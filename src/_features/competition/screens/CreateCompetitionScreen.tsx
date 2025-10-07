@@ -348,7 +348,7 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
             <TitleAndDateInput
               title={title}
               onTitleChange={setTitle}
-              titlePlaceholder="Competition"
+              titlePlaceholder="Competition" 
               date={date}
               onDateChange={handleDateChange}
             />
@@ -393,6 +393,7 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
               variant="primary"
               onPress={addMatch}
               icon={<Ionicons name="add" size={20} color="white" />}
+              testID="add-match-button"
             />
 
             {/* Video Recorder Modal */}

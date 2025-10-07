@@ -1,0 +1,13 @@
+appId: host.exp.Exponent
+---
+# Debug: Inspect create modal options
+
+# 1. Launch app
+- runFlow: ../smoke/app-launch.yaml
+
+# 2. Open create modal
+- tapOn:
+    id: "create-tab"
+
+# 3. Wait and take output to see what options are available
+- waitForAnimationToEnd

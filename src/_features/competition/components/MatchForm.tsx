@@ -12,7 +12,7 @@ import {
 import { MatchRecord } from '@/src/types/match';
 import { Ionicons } from '@expo/vector-icons';
 // import { router } from 'expo-router';
-import SkillFormModal from '@/src/_features/skill/components/SkillFormModal';
+import SkillFormModal from '@/src/_features/skill/screens/SkillFormModal';
 import React, { useState } from 'react';
 import { TextInput } from 'react-native';
 
@@ -100,6 +100,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
           onValueChange={(value) => onUpdateMatch(match.id, { outcome: value as any })}
           placeholder="Select outcome"
           style={styles.dropdown}
+          testID="match-outcome-dropdown"
         />
       </ThemedView>
 
@@ -112,6 +113,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
           onValueChange={(value) => onUpdateMatch(match.id, { outcomeMethod: value as any })}
           placeholder="Select method"
           style={styles.dropdown}
+          testID="match-method-dropdown"
         />
       </ThemedView>
 
@@ -124,6 +126,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
           onPress={() => setShowScores(!showScores)}
           style={styles.scoresToggleButton}
           icon={<Ionicons name={showScores ? "chevron-up" : "chevron-down"} size={16} color={iconColor} />}
+          testID="toggle-scores-button"
         />
       </ThemedView>
 
@@ -139,6 +142,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
               placeholder="0"
               keyboardType="numeric"
               maxLength={2}
+              testID="my-score-input"
             />
           </ThemedView>
           <ThemedView style={styles.scoreInput}>
@@ -150,6 +154,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
               placeholder="0"
               keyboardType="numeric"
               maxLength={2}
+              testID="opponent-score-input"
             />
           </ThemedView>
         </ThemedView>
@@ -177,6 +182,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
           }}
           icon={<Ionicons name="document-text" size={16} color={iconColor} />}
           style={styles.actionButton}
+          testID="toggle-note-button"
         />
       </ThemedView>
 
@@ -188,6 +194,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
           onChangeText={(text) => onUpdateMatch(match.id, { note: text })}
           placeholder="Add your note here..."
           multiline
+          testID="match-note-input"
         />
       )}
 

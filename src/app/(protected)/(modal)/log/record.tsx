@@ -39,7 +39,7 @@ export default function RecordScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor }}>
       <ModalHeader
-        title="Record"
+        title="Record Video"
         leftButton={{
           icon: <Ionicons name="arrow-back" size={24} color={textColor} />,
           onPress: handleBack,
@@ -52,7 +52,6 @@ export default function RecordScreen() {
           textColor: isSaveDisabled ? textColor + '60' : tintColor,
         }}
       />
-      <CreateCompetitionScreen ref={competitionScreenRef} onSave={() => router.back()} />
     </SafeAreaView>
   );
 }

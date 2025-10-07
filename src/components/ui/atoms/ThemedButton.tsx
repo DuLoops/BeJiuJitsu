@@ -13,6 +13,7 @@ interface ButtonProps {
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
   icon?: React.ReactNode;
+  testID?: string;
 }
 
 const ThemedButton = ({ 
@@ -22,7 +23,8 @@ const ThemedButton = ({
   variant = 'primary',
   disabled = false,
   style,
-  icon
+  icon,
+  testID
 }: ButtonProps) => {
   // Use only valid color keys from Colors
   const tintColor = useThemeColor({}, 'tint');
@@ -95,6 +97,7 @@ const ThemedButton = ({
         styles[size],
         style
       ]}
+      testID={testID}
     >
       {icon && <View style={styles.iconContainer}>{icon}</View>}
       <Text style={styles.text}>

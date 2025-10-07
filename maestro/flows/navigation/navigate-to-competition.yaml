@@ -1,0 +1,15 @@
+appId: host.exp.Exponent
+---
+# Navigate to Competition screen - reusable navigation flow
+
+# 1. Launch app and open BeJiuJitsu
+- runFlow: ../smoke/app-launch.yaml
+
+# 2. Navigate to Competition screen
+- tapOn:
+    id: "create-tab"  # Second tab (+) button
+- tapOn:
+    id: "log-option" # Log option in the modal
+- assertVisible: "Log"
+- tapOn:
+    id: "log-competition-tab" # Competition tab in log screen

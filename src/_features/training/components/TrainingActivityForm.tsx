@@ -7,7 +7,7 @@ import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Enums } from '@/src/supabase/types';
 import { Ionicons } from '@expo/vector-icons';
 // import { router } from 'expo-router';
-import SkillFormModal from '@/src/_features/skill/components/SkillFormModal';
+import SkillFormModal from '@/src/_features/skill/screens/SkillFormModal';
 import React, { useRef, useState } from 'react';
 import { TextInput } from 'react-native';
 import { TrainingActivityRecord, TrainingValue } from './TrainingActivityCard';
@@ -162,9 +162,10 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
                 style={styles.textInput}
                 value={trainingValue.value.toString()}
                 onChangeText={(text) => updateTrainingValue(trainingValue.id, { value: parseInt(text) || 0 })}
-                placeholder="0"
+
                 keyboardType="numeric"
                 maxLength={4}
+                testID={`training-value-input-${trainingValue.id}`}
               />
             </ThemedView>
             <ThemedView style={styles.unitInput}>
@@ -172,9 +173,17 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
                 ref={(ref) => { dropdownRefs.current[trainingValue.id] = ref; }}
                 options={unitOptions}
                 selectedValue={trainingValue.unit}
-                onValueChange={(value) => updateTrainingValue(trainingValue.id, { unit: value as TrainingUnit })}
+                onValueChange={(value) => {
+                  updateTrainingValue(trainingValue.id, { unit: value as TrainingUnit });
+                  // Close the unit dropdown and focus back on the value input
+                  dropdownRefs.current[trainingValue.id]?.close?.();
+                  setTimeout(() => {
+                    valueInputRefs.current[trainingValue.id]?.focus?.();
+                  }, 50);
+                }}
                 placeholder="Unit"
                 style={styles.dropdown}
+
               />
             </ThemedView>
             <ThemedButton
@@ -191,6 +200,7 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
           onPress={addTrainingValue}
           style={styles.addValueButton}
           icon={<Ionicons name="add" size={16} color={iconColor} />}
+          testID="add-record-button"
         />
       </ThemedView>
 
@@ -204,6 +214,7 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
           placeholder="Add notes about this activity..."
           multiline
           numberOfLines={3}
+          testID="training-notes-input"
         />
       </ThemedView>
 

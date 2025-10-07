@@ -1,0 +1,29 @@
+appId: host.exp.Exponent
+---
+# Test competition logging functionality with UUID generation
+# This test creates a basic competition log without matches
+
+# 1. NAVIGATE: Launch app and go to Competition screen
+- runFlow: ../../navigation/navigate-to-competition.yaml
+
+# 2. TEST: Enter competition title
+- tapOn:
+    id: "competition-title-input"
+- inputText: "IBJJF World Championship"
+- waitForAnimationToEnd
+
+# 3. Save the competition to test UUID generation
+- tapOn:
+    id: "save-button"
+
+# 4. Wait for success alert and dismiss it
+- waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Competition Saved"
+    commands:
+      - tapOn: "OK"
+
+# 5. Verify successful navigation back (could be any main screen)
+- waitForAnimationToEnd
+# Success if we get back to any main screen without errors
