@@ -9,7 +9,6 @@ interface AlertAction {
   onPress?: () => void;
   style?: 'default' | 'cancel' | 'destructive';
 }
-
 interface AlertProps {
   visible: boolean;
   title: string;

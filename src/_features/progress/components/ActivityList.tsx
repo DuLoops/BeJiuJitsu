@@ -4,11 +4,17 @@ import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { UnifiedActivityLog, ActivityType } from '../types/progress';
+import { getActivityColor } from '@/src/constants/Colors';
 
 interface ActivityListProps {
   activities: UnifiedActivityLog[];
   filter: 'all' | ActivityType;
   onActivityPress?: (activity: UnifiedActivityLog) => void;
+  onEndReached?: () => void;
+  ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
+  ListFooterComponent?: React.ComponentType<any> | React.ReactElement | null;
+  refreshing?: boolean;
+  onRefresh?: () => void;
   testID?: string;
 }
 
@@ -33,19 +39,6 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onPress }) => {
         return '📹';
       default:
         return '📝';
-    }
-  };
-
-  const getActivityColor = (type: ActivityType) => {
-    switch (type) {
-      case 'training':
-        return '#4CAF50';
-      case 'competition':
-        return '#FF9800';
-      case 'footage':
-        return '#2196F3';
-      default:
-        return '#757575';
     }
   };
 
@@ -139,7 +132,17 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onPress }) => {
   );
 };
 
-export function ActivityList({ activities, filter, onActivityPress, testID = 'activity-list' }: ActivityListProps) {
+export function ActivityList({
+  activities,
+  filter,
+  onActivityPress,
+  onEndReached,
+  ListHeaderComponent,
+  ListFooterComponent,
+  refreshing,
+  onRefresh,
+  testID = 'activity-list'
+}: ActivityListProps) {
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const secondaryTextColor = useThemeColor({}, 'icon');
@@ -149,7 +152,7 @@ export function ActivityList({ activities, filter, onActivityPress, testID = 'ac
     return activity.type === filter;
   });
 
-  const renderHeader = () => (
+  const renderInternalHeader = () => (
     <ThemedView style={styles.header}>
       <ThemedText style={[styles.headerTitle, { color: textColor }]}>
         Recent Activity
@@ -174,20 +177,32 @@ export function ActivityList({ activities, filter, onActivityPress, testID = 'ac
     </ThemedView>
   );
 
+  const combinedHeader = () => (
+    <>
+      {ListHeaderComponent}
+      {renderInternalHeader()}
+    </>
+  );
+
   return (
-    <ThemedView style={[styles.container, { backgroundColor }]} testID={testID}>
-      {renderHeader()}
-      <FlatList
-        data={filteredActivities}
-        renderItem={({ item }) => (
-          <ActivityItem activity={item} onPress={onActivityPress} />
-        )}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={renderEmpty}
-        contentContainerStyle={styles.listContent}
-      />
-    </ThemedView>
+    <FlatList
+      data={filteredActivities}
+      renderItem={({ item }) => (
+        <ActivityItem activity={item} onPress={onActivityPress} />
+      )}
+      keyExtractor={(item) => item.id}
+      showsVerticalScrollIndicator={false}
+      ListHeaderComponent={combinedHeader()}
+      ListEmptyComponent={renderEmpty}
+      ListFooterComponent={ListFooterComponent}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.5}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      contentContainerStyle={styles.listContent}
+      style={{ backgroundColor }}
+      testID={testID}
+    />
   );
 }
 
@@ -231,15 +246,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconContainer: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   iconText: {
-    fontSize: 16,
+    fontSize: 20,
   },
   textContent: {
     flex: 1,

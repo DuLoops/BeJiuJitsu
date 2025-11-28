@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef } from 'react';
 import 'react-native-reanimated';
 import { useAuthStore } from '../stores/authStore';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -81,12 +82,14 @@ export default function RootLayout() {
   const colorScheme = 'light'; // Keep light theme for now
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={colorScheme === 'light' ? DefaultTheme : DarkTheme}>
-        <StatusBar style="auto" />
-        <RootLayoutNav />
-      </ThemeProvider>
-      {/* {__DEV__ && <ReactQueryDevtools client={queryClient} />} */}
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider value={colorScheme === 'light' ? DefaultTheme : DarkTheme}>
+          <StatusBar style="auto" />
+          <RootLayoutNav />
+        </ThemeProvider>
+        {/* {__DEV__ && <ReactQueryDevtools client={queryClient} />} */}
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }

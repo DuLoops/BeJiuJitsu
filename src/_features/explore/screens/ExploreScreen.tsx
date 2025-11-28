@@ -1,14 +1,18 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-
+import { SafeAreaView } from 'react-native-safe-area-context'
 const ExploreScreen = () => {
   return (
-    <View>
+    <SafeAreaView style={styles.container}>
       <Text>ExploreScreen</Text>
-    </View>
+    </SafeAreaView>
   )
 }
 
 export default ExploreScreen
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+})

@@ -82,3 +82,15 @@ export function getBeltColor(belt?: string | null): string {
   if (!belt) return '#F3F4F6';
   return BeltColors[belt] || '#F3F4F6';
 }
+
+// Activity type colors (global - use these consistently throughout the app)
+export const ActivityColors = {
+  all: '#2563EB',        // Blue
+  training: '#8B5CF6',   // Purple
+  footage: '#A16207',    // Brown
+  competition: '#374151', // Black/Dark Gray
+};
+
+export function getActivityColor(activityType: 'all' | 'training' | 'footage' | 'competition'): string {
+  return ActivityColors[activityType] || ActivityColors.all;
+}

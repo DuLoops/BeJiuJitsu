@@ -221,15 +221,15 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
       {/* Action Buttons */}
       <ThemedView style={styles.actionButtons}>
         <ThemedButton
-          title="Video"
-          onPress={() => onAddVideo(activity.id)}
-          icon={<Ionicons name="videocam" size={16} color={iconColor} />}
-          style={styles.actionButton}
-        />
-        <ThemedButton
           title="Skill"
           onPress={handleAddSkill}
           icon={<Ionicons name="fitness" size={16} color={iconColor} />}
+          style={styles.actionButton}
+        />
+        <ThemedButton
+          title="Video"
+          onPress={() => onAddVideo(activity.id)}
+          icon={<Ionicons name="videocam" size={16} color={iconColor} />}
           style={styles.actionButton}
         />
       </ThemedView>

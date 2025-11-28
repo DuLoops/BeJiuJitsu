@@ -51,6 +51,8 @@ Each feature contains:
 
 ## Key Conventions
 
+- Use safe area view for stack screens
+
 **Import Paths**: Use `@/src` alias for all imports from src directory
 
 **Component Architecture**: 
@@ -110,8 +112,7 @@ Uses Maestro for React Native E2E testing. **See `maestro/CLAUDE.md` for compreh
 ```
 
 ### TestID Naming Convention
-- Use `kebab-case`: `add-activity-button`, `title-input`
-- Be descriptive: `{action}-{target}-{type}`
+- Do not test unless specifically instructred. 
 - Follow patterns in `maestro/CLAUDE.md`
 
 ## Visual Development
@@ -139,11 +140,6 @@ Invoke the `design-review` agent for thorough design validation when:
 - Before finalizing PRs with visual changes
 - Needing comprehensive accessibility and responsiveness testing
 
-### Maestro Testing Integration
-When implementing new features or fixing bugs:
-1. **Run existing tests** - Ensure `maestro test maestro/flows/` passes
-2. **Create new tests** - Add test coverage for new functionality
-3. **Update test documentation** - Keep `maestro/README.md` current
 
 ## Database Schema
 

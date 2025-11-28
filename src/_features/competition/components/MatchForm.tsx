@@ -163,18 +163,6 @@ const MatchForm: React.FC<MatchFormProps> = ({
       {/* Action Buttons */}
       <ThemedView style={styles.actionButtons}>
         <ThemedButton
-          title="Video"
-          onPress={() => onAddVideo(match.id)}
-          icon={<Ionicons name="videocam" size={16} color={iconColor} />}
-          style={styles.actionButton}
-        />
-        <ThemedButton
-          title="Skill"
-          onPress={() => handleAddSkill(match.id)}
-          icon={<Ionicons name="fitness" size={16} color={iconColor} />}
-          style={styles.actionButton}
-        />
-        <ThemedButton
           title="Note"
           onPress={() => {
             // Toggle note input
@@ -183,6 +171,18 @@ const MatchForm: React.FC<MatchFormProps> = ({
           icon={<Ionicons name="document-text" size={16} color={iconColor} />}
           style={styles.actionButton}
           testID="toggle-note-button"
+        />
+        <ThemedButton
+          title="Skill"
+          onPress={() => handleAddSkill(match.id)}
+          icon={<Ionicons name="fitness" size={16} color={iconColor} />}
+          style={styles.actionButton}
+        />
+        <ThemedButton
+          title="Video"
+          onPress={() => onAddVideo(match.id)}
+          icon={<Ionicons name="videocam" size={16} color={iconColor} />}
+          style={styles.actionButton}
         />
       </ThemedView>
 

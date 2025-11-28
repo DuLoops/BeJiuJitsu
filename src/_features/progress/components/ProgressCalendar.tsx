@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
-import { CalendarDay } from '../types/progress';
+import { CalendarDay, ActivityType } from '../types/progress';
+import { getActivityColor } from '@/src/constants/Colors';
 
 interface ProgressCalendarProps {
   selectedDate?: Date;
   onDateSelect?: (date: Date) => void;
-  activitySummary?: Record<string, { count: number; types: string[] }>;
+  activitySummary?: Record<string, { count: number; types: ActivityType[] }>;
+  onMonthChange?: (year: number, month: number) => void;
   testID?: string;
 }
 
@@ -23,10 +25,16 @@ export function ProgressCalendar({
   selectedDate,
   onDateSelect,
   activitySummary = {},
+  onMonthChange,
   testID = 'progress-calendar'
 }: ProgressCalendarProps) {
   const [currentDate, setCurrentDate] = useState(selectedDate || new Date());
   const textColor = useThemeColor({}, 'text');
+
+  // Notify parent when month changes
+  useEffect(() => {
+    onMonthChange?.(currentDate.getFullYear(), currentDate.getMonth() + 1);
+  }, [currentDate, onMonthChange]);
 
   const generateCalendarDays = (): CalendarDay[] => {
     const year = currentDate.getFullYear();
@@ -117,35 +125,55 @@ export function ProgressCalendar({
     onDateSelect?.(selectedDate);
   };
 
-  const getActivityIndicator = (activities: string[]) => {
+  const getActivityIndicator = (activities: ActivityType[], day: number, isToday: boolean, isSelected: boolean) => {
     if (activities.length === 0) return null;
 
-    const colors = {
-      training: '#4CAF50', // Green
-      competition: '#FF9800', // Orange
-      footage: '#2196F3', // Blue
-    };
+    // Order: Training (innermost), Footage (middle), Competition (outermost)
+    const activityOrder: ActivityType[] = ['training', 'footage', 'competition'];
+    const sortedActivities = [...new Set(activities)].sort((a, b) =>
+      activityOrder.indexOf(a) - activityOrder.indexOf(b)
+    );
 
-    if (activities.length === 1) {
+    // Single activity
+    if (sortedActivities.length === 1) {
+      const activityColor = getActivityColor(sortedActivities[0]);
       return (
-        <View
-          style={[styles.activityDot, { backgroundColor: colors[activities[0] as keyof typeof colors] }]}
-        />
+        <View style={[styles.activityIndicator, { backgroundColor: activityColor }]}>
+          <Text style={styles.activityDayText}>
+            {day}
+          </Text>
+        </View>
       );
     }
 
+    // Two activities: inner and outer ring
+    if (sortedActivities.length === 2) {
+      const innerColor = getActivityColor(sortedActivities[0]);
+      const outerColor = getActivityColor(sortedActivities[1]);
+      return (
+        <View style={[styles.activityIndicatorOuter, { backgroundColor: outerColor }]}>
+          <View style={[styles.activityIndicatorInner, { backgroundColor: innerColor }]}>
+            <Text style={styles.activityDayText}>
+              {day}
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    // Three activities: three rings
+    const innerColor = getActivityColor(sortedActivities[0]);
+    const middleColor = getActivityColor(sortedActivities[1]);
+    const outerColor = getActivityColor(sortedActivities[2]);
     return (
-      <View style={styles.multiActivityContainer}>
-        {activities.slice(0, 3).map((type, index) => (
-          <View
-            key={type}
-            style={[
-              styles.smallActivityDot,
-              { backgroundColor: colors[type as keyof typeof colors] },
-              { marginLeft: index > 0 ? -2 : 0 }
-            ]}
-          />
-        ))}
+      <View style={[styles.activityIndicatorOuter, { backgroundColor: outerColor }]}>
+        <View style={[styles.activityIndicatorMiddle, { backgroundColor: middleColor }]}>
+          <View style={[styles.activityIndicatorInner, { backgroundColor: innerColor }]}>
+            <Text style={styles.activityDayText}>
+              {day}
+            </Text>
+          </View>
+        </View>
       </View>
     );
   };
@@ -154,9 +182,6 @@ export function ProgressCalendar({
 
   return (
     <ThemedView style={styles.container} testID={testID}>
-      <ThemedView style={styles.header}>
-        <ThemedText style={styles.calendarTitle}>📅 Calendar</ThemedText>
-      </ThemedView>
 
       <ThemedView style={styles.monthHeader}>
         <TouchableOpacity
@@ -209,18 +234,20 @@ export function ProgressCalendar({
               disabled={!calendarDay.isCurrentMonth}
               testID={`calendar-day-${calendarDay.day}`}
             >
-              <Text
-                style={[
-                  styles.dayText,
-                  { color: textColor },
-                  calendarDay.isToday && { color: '#fff' },
-                  isSelected && { color: '#fff' },
-                  !calendarDay.isCurrentMonth && styles.otherMonthText,
-                ]}
-              >
-                {calendarDay.day}
-              </Text>
-              {calendarDay.hasActivity && getActivityIndicator(calendarDay.activities)}
+              {calendarDay.hasActivity ? (
+                getActivityIndicator(calendarDay.activities, calendarDay.day, calendarDay.isToday, !!isSelected)
+              ) : (
+                <Text
+                  style={[
+                    styles.dayText,
+                    { color: textColor },
+                    isSelected && { color: '#fff' },
+                    !calendarDay.isCurrentMonth && styles.otherMonthText,
+                  ]}
+                >
+                  {calendarDay.day}
+                </Text>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -231,12 +258,7 @@ export function ProgressCalendar({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  header: {
-    marginBottom: 16,
+    paddingVertical: 6,
   },
   calendarTitle: {
     fontSize: 18,
@@ -246,7 +268,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
   },
   monthButton: {
     padding: 8,
@@ -257,7 +279,6 @@ const styles = StyleSheet.create({
   },
   daysHeader: {
     flexDirection: 'row',
-    marginBottom: 8,
   },
   dayHeaderText: {
     flex: 1,
@@ -269,16 +290,19 @@ const styles = StyleSheet.create({
   calendar: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    padding: 1
+
   },
   dayContainer: {
     width: '14.28%', // 100% / 7 days
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
+    padding: 2,
   },
   todayContainer: {
-    backgroundColor: '#000',
+    borderWidth: 2,
+    borderColor: '#000',
     borderRadius: 8,
   },
   selectedContainer: {
@@ -289,28 +313,43 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   dayText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 16,
+    margin: 'auto'
   },
   otherMonthText: {
     opacity: 0.3,
   },
-  activityDot: {
-    position: 'absolute',
-    bottom: 4,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  multiActivityContainer: {
-    position: 'absolute',
-    bottom: 4,
-    flexDirection: 'row',
+  activityIndicator: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 100,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  smallActivityDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+  activityIndicatorOuter: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityIndicatorMiddle: {
+    width: '85%',
+    aspectRatio: 1,
+    borderRadius: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityIndicatorInner: {
+    width: '70%',
+    aspectRatio: 1,
+    borderRadius: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityDayText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

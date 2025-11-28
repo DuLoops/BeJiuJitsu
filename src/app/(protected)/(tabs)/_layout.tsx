@@ -1,18 +1,41 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
+import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Tabs, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, Pressable, TouchableOpacity, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 
 
 
 export default function ProtectedTabsLayout() {
-
   const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
+  const backgroundColor = useThemeColor({}, 'background');
+
+  const handleLogTraining = () => {
+    setModalVisible(false);
+    router.push('/(protected)/(modal)/create/training');
+  };
+
+  const handleLogCompetition = () => {
+    setModalVisible(false);
+    router.push('/(protected)/(modal)/create/competition');
+  };
+
+  const handleRecordRoll = () => {
+    setModalVisible(false);
+    router.push('/(protected)/(modal)/create/record');
+  };
+
+  const handlePublishPost = () => {
+    setModalVisible(false);
+    router.push('/(protected)/(modal)/create/post');
+  };
 
   return (
     <>
@@ -27,7 +50,7 @@ export default function ProtectedTabsLayout() {
             ),
           }} />
         <Tabs.Screen
-          name='createModal'
+          name='create'
           options={{
             title: 'Create',
             tabBarButton: () => (
@@ -44,39 +67,108 @@ export default function ProtectedTabsLayout() {
         }} />
       </Tabs>
       <Modal
-        animationType="fade"
+        animationType="slide"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <TouchableOpacity style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }} activeOpacity={1} onPressOut={() => setModalVisible(false)}>
-          <View style={{ width: 200, padding: 20, backgroundColor: 'white', borderRadius: 10, marginBottom: 80, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            {/* <TouchableOpacity
-              style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
-              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/record'); }}
-              testID="record-option"
-            >
-              <ThemedText>Record</ThemedText>
-            </TouchableOpacity>
-            <View style={{ height: 1, backgroundColor: '#ccc', width: '100%', marginVertical: 10 }} /> */}
-            <TouchableOpacity
-              style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
-              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/create/post'); }}
-              testID="post-option"
-            >
-              <ThemedText>Post</ThemedText>
-            </TouchableOpacity>
-            <View style={{ height: 1, backgroundColor: '#ccc', width: '100%', marginVertical: 10 }} />
-            <TouchableOpacity
-              style={{ width: '100%', paddingVertical: 4, alignItems: 'center' }}
-              onPress={() => { setModalVisible(false); router.push('/(protected)/(modal)/log'); }}
-              testID="log-option"
-            >
-              <ThemedText>Log</ThemedText>
-            </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPressOut={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <ThemedView style={[styles.contentContainer, { backgroundColor }]}>
+              <View style={styles.handleBar} />
+              <View style={styles.content}>
+                <View style={styles.buttonContainer}>
+                  <ThemedButton
+                    title="Training"
+                    variant="primary"
+                  size="lg"
+                    onPress={handleLogTraining}
+                    icon={<Ionicons name="barbell" size={24} color="white" />}
+                    style={styles.button}
+                    testID="log-training-button"
+                  />
+
+                  <ThemedButton
+                    title="Competition"
+                    variant="primary"
+                    size="lg"
+                    onPress={handleLogCompetition}
+                    icon={<Ionicons name="trophy" size={24} color="white" />}
+                    style={styles.button}
+                    testID="log-competition-button"
+                  />
+
+                  <ThemedButton
+                    title="Record"
+                    variant="primary"
+                    size="lg"
+                    onPress={handleRecordRoll}
+                    icon={<Ionicons name="videocam" size={24} color="white" />}
+                    style={styles.button}
+                    testID="record-roll-button"
+                  />
+
+                  <ThemedButton
+                    title="Post"
+                    variant="primary"
+                    size="lg"
+                    onPress={handlePublishPost}
+                    icon={<Ionicons name="create" size={24} color="white" />}
+                    style={styles.button}
+                    testID="publish-post-button"
+                  />
+                </View>
+              </View>
+            </ThemedView>
           </View>
         </TouchableOpacity>
       </Modal>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    maxHeight: '80%',
+  },
+  contentContainer: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 8,
+  },
+  handleBar: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#ccc',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginVertical: 8,
+  },
+  content: {
+    padding: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    opacity: 0.7,
+    marginBottom: 32,
+  },
+  buttonContainer: {
+    gap: 16,
+  },
+  button: {
+    width: '100%',
+  },
+});

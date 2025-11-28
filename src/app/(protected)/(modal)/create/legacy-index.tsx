@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 
 import CreateCompetitionScreen, { CreateCompetitionScreenRef } from '@/src/_features/competition/screens/CreateCompetitionScreen';
 import CreateTrainingScreen, { CreateTrainingScreenRef } from '@/src/_features/training/screens/CreateTrainingScreen';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import Alert from '@/src/components/ui/molecules/Alert';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { useAuthStore } from '@/src/stores/authStore';
 
@@ -15,8 +16,13 @@ type TabType = 'training' | 'competition';
 export default function CreateIndexScreen() {
   const [selectedTab, setSelectedTab] = useState<TabType>('training');
   const [refsReady, setRefsReady] = useState(false);
-  const { session } = useAuthStore(); // This will cause re-render when auth state changes
-  
+  const { session } = useAuthStore();
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Alert state
+  const [showAlert, setShowAlert] = useState(false);
+  const [pendingTab, setPendingTab] = useState<TabType | null>(null);
+
   // Refs for child screens
   const trainingScreenRef = useRef<CreateTrainingScreenRef>(null);
   const competitionScreenRef = useRef<CreateCompetitionScreenRef>(null);
@@ -56,9 +62,30 @@ export default function CreateIndexScreen() {
     }
   };
 
+  const handleTabSwitch = (targetTab: TabType) => {
+    // Don't warn if switching to the same tab
+    if (targetTab === selectedTab) return;
 
+    // Show alert and store pending tab
+    setPendingTab(targetTab);
+    setShowAlert(true);
+  };
+
+  const handleConfirmSwitch = () => {
+    if (pendingTab) {
+      setSelectedTab(pendingTab);
+    }
+    setShowAlert(false);
+    setPendingTab(null);
+  };
+
+  const handleCancelSwitch = () => {
+    setShowAlert(false);
+    setPendingTab(null);
+  };
 
   const renderContent = () => {
+    // Remount screens on tab switch (no data persistence)
     switch (selectedTab) {
       case 'training':
         return <CreateTrainingScreen ref={trainingScreenRef} />;
@@ -69,28 +96,41 @@ export default function CreateIndexScreen() {
     }
   };
 
+  // Animated header height based on scroll
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 60],
+    outputRange: [60, 0],
+    extrapolate: 'clamp',
+  });
+
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 60],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
-      {/* Header Navigation */}
+      {/* Fixed Header */}
       <ThemedView style={[styles.header, { borderBottomColor: borderColor }]}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.headerButton}
           onPress={() => { if (router.canGoBack()) { router.back(); } else { router.replace('/(protected)/(tabs)'); } }}
         >
           <Ionicons name="arrow-back" size={24} color={iconColor} />
         </TouchableOpacity>
-        
+
         <ThemedText style={[styles.headerTitle, { color: textColor }]}>
           Log
         </ThemedText>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.headerButton}
           onPress={handleSave}
           testID="save-button"
         >
           <ThemedText style={[
-            styles.saveText, 
+            styles.saveText,
             { color: tintColor }
           ]}>
             Save
@@ -98,15 +138,25 @@ export default function CreateIndexScreen() {
         </TouchableOpacity>
       </ThemedView>
 
-      {/* Toggle Navigation */}
-      <ThemedView style={[styles.tabContainer, { borderBottomColor: borderColor }]}>
+      {/* Scrollable Tabs */}
+      <Animated.View
+        style={[
+          styles.tabContainer,
+          {
+            borderBottomColor: borderColor,
+            height: headerHeight,
+            opacity: headerOpacity,
+            overflow: 'hidden',
+          }
+        ]}
+      >
         <TouchableOpacity
           style={[
             styles.tab,
             selectedTab === 'training' && styles.activeTab,
             { backgroundColor: tabBackgroundColor }
           ]}
-          onPress={() => setSelectedTab('training')}
+          onPress={() => handleTabSwitch('training')}
           testID="log-training-tab"
         >
           <ThemedText
@@ -128,7 +178,7 @@ export default function CreateIndexScreen() {
             selectedTab === 'competition' && styles.activeTab,
             { backgroundColor: tabBackgroundColor }
           ]}
-          onPress={() => setSelectedTab('competition')}
+          onPress={() => handleTabSwitch('competition')}
           testID="log-competition-tab"
         >
           <ThemedText
@@ -143,12 +193,39 @@ export default function CreateIndexScreen() {
             <ThemedView style={[styles.activeIndicator, { backgroundColor: tintColor }]} />
           )}
         </TouchableOpacity>
-      </ThemedView>
+      </Animated.View>
 
-      {/* Content */}
-      <ThemedView style={styles.content}>
+      {/* Content with scroll listener */}
+      <Animated.ScrollView
+        style={styles.content}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+      >
         {renderContent()}
-      </ThemedView>
+      </Animated.ScrollView>
+
+      {/* Tab Switch Warning Alert */}
+      <Alert
+        visible={showAlert}
+        title="Switch Tab?"
+        message={`Any unsaved ${selectedTab === 'training' ? 'Training' : 'Competition'} data will be discarded. Continue?`}
+        actions={[
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: handleCancelSwitch,
+          },
+          {
+            text: 'Switch',
+            style: 'destructive',
+            onPress: handleConfirmSwitch,
+          },
+        ]}
+        onDismiss={handleCancelSwitch}
+      />
     </SafeAreaView>
   );
 }
@@ -194,6 +271,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+    height: 60,
   },
   tab: {
     flex: 1,

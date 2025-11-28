@@ -45,6 +45,7 @@ export interface CreateTrainingScreenRef {
   handleSave: () => void;
   isValid: () => boolean;
   isSaving: () => boolean;
+  getActivityCount: () => number;
 }
 
 const CreateTrainingScreen = forwardRef<CreateTrainingScreenRef, CreateTrainingScreenProps>(({ onSave }, ref) => {
@@ -89,6 +90,8 @@ const CreateTrainingScreen = forwardRef<CreateTrainingScreenRef, CreateTrainingS
       setIsSaving(false);
       Alert.alert('Success', 'Training session with activities logged!');
       queryClient.invalidateQueries({ queryKey: ['trainingsForUser', userId] });
+      queryClient.invalidateQueries({ queryKey: ['progress-activities'] });
+      queryClient.invalidateQueries({ queryKey: ['activity-summary'] });
       if (router.canGoBack()) {
         router.back();
       } else {
@@ -190,6 +193,7 @@ const CreateTrainingScreen = forwardRef<CreateTrainingScreenRef, CreateTrainingS
     handleSave: handleSubmit,
     isValid: isFormValid,
     isSaving: () => mutation.isPending || isSaving,
+    getActivityCount: () => activities.length,
   }));
 
   return (

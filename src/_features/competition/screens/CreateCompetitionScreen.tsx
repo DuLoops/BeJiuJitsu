@@ -4,7 +4,7 @@ import {
   fetchUserSkillsForCompetitionSelection,
 } from '@/src/_features/competition/services/competitionService';
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
@@ -47,11 +47,13 @@ export interface CreateCompetitionScreenRef {
   handleSave: () => void;
   isValid: () => boolean;
   isSaving: () => boolean;
+  getMatchCount: () => number;
 }
 
 const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCompetitionScreenProps>(({ onSave }, ref) => {
   const { session } = useAuthStore();
   const userId = session?.user?.id;
+  const queryClient = useQueryClient();
   const backgroundColor = useThemeColor({}, 'background');
 
   // ScrollView ref for auto-scrolling to new matches
@@ -278,6 +280,10 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
       // Save to backend
       await createFullCompetitionEntry(userId, competitionData);
 
+      // Invalidate progress queries to refresh the progress page
+      queryClient.invalidateQueries({ queryKey: ['progress-activities'] });
+      queryClient.invalidateQueries({ queryKey: ['activity-summary'] });
+
       setAlertConfig({
         visible: true,
         title: 'Competition Saved',
@@ -332,6 +338,7 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
     handleSave: handleSaveAll,
     isValid: isFormValid,
     isSaving: () => isSaving,
+    getMatchCount: () => matches.length,
   }));
 
   return (

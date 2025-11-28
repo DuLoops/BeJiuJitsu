@@ -1,14 +1,14 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet, View } from 'react-native';
 import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { ActivityType } from '../types/progress';
+import { getActivityColor } from '@/src/constants/Colors';
 
 interface FilterOption {
   key: 'all' | ActivityType;
   label: string;
-  icon: string;
 }
 
 interface ActivityFilterProps {
@@ -24,10 +24,10 @@ interface ActivityFilterProps {
 }
 
 const FILTER_OPTIONS: FilterOption[] = [
-  { key: 'all', label: 'All', icon: '⚡' },
-  { key: 'training', label: 'Training', icon: '🥋' },
-  { key: 'footage', label: 'Footage', icon: '📹' },
-  { key: 'competition', label: 'Competition', icon: '🏆' },
+  { key: 'all', label: 'All' },
+  { key: 'training', label: 'Training' },
+  { key: 'footage', label: 'Footage' },
+  { key: 'competition', label: 'Comp' },
 ];
 
 export function ActivityFilter({
@@ -61,6 +61,15 @@ export function ActivityFilter({
       {FILTER_OPTIONS.map(option => {
         const isSelected = selectedFilter === option.key;
         const count = getCount(option.key);
+        const activityColor = getActivityColor(option.key);
+
+        // Convert hex color to rgba with 0.1 opacity for light background
+        const hexToRgba = (hex: string, alpha: number) => {
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
 
         return (
           <TouchableOpacity
@@ -68,21 +77,21 @@ export function ActivityFilter({
             style={[
               styles.filterButton,
               {
-                backgroundColor: isSelected ? tintColor : backgroundColor,
-                borderColor: isSelected ? tintColor : borderColor,
+                backgroundColor: isSelected ? activityColor : hexToRgba(activityColor, 0.1),
+                borderColor: isSelected ? activityColor : borderColor,
               }
             ]}
             onPress={() => onFilterChange(option.key)}
             testID={`filter-${option.key}`}
           >
-            <ThemedText style={styles.filterIcon}>
-              {option.icon}
-            </ThemedText>
             <ThemedText
               style={[
                 styles.filterLabel,
                 { color: isSelected ? '#fff' : textColor }
               ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
             >
               {option.label}
             </ThemedText>
@@ -91,14 +100,14 @@ export function ActivityFilter({
                 style={[
                   styles.countBadge,
                   {
-                    backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : tintColor,
+                    backgroundColor: isSelected ? '#fff' : activityColor,
                   }
                 ]}
               >
                 <ThemedText
                   style={[
                     styles.countText,
-                    { color: isSelected ? '#fff' : '#fff' }
+                    { color: isSelected ? activityColor : '#fff' }
                   ]}
                 >
                   {count}
@@ -124,35 +133,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
     position: 'relative',
   },
-  filterIcon: {
-    fontSize: 14,
-    marginRight: 4,
-  },
   filterLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
   },
   countBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#FF3B30',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    top: -6,
+    right: -6,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
+    paddingHorizontal: 7,
   },
   countText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
     color: '#fff',
   },
 });

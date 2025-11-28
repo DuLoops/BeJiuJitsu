@@ -25,7 +25,10 @@ export const fetchTrainingActivities = async (
     query = query.gte('created_at', startDate);
   }
   if (endDate) {
-    query = query.lte('created_at', endDate);
+    // Use lt (less than) with next day to include all of endDate
+    const nextDay = new Date(endDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    query = query.lt('created_at', nextDay.toISOString().split('T')[0]);
   }
 
   const { data, error } = await query;
@@ -35,7 +38,7 @@ export const fetchTrainingActivities = async (
     throw error;
   }
 
-  return (data || []).map(training => {
+  const result = (data || []).map(training => {
     const activities = training.training_activities?.map(activity => {
       const totalDuration = activity.training_activity_values
         ?.filter(val => val.unit === 'Minutes' || val.unit === 'Hours')
@@ -82,6 +85,8 @@ export const fetchTrainingActivities = async (
       activities,
     };
   });
+
+  return result;
 };
 
 // Fetch all competitions for a user within a date range
@@ -111,7 +116,10 @@ export const fetchCompetitionActivities = async (
     query = query.gte('date', startDate);
   }
   if (endDate) {
-    query = query.lte('date', endDate);
+    // Use lt (less than) with next day to include all of endDate
+    const nextDay = new Date(endDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    query = query.lt('date', nextDay.toISOString().split('T')[0]);
   }
 
   const { data, error } = await query;
@@ -157,12 +165,14 @@ export const fetchFootageActivities = async (
       user_skill:user_skills!inner(
         skill:skills(name, category)
       ),
-      training_activity:training_activities(
-        training:trainings(title)
-      ),
-      competition_match:competition_matches(
-        name,
-        competition:competitions(title)
+      skill_content_links!user_skill_video_id(
+        training_activity:training_activities(
+          training:trainings(title)
+        ),
+        competition_match:competition_matches(
+          name,
+          competition:competitions(title)
+        )
       )
     `)
     .eq('user_skill.user_id', userId)
@@ -172,7 +182,10 @@ export const fetchFootageActivities = async (
     query = query.gte('created_at', startDate);
   }
   if (endDate) {
-    query = query.lte('created_at', endDate);
+    // Use lt (less than) with next day to include all of endDate
+    const nextDay = new Date(endDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    query = query.lt('created_at', nextDay.toISOString().split('T')[0]);
   }
 
   const { data, error } = await query;
@@ -184,8 +197,11 @@ export const fetchFootageActivities = async (
 
   return (data || []).map(video => {
     const skillName = video.user_skill?.skill?.name || 'Skill Video';
-    const source = video.training_activity?.training?.title ||
-                  video.competition_match?.competition?.title ||
+
+    // skill_content_links is an array, get the first link if it exists
+    const contentLink = video.skill_content_links?.[0];
+    const source = contentLink?.training_activity?.training?.title ||
+                  contentLink?.competition_match?.competition?.title ||
                   'Independent';
 
     return {
