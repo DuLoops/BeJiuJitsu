@@ -1,6 +1,6 @@
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import ConfirmAlert from '@/src/components/ui/molecules/Alert';
 import AutocompleteDropdownWithFilter, { AutocompleteWithFilterItem, CategoryTagItem } from '@/src/components/ui/molecules/AutocompleteDropdownWithFilter';
 import DropdownPicker from '@/src/components/ui/molecules/DropdownPicker';
@@ -208,7 +208,7 @@ const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, sourc
 
       <View style={styles.centered} pointerEvents="box-none">
         <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-          <ThemedView style={[styles.card, { backgroundColor }]}>            
+          <ThemedCard style={[styles.card, { backgroundColor }]}>
             <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <ThemedText style={styles.title}>{savedSkillInfo ? 'Success!' : 'Skill'}</ThemedText>
 
@@ -254,123 +254,123 @@ const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, sourc
                     value={skillName}
                     onChangeText={(t) => { setSkillName(t); setSelectedSkill(null); }}
                     onSelectItem={(item) => {
-                  setSelectedSkill(item);
-                  setSkillName(item?.title || '');
-                  // If item is one of user's skills, load existing notes/videos
-                  if (item && mySkillIdSet.has(item.id)) {
-                    const userSkillId = skillIdToUserSkillId.get(item.id);
-                    if (userSkillId) {
-                      setLoadingUserSkillData(true);
-                      Promise.all([
-                        fetchUserSkillNotes(userSkillId),
-                        fetchUserSkillVideos(userSkillId),
-                      ])
-                        .then(([existingNotes, existingVideos]) => {
-                          const sortedNotes = existingNotes.sort((a,b)=> (a.note_order||0)-(b.note_order||0));
-                          const sortedVideos = existingVideos.sort((a,b)=> (a.video_order||0)-(b.video_order||0));
-                          setLoadedNotesData(sortedNotes);
-                          setLoadedVideosData(sortedVideos);
-                          setNotes(sortedNotes.length > 0 ? sortedNotes.map(n => n.note) : ['']);
-                          setVideos(sortedVideos.length > 0 ? sortedVideos.map(v => v.video_url) : []);
-                        })
-                        .catch(() => {
-                          setNotes(['']);
-                          setVideos([]);
-                        })
-                        .finally(() => setLoadingUserSkillData(false));
-                    }
-                  } else {
-                    setNotes((prev)=> prev.length? prev: ['']);
-                    setVideos([]);
-                  }
-                }}
-                placeholder="Search skills or type to add new"
-                showCategoryChips={true}
-                showMineChip={true}
-              />
+                      setSelectedSkill(item);
+                      setSkillName(item?.title || '');
+                      // If item is one of user's skills, load existing notes/videos
+                      if (item && mySkillIdSet.has(item.id)) {
+                        const userSkillId = skillIdToUserSkillId.get(item.id);
+                        if (userSkillId) {
+                          setLoadingUserSkillData(true);
+                          Promise.all([
+                            fetchUserSkillNotes(userSkillId),
+                            fetchUserSkillVideos(userSkillId),
+                          ])
+                            .then(([existingNotes, existingVideos]) => {
+                              const sortedNotes = existingNotes.sort((a, b) => (a.note_order || 0) - (b.note_order || 0));
+                              const sortedVideos = existingVideos.sort((a, b) => (a.video_order || 0) - (b.video_order || 0));
+                              setLoadedNotesData(sortedNotes);
+                              setLoadedVideosData(sortedVideos);
+                              setNotes(sortedNotes.length > 0 ? sortedNotes.map(n => n.note) : ['']);
+                              setVideos(sortedVideos.length > 0 ? sortedVideos.map(v => v.video_url) : []);
+                            })
+                            .catch(() => {
+                              setNotes(['']);
+                              setVideos([]);
+                            })
+                            .finally(() => setLoadingUserSkillData(false));
+                        }
+                      } else {
+                        setNotes((prev) => prev.length ? prev : ['']);
+                        setVideos([]);
+                      }
+                    }}
+                    placeholder="Search skills or type to add new"
+                    showCategoryChips={true}
+                    showMineChip={true}
+                  />
 
-              {loadingUserSkillData && (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" />
-                  <ThemedText style={styles.loadingText}>Loading skill data...</ThemedText>
-                </View>
-              )}
+                  {loadingUserSkillData && (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="small" />
+                      <ThemedText style={styles.loadingText}>Loading skill data...</ThemedText>
+                    </View>
+                  )}
 
-              {selectedSkill && mySkillIdSet.has(selectedSkill.id) && !loadingUserSkillData && (
-                <View style={styles.infoContainer}>
-                  <Ionicons name="information-circle" size={16} color="#007AFF" />
-                  <ThemedText style={styles.infoText}>
-                    Loaded {notes.filter(n => n.trim()).length} note(s) and {videos.filter(v => v.trim()).length} video(s) from your saved skill
-                  </ThemedText>
-                </View>
-              )}
+                  {selectedSkill && mySkillIdSet.has(selectedSkill.id) && !loadingUserSkillData && (
+                    <View style={styles.infoContainer}>
+                      <Ionicons name="information-circle" size={16} color="#007AFF" />
+                      <ThemedText style={styles.infoText}>
+                        Loaded {notes.filter(n => n.trim()).length} note(s) and {videos.filter(v => v.trim()).length} video(s) from your saved skill
+                      </ThemedText>
+                    </View>
+                  )}
 
-              <View style={styles.spacer} />
-              <ThemedText style={styles.label}>Category</ThemedText>
-              <DropdownPicker
-                options={categoryOptions}
-                selectedValue={(selectedCategoryId as string) || ''}
-                onValueChange={(v) => setSelectedCategoryId(v as Database['public']['Enums']['Category'])}
-                placeholder="Select category"
-              />
+                  <View style={styles.spacer} />
+                  <ThemedText style={styles.label}>Category</ThemedText>
+                  <DropdownPicker
+                    options={categoryOptions}
+                    selectedValue={(selectedCategoryId as string) || ''}
+                    onValueChange={(v) => setSelectedCategoryId(v as Database['public']['Enums']['Category'])}
+                    placeholder="Select category"
+                  />
 
-              <View style={styles.section}>
-                <ThemedText style={styles.label}>Notes</ThemedText>
-                {notes.map((n, idx) => {
-                  const noteData = loadedNotesData[idx];
-                  const lastEdited = noteData?.updated_at || noteData?.created_at;
-                  return (
-                    <View key={`note_${idx}`} style={styles.noteContainer}>
-                      {lastEdited && (
-                        <ThemedText style={styles.timestampText}>
-                          Last edited: {formatDate(lastEdited)}
-                        </ThemedText>
-                      )}
-                      <TextInput
-                        style={styles.textArea}
-                        value={n}
-                        onChangeText={(t) => updateNote(idx, t)}
-                        placeholder={`Note ${idx + 1}`}
-                        multiline
-                      />
-                      <TouchableWithoutFeedback onPress={() => requestRemoveNote(idx)}>
-                        <View style={styles.noteTrashIcon}>
-                          <Ionicons name="trash" size={18} color="#dc3545" />
+                  <View style={styles.section}>
+                    <ThemedText style={styles.label}>Notes</ThemedText>
+                    {notes.map((n, idx) => {
+                      const noteData = loadedNotesData[idx];
+                      const lastEdited = noteData?.updated_at || noteData?.created_at;
+                      return (
+                        <View key={`note_${idx}`} style={styles.noteContainer}>
+                          {lastEdited && (
+                            <ThemedText style={styles.timestampText}>
+                              Last edited: {formatDate(lastEdited)}
+                            </ThemedText>
+                          )}
+                          <TextInput
+                            style={styles.textArea}
+                            value={n}
+                            onChangeText={(t) => updateNote(idx, t)}
+                            placeholder={`Note ${idx + 1}`}
+                            multiline
+                          />
+                          <TouchableWithoutFeedback onPress={() => requestRemoveNote(idx)}>
+                            <View style={styles.noteTrashIcon}>
+                              <Ionicons name="trash" size={18} color="#dc3545" />
+                            </View>
+                          </TouchableWithoutFeedback>
                         </View>
-                      </TouchableWithoutFeedback>
-                    </View>
-                  );
-                })}
-                <ThemedButton title="Add Note" onPress={addNote} />
-              </View>
+                      );
+                    })}
+                    <ThemedButton title="Add Note" onPress={addNote} />
+                  </View>
 
-              <View style={styles.section}>
-                <ThemedText style={styles.label}>Videos</ThemedText>
-                {videos.map((v, idx) => {
-                  const videoData = loadedVideosData[idx];
-                  const lastEdited = videoData?.updated_at || videoData?.created_at;
-                  return (
-                    <View key={`vid_${idx}`}>
-                      {lastEdited && (
-                        <ThemedText style={styles.timestampText}>
-                          Last edited: {formatDate(lastEdited)}
-                        </ThemedText>
-                      )}
-                      <View style={styles.row}>
-                        <TextInput
-                          style={styles.textInput}
-                          value={v}
-                          onChangeText={(t) => updateVideo(idx, t)}
-                          placeholder="Video URL"
-                          autoCapitalize="none"
-                        />
-                        <ThemedButton title="Remove" onPress={() => removeVideo(idx)} style={styles.removeBtn} />
-                      </View>
-                    </View>
-                  );
-                })}
-                <ThemedButton title="Add Video" onPress={addVideo} />
-              </View>
+                  <View style={styles.section}>
+                    <ThemedText style={styles.label}>Videos</ThemedText>
+                    {videos.map((v, idx) => {
+                      const videoData = loadedVideosData[idx];
+                      const lastEdited = videoData?.updated_at || videoData?.created_at;
+                      return (
+                        <View key={`vid_${idx}`}>
+                          {lastEdited && (
+                            <ThemedText style={styles.timestampText}>
+                              Last edited: {formatDate(lastEdited)}
+                            </ThemedText>
+                          )}
+                          <View style={styles.row}>
+                            <TextInput
+                              style={styles.textInput}
+                              value={v}
+                              onChangeText={(t) => updateVideo(idx, t)}
+                              placeholder="Video URL"
+                              autoCapitalize="none"
+                            />
+                            <ThemedButton title="Remove" onPress={() => removeVideo(idx)} style={styles.removeBtn} />
+                          </View>
+                        </View>
+                      );
+                    })}
+                    <ThemedButton title="Add Video" onPress={addVideo} />
+                  </View>
 
                 </>
               )}
@@ -381,7 +381,7 @@ const SkillFormModal: React.FC<SkillFormModalProps> = ({ visible, onClose, sourc
                 <ThemedButton title="Save" onPress={() => mutation.mutate()} disabled={mutation.isPending || loadingSkills} />
               </View>
             )}
-          </ThemedView>
+          </ThemedCard>
         </TouchableWithoutFeedback>
       </View>
     </Modal>

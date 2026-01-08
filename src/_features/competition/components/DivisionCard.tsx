@@ -2,7 +2,7 @@ import React from 'react';
 import { TextInput } from 'react-native';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import DropdownPicker from '@/src/components/ui/molecules/DropdownPicker';
 
 export interface DivisionData {
@@ -26,9 +26,9 @@ const DivisionCard: React.FC<DivisionCardProps> = ({
   onRemoveDivision,
 }) => {
   return (
-    <ThemedView style={styles.divisionCard}>
-      <ThemedView>
-        <ThemedView style={styles.divisionField}>
+    <ThemedCard style={styles.divisionCard}>
+      <ThemedCard>
+        <ThemedCard style={styles.divisionField}>
           <ThemedText style={styles.inlineSmall}>Gi/NoGi</ThemedText>
           <DropdownPicker
             options={[
@@ -41,14 +41,14 @@ const DivisionCard: React.FC<DivisionCardProps> = ({
             placeholder="BJJ Type"
             style={styles.dropdown}
           />
-        </ThemedView>
-      </ThemedView>
+        </ThemedCard>
+      </ThemedCard>
       
       {/* Weight Class Section */}
-      <ThemedView style={styles.weightClassSection}>
+      <ThemedCard style={styles.weightClassSection}>
         <ThemedText style={styles.inlineSmall}>Weight Class</ThemedText>
-        <ThemedView style={styles.weightClassRow}>
-          <ThemedView style={styles.weightTypeDropdown}>
+        <ThemedCard style={styles.weightClassRow}>
+          <ThemedCard style={styles.weightTypeDropdown}>
             <DropdownPicker
               options={[
                 { label: 'kg (under)', value: 'kg_under' },
@@ -63,7 +63,7 @@ const DivisionCard: React.FC<DivisionCardProps> = ({
               placeholder="Weight Type"
               style={styles.dropdown}
             />
-          </ThemedView>
+          </ThemedCard>
           {division.weightType !== 'open' && (
             <TextInput
               style={[styles.weightInput, styles.weightNumberInput]}
@@ -75,15 +75,15 @@ const DivisionCard: React.FC<DivisionCardProps> = ({
               keyboardType="numeric"
             />
           )}
-        </ThemedView>
-      </ThemedView>
+        </ThemedCard>
+      </ThemedCard>
 
       <ThemedButton 
         title="Remove Division" 
         onPress={() => onRemoveDivision(division.tempId)}
         style={styles.removeDivisionButton}
       />
-    </ThemedView>
+    </ThemedCard>
   );
 };
 

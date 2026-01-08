@@ -39,7 +39,8 @@ const DropdownPicker = forwardRef<DropdownPickerRef, DropdownPickerProps>(({
   const [isOpen, setIsOpen] = useState(autoOpen);
   const tintColor = useThemeColor({}, 'tint');
   const iconColor = useThemeColor({}, 'icon');
-  const backgroundColor = useThemeColor({}, 'background');
+  const backgroundColor = useThemeColor({}, 'card');
+  const borderColor = useThemeColor({}, 'border'); // Added border color
 
   const selectedOption = options.find(option => option.value === selectedValue);
   const displayText = selectedOption ? selectedOption.label : placeholder;
@@ -64,7 +65,7 @@ const DropdownPicker = forwardRef<DropdownPickerRef, DropdownPickerProps>(({
       <TouchableOpacity
         style={[
           styles.dropdownButton,
-          { borderColor: tintColor },
+          { borderColor: tintColor, backgroundColor }, // Use themed background
           style,
         ]}
         onPress={() => setIsOpen(true)}
@@ -75,10 +76,10 @@ const DropdownPicker = forwardRef<DropdownPickerRef, DropdownPickerProps>(({
         <ThemedText style={styles.dropdownText}>
           {displayText}
         </ThemedText>
-        <Ionicons 
-          name="chevron-down" 
-          size={20} 
-          color={iconColor} 
+        <Ionicons
+          name="chevron-down"
+          size={20}
+          color={iconColor}
           style={[
             styles.dropdownIcon,
             isOpen && styles.dropdownIconOpen
@@ -92,18 +93,18 @@ const DropdownPicker = forwardRef<DropdownPickerRef, DropdownPickerProps>(({
         animationType="fade"
         onRequestClose={handleBackdropPress}
       >
-        <TouchableOpacity 
-          style={styles.backdrop} 
+        <TouchableOpacity
+          style={styles.backdrop}
           activeOpacity={1}
           onPress={handleBackdropPress}
         >
           <View style={styles.modalContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.modalContent, { backgroundColor }]}
               activeOpacity={1}
               onPress={(e) => e.stopPropagation()}
             >
-              <ScrollView 
+              <ScrollView
                 style={styles.optionsList}
                 showsVerticalScrollIndicator={false}
               >
@@ -112,6 +113,7 @@ const DropdownPicker = forwardRef<DropdownPickerRef, DropdownPickerProps>(({
                     key={option.value}
                     style={[
                       styles.optionItem,
+                      { borderBottomColor: borderColor }, // Use themed border
                       option.value === selectedValue && {
                         backgroundColor: tintColor + '20'
                       },
@@ -124,7 +126,7 @@ const DropdownPicker = forwardRef<DropdownPickerRef, DropdownPickerProps>(({
                     {getOptionColor ? (
                       <View style={[styles.colorDot, { backgroundColor: getOptionColor(option.value) }]} />
                     ) : null}
-                    <ThemedText 
+                    <ThemedText
                       style={[
                         styles.optionText,
                         option.value === selectedValue && {
@@ -136,10 +138,10 @@ const DropdownPicker = forwardRef<DropdownPickerRef, DropdownPickerProps>(({
                       {option.label}
                     </ThemedText>
                     {option.value === selectedValue && (
-                      <Ionicons 
-                        name="checkmark" 
-                        size={20} 
-                        color={tintColor} 
+                      <Ionicons
+                        name="checkmark"
+                        size={20}
+                        color={tintColor}
                       />
                     )}
                   </TouchableOpacity>
@@ -166,7 +168,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#f9f9f9',
+    // backgroundColor: '#f9f9f9', // Removed hardcoded color
     minHeight: 50,
   },
   dropdownText: {
@@ -220,7 +222,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    // borderBottomColor: '#f0f0f0', // Removed hardcoded color
   },
   lastOption: {
     borderBottomWidth: 0,

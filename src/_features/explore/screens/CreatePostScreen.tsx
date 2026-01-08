@@ -3,7 +3,7 @@ import { StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, Alert } from '
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import ModalHeader from '@/src/components/ui/molecules/ModalHeader';
 import PostForm from '../components/post/PostForm';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
@@ -14,6 +14,7 @@ interface PostFormData {
   content: string;
   category: PostCategory | null;
   imageFile: { uri: string; name: string; type: string } | null;
+  videoUri: string | null;
 }
 
 const CreatePostScreen: React.FC = () => {
@@ -21,10 +22,11 @@ const CreatePostScreen: React.FC = () => {
     content: '',
     category: null,
     imageFile: null,
+    videoUri: null,
   });
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   const { session } = useAuthStore();
   const backgroundColor = useThemeColor({}, 'background');
   const tintColor = useThemeColor({}, 'tint');
@@ -43,12 +45,13 @@ const CreatePostScreen: React.FC = () => {
 
     try {
       setIsSaving(true);
-      
+
       await createPost(
         {
           content: formData.content || undefined,
           category: formData.category,
           imageFile: formData.imageFile || undefined,
+          videoUri: formData.videoUri || undefined,
         },
         session.user.id
       );
@@ -76,7 +79,7 @@ const CreatePostScreen: React.FC = () => {
   };
 
   const handleBack = () => {
-    if (formData.content.trim() || formData.imageFile) {
+    if (formData.content.trim() || formData.imageFile || formData.videoUri) {
       Alert.alert(
         'Discard Post?',
         'Are you sure you want to discard this post?',
@@ -108,8 +111,8 @@ const CreatePostScreen: React.FC = () => {
           textColor: isSaveDisabled ? textColor + '60' : tintColor,
         }}
       />
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"

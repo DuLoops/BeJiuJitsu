@@ -8,7 +8,7 @@ import { validateUsername } from '@/src/_features/profile/utils/validation';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { AuthContext } from '@/src/context/AuthContext';
 import { Enums } from '@/src/supabase/types';
 import { router } from 'expo-router';
@@ -147,9 +147,9 @@ export default function CreateProfileScreen() {
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <ThemedText style={styles.title}>Create Your Profile</ThemedText>
 
-      <ThemedView style={styles.section}>
+      <ThemedCard style={styles.section}>
         <ThemedText style={styles.label}>Username</ThemedText>
-        <ThemedView style={styles.usernameContainer}>
+        <ThemedCard style={styles.usernameContainer}>
           <ThemedInput
             style={[styles.input, styles.usernameInput]}
             value={userName}
@@ -157,7 +157,7 @@ export default function CreateProfileScreen() {
             placeholder="Enter your username (min 3 chars)"
             autoCapitalize="none"
           />
-        </ThemedView>
+        </ThemedCard>
         {isCheckingUsername && <ThemedText style={styles.infoText}>Checking username...</ThemedText>}
         {usernameDisplayError && (
             <ThemedText style={styles.errorText}>{usernameDisplayError}</ThemedText>
@@ -165,20 +165,20 @@ export default function CreateProfileScreen() {
         {isUsernameAvailable === true && userName === debouncedUserName && !isCheckingUsername && !isUsernameQueryError && (
           <ThemedText style={styles.successText}>Username is available!</ThemedText>
         )}
-      </ThemedView>
+      </ThemedCard>
 
-      <ThemedView style={styles.section}>
+      <ThemedCard style={styles.section}>
         <SelectRank
           belt={belt}
           stripes={stripes}
           onBeltChange={setBelt}
           onStripesChange={setStripes}
         />
-      </ThemedView>
+      </ThemedCard>
 
-      <ThemedView style={styles.section}>
+      <ThemedCard style={styles.section}>
         <GoalsList items={goals} onItemsChange={setGoals} title="Training Goals" />
-      </ThemedView>
+      </ThemedCard>
 
       {overallIsLoading ? (
         <ActivityIndicator size="large" color={styles.activityIndicatorColor.color} />

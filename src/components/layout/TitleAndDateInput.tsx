@@ -5,7 +5,8 @@ import { Platform } from 'react-native';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
+import { View } from 'react-native';
 
 interface TitleAndDateInputProps {
   title: string;
@@ -23,6 +24,7 @@ export default function TitleAndDateInput({
   onDateChange,
 }: TitleAndDateInputProps) {
   const [showDatePicker, setShowDatePicker] = useState(Platform.OS === 'ios');
+  const textColor = useThemeColor({}, 'text');
 
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     const currentDate = selectedDate || date;
@@ -33,7 +35,7 @@ export default function TitleAndDateInput({
   return (
     <>
       {/* Title Input */}
-      <ThemedView style={styles.section}>
+      <View style={styles.section}>
         <ThemedText style={styles.sectionLabel}>Title</ThemedText>
         <ThemedInput
           value={title}
@@ -42,16 +44,16 @@ export default function TitleAndDateInput({
           style={styles.titleInput}
           testID="competition-title-input"
         />
-      </ThemedView>
+      </View>
 
       {/* Date Picker */}
-      <ThemedView style={styles.section}>
+      <View style={styles.section}>
         <ThemedText style={styles.sectionLabel}>Date</ThemedText>
         {Platform.OS !== 'ios' && (
-          <ThemedButton 
+          <ThemedButton
             variant="outline"
-            onPress={() => setShowDatePicker(true)} 
-            title={`Selected: ${date.toLocaleDateString()}`} 
+            onPress={() => setShowDatePicker(true)}
+            title={`Selected: ${date.toLocaleDateString()}`}
           />
         )}
         {showDatePicker && (
@@ -61,9 +63,11 @@ export default function TitleAndDateInput({
             mode="date"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={handleDateChange}
+            textColor={textColor}
+            themeVariant="dark"
           />
         )}
-      </ThemedView>
+      </View>
     </>
   );
 }

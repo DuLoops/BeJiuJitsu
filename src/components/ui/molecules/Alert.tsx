@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedButton from '../atoms/ThemedButton';
 import ThemedText from '../atoms/ThemedText';
-import ThemedView from '../atoms/ThemedView';
+import ThemedCard from '../atoms/ThemedCard';
 
 interface AlertAction {
   text: string;
@@ -60,7 +60,7 @@ const Alert: React.FC<AlertProps> = ({
           activeOpacity={1}
           onPress={(e) => e.stopPropagation()}
         >
-          <ThemedView style={styles.alertContent}>
+          <ThemedCard style={styles.alertContent}>
             <ThemedText style={styles.title}>{title}</ThemedText>
             {message && (
               <ThemedText style={styles.message}>{message}</ThemedText>
@@ -80,7 +80,7 @@ const Alert: React.FC<AlertProps> = ({
                 />
               ))}
             </View>
-          </ThemedView>
+          </ThemedCard>
         </TouchableOpacity>
       </TouchableOpacity>
     </Modal>

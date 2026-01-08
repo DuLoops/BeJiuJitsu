@@ -1,5 +1,5 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -31,7 +31,7 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({
   };
 
   return (
-    <ThemedView style={[styles.header, { backgroundColor }]}>
+    <ThemedCard style={[styles.header, { backgroundColor }]}>
       <TouchableOpacity 
         onPress={handleGoBack}
         style={styles.headerButton}
@@ -57,7 +57,7 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({
           {saveTitle}
         </ThemedText>
       </TouchableOpacity>
-    </ThemedView>
+    </ThemedCard>
   );
 };
 

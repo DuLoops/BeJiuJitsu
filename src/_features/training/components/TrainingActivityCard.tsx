@@ -1,10 +1,10 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import VideoPlayer from '@/src/components/ui/molecules/VideoPlayer';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 
 export interface TrainingValue {
   id: string;
@@ -43,55 +43,55 @@ const TrainingActivityCard: React.FC<TrainingActivityCardProps> = ({
     if (activity.isExpanded) return null;
 
     return (
-      <ThemedView style={styles.collapsedTagsContainer}>
+      <ThemedCard style={styles.collapsedTagsContainer}>
         {activity.video_url && (
-          <ThemedView style={[styles.tag, styles.videoTag]}>
+          <ThemedCard style={[styles.tag, styles.videoTag]}>
             <Ionicons name="videocam" size={12} color="white" />
             <ThemedText style={styles.tagText}>Video</ThemedText>
-          </ThemedView>
+          </ThemedCard>
         )}
         {activity.notes && (
-          <ThemedView style={[styles.tag, styles.noteTag]}>
+          <ThemedCard style={[styles.tag, styles.noteTag]}>
             <Ionicons name="document-text" size={12} color="white" />
             <ThemedText style={styles.tagText}>Note</ThemedText>
-          </ThemedView>
+          </ThemedCard>
         )}
-      </ThemedView>
+      </ThemedCard>
     );
   };
 
   return (
-    <ThemedView style={styles.activityContainer}>
-      <ThemedView style={styles.activityHeader}>
+    <ThemedCard style={styles.activityContainer}>
+      <View style={styles.activityHeader}>
         <ThemedText style={styles.activityNumber}>{index + 1}.</ThemedText>
-        <ThemedView style={styles.activityInfo}>
+        <View style={styles.activityInfo}>
           <ThemedText style={styles.typeText}>
             {activity.type}
           </ThemedText>
-        </ThemedView>
-        
+        </View>
+
         {renderTags()}
 
         {/* Expand/Collapse button */}
         <TouchableOpacity onPress={() => onToggleExpansion(activity.id)}>
-          <Ionicons 
-            name={activity.isExpanded ? 'chevron-up' : 'chevron-down'} 
-            size={20} 
-            color={iconColor} 
+          <Ionicons
+            name={activity.isExpanded ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color={iconColor}
           />
         </TouchableOpacity>
-      </ThemedView>
+      </View>
 
       {/* Video Player if video exists and collapsed */}
       {!activity.isExpanded && activity.video_url && (
-        <ThemedView style={styles.videoSection}>
+        <View style={styles.videoSection}>
           <VideoPlayer />
-        </ThemedView>
+        </View>
       )}
 
       {/* Expanded content */}
       {activity.isExpanded && children}
-    </ThemedView>
+    </ThemedCard>
   );
 };
 
@@ -99,15 +99,10 @@ export default TrainingActivityCard;
 
 const styles = {
   activityContainer: {
-    backgroundColor: '#ffffff', // White background for card
-    borderRadius: 10,
+    borderRadius: 2, // Square look
     padding: 15,
     marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    // Removed shadows
   },
   activityHeader: {
     flexDirection: 'row' as const,

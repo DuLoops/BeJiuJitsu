@@ -13,12 +13,12 @@ appId: host.exp.Exponent
       notVisible: "ExploreScreen"
     commands:
       - launchApp
-      # Handle Expo Go launcher - tap BeJiuJitsu if visible
+      # Handle Expo Go launcher - tap DoJits if visible
       - runFlow:
           when:
-            visible: "BeJiuJitsu"
+            visible: "DoJits"
           commands:
-            - tapOn: "BeJiuJitsu"
+            - tapOn: "DoJits"
 
 # Wait for app to load and verify basic app structure
 - assertVisible: "ExploreScreen"

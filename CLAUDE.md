@@ -154,7 +154,7 @@ BJJ-focused schema with:
 - Create and update the document as necessary and notify me
 
 ## GitHub Repository
-- Repository: `DuLoops/BeJiuJitsu`
+- Repository: `DuLoops/DoJits`
 - Current branch: `sprint2`
 - Use GitHub CLI (`gh`) for repository operations
 - use uuid from react-native-get-random-values package

@@ -1,6 +1,6 @@
 import React from 'react';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import DropdownPicker from '@/src/components/ui/molecules/DropdownPicker';
 import { getBeltColor } from '@/src/constants/Colors';
 
@@ -16,7 +16,7 @@ const CompetitionLevelSelector: React.FC<CompetitionLevelSelectorProps> = ({
   style,
 }) => {
   return (
-    <ThemedView style={style}>
+    <ThemedCard style={style}>
       <ThemedText style={styles.fieldLabel}>Competition Level</ThemedText>
       <DropdownPicker
         options={[
@@ -37,7 +37,7 @@ const CompetitionLevelSelector: React.FC<CompetitionLevelSelectorProps> = ({
         style={styles.dropdown}
         getOptionColor={(v) => v === 'ABSOLUTE' ? '#FFD700' : getBeltColor(v)}
       />
-    </ThemedView>
+    </ThemedCard>
   );
 };
 

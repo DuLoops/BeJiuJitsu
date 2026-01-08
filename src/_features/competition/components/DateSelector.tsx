@@ -1,5 +1,5 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
@@ -42,8 +42,8 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedView style={styles.rowContainer}>
+    <ThemedCard style={styles.container}>
+      <ThemedCard style={styles.rowContainer}>
         <ThemedText style={styles.label}>{label}:</ThemedText>
       
         {Platform.OS === 'ios' ? (
@@ -68,7 +68,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
           </ThemedText>
         </TouchableOpacity>
       )}
-      </ThemedView>
+      </ThemedCard>
       
       {/* Android modal picker */}
       {Platform.OS === 'android' && showPicker && (
@@ -81,7 +81,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
           maximumDate={new Date()}
         />
       )}
-    </ThemedView>
+    </ThemedCard>
   );
 };
 

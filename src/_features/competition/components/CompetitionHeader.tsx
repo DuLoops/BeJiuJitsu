@@ -1,6 +1,6 @@
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -27,13 +27,13 @@ const CompetitionHeader: React.FC<CompetitionHeaderProps> = ({ onDone }) => {
   };
 
   return (
-    <ThemedView style={styles.header}>
+    <ThemedCard style={styles.header}>
       <TouchableOpacity onPress={handleBack}>
         <Ionicons name="chevron-back" size={24} color={iconColor} />
       </TouchableOpacity>
       <ThemedText style={styles.headerTitle}>Competition</ThemedText>
       <ThemedButton title="Done" onPress={handleDone} />
-    </ThemedView>
+    </ThemedCard>
   );
 };
 

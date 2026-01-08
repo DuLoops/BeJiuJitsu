@@ -1,5 +1,5 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import VideoPlayer from '@/src/components/ui/molecules/VideoPlayer';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { MatchRecord } from '@/src/types/match';
@@ -7,90 +7,124 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 
+import { DivisionData } from '@/src/_features/competition/components/DivisionCard';
+
 interface MatchCardProps {
   match: MatchRecord;
   index: number;
   onToggleExpansion: (matchId: string) => void;
   children?: React.ReactNode;
+  divisions: DivisionData[];
 }
 
 const MatchCard: React.FC<MatchCardProps> = ({
   match,
   index,
   onToggleExpansion,
-  children
+  children,
+  divisions
 }) => {
   const iconColor = useThemeColor({}, 'icon');
+  const textSecondary = useThemeColor({}, 'textSecondary');
 
-  const getDisplayText = (outcome: string) => {
-    if (outcome === 'DRAW') return 'Tie';
-    return outcome.charAt(0).toUpperCase() + outcome.slice(1).toLowerCase();
+  const getOutcomeText = () => {
+    const outcome = match.outcome === 'DRAW' ? 'Tie' : match.outcome.charAt(0).toUpperCase() + match.outcome.slice(1).toLowerCase();
+
+    // Find division name
+    let divisionText = '';
+    if (match.divisionTempId) {
+      const division = divisions.find(d => d.tempId === match.divisionTempId);
+      if (division) {
+        divisionText = ` - ${division.bjjType} ${division.weightType === 'open' ? 'Open' : `${division.weightClassUnderKg} ${division.weightType.replace('_', ' ')}`}`;
+      }
+    }
+
+    // Method
+    let methodText = '';
+    if (match.outcomeMethod) {
+      methodText = ` - (${match.outcomeMethod.replace('_', ' ').toLowerCase()})`;
+    }
+
+    return `${outcome}${divisionText}${methodText}`;
   };
 
   const renderTags = () => {
     if (match.isExpanded) return null;
 
+    const tags = [];
+
+    if (match.note) {
+      tags.push(
+        <ThemedCard key="note" style={[styles.tag, styles.noteTag]}>
+          <ThemedText style={styles.tagText}>(note)</ThemedText>
+        </ThemedCard>
+      );
+    }
+
+    if (match.skillUsages.length > 0) {
+      match.skillUsages.forEach((skill, idx) => {
+        tags.push(
+          <ThemedCard key={`skill-${idx}`} style={[styles.tag, styles.skillTag]}>
+            <ThemedText style={styles.tagText}>('{skill.skill.name}')</ThemedText>
+          </ThemedCard>
+        );
+      });
+    }
+
+    if (match.videoUrl) {
+      tags.push(
+        <ThemedCard key="video" style={[styles.tag, styles.videoTag]}>
+          <ThemedText style={styles.tagText}>(video)</ThemedText>
+        </ThemedCard>
+      );
+    }
+
+    if (tags.length === 0) return null;
+
     return (
-      <ThemedView style={styles.collapsedTagsContainer}>
-        {match.videoUrl && (
-          <ThemedView style={[styles.tag, styles.videoTag]}>
-            <Ionicons name="videocam" size={12} color="white" />
-            <ThemedText style={styles.tagText}>Video</ThemedText>
-          </ThemedView>
-        )}
-        {match.skillUsages.length > 0 && (
-          <ThemedView style={[styles.tag, styles.skillTag]}>
-            <Ionicons name="fitness" size={12} color="white" />
-            <ThemedText style={styles.tagText}>Skills ({match.skillUsages.length})</ThemedText>
-          </ThemedView>
-        )}
-        {match.note && (
-          <ThemedView style={[styles.tag, styles.noteTag]}>
-            <Ionicons name="document-text" size={12} color="white" />
-            <ThemedText style={styles.tagText}>Note</ThemedText>
-          </ThemedView>
-        )}
-      </ThemedView>
+      <ThemedCard style={styles.collapsedTagsContainer}>
+        {tags}
+      </ThemedCard>
     );
   };
 
   return (
-    <ThemedView style={styles.matchContainer}>
-      <ThemedView style={styles.matchHeader}>
+    <ThemedCard style={styles.matchContainer}>
+      <ThemedCard style={styles.matchHeader}>
         <ThemedText style={styles.matchNumber}>{index + 1}.</ThemedText>
-        <ThemedView style={styles.matchResult}>
+        <ThemedCard style={styles.matchResult}>
           <ThemedText style={[
             styles.resultText,
             match.outcome === 'WIN' && styles.winText,
             match.outcome === 'LOSE' && styles.loseText,
             match.outcome === 'DRAW' && styles.tieText,
           ]}>
-            {getDisplayText(match.outcome)}
+            {getOutcomeText()}
           </ThemedText>
-        </ThemedView>
-        
+        </ThemedCard>
+
         {renderTags()}
 
         {/* Expand/Collapse button */}
         <TouchableOpacity onPress={() => onToggleExpansion(match.id)}>
-          <Ionicons 
-            name={match.isExpanded ? 'chevron-up' : 'chevron-down'} 
-            size={20} 
-            color={iconColor} 
+          <Ionicons
+            name={match.isExpanded ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color={iconColor}
           />
         </TouchableOpacity>
-      </ThemedView>
+      </ThemedCard>
 
       {/* Video Player if video exists and collapsed */}
       {!match.isExpanded && match.videoUrl && (
-        <ThemedView style={styles.videoSection}>
+        <ThemedCard style={styles.videoSection}>
           <VideoPlayer />
-        </ThemedView>
+        </ThemedCard>
       )}
 
       {/* Expanded content */}
       {match.isExpanded && children}
-    </ThemedView>
+    </ThemedCard>
   );
 };
 
@@ -98,7 +132,7 @@ export default MatchCard;
 
 const styles = {
   matchContainer: {
-    backgroundColor: '#ffffff', // White background for card
+    // backgroundColor: '#ffffff', // Handled by ThemedCard
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
@@ -150,26 +184,25 @@ const styles = {
   tag: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#007bff',
-    borderRadius: 15,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    marginRight: 6,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    marginRight: 4,
     marginVertical: 2, // Add vertical margin for better spacing
+    backgroundColor: 'transparent',
   },
   videoTag: {
-    backgroundColor: '#28a745',
+    // backgroundColor: '#28a745',
   },
   skillTag: {
-    backgroundColor: '#6c757d',
+    // backgroundColor: '#6c757d',
   },
   noteTag: {
-    backgroundColor: '#dc3545',
+    // backgroundColor: '#dc3545',
   },
   tagText: {
-    color: '#fff',
+    // color: '#666', // Handled by ThemedText default or override
     fontSize: 12,
-    marginLeft: 4, // Reduced margin for tighter spacing
+    marginLeft: 0,
     lineHeight: 14, // Ensure consistent line height
   },
   videoSection: {

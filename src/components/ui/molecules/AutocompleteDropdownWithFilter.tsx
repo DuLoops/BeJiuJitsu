@@ -1,6 +1,6 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { getCategoryColor, themeColors } from '@/src/constants/Colors';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
+import { getCategoryColor, PALETTE } from '@/src/constants/Colors';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -175,155 +175,162 @@ const AutocompleteDropdownWithFilter: React.FC<AutocompleteDropdownWithFilterPro
     ];
     const categoryChips = categories.map((c) => ({ id: c.id, name: c.name, color: getCategoryColor(c.id), textColor: '#111827' }));
     // Place "Mine" at the end
-    const mineChip = showMineChip && hasMine ? [{ id: 'MINE', name: 'Mine', color: themeColors.red, textColor: '#ffffff' }] : [];
+    const mineChip = showMineChip && hasMine ? [{ id: 'MINE', name: 'Mine', color: PALETTE.common.accent, textColor: '#111827' }] : [];
     return [...base, ...categoryChips, ...mineChip];
   }, [categories, data, showMineChip]);
 
   return (
     <View style={[styles.container, style]}>
-        <TouchableWithoutFeedback onPress={(e) => { e.stopPropagation(); inputRef.current?.focus(); }}>
-          <View ref={containerRef} style={[styles.inputContainer]} onLayout={measureInputPosition}>
-            <TextInput
-              ref={inputRef}
-              style={[styles.textInput, { color: textColor }]}
-              value={value}
-              onChangeText={(text) => { onChangeText(text); setShowDropdown(true); }}
-              onFocus={() => { setIsFocused(true); measureInputPosition(); setShowDropdown(true); }}
-              onBlur={() => { /* keep dropdown open when interacting with chips/list; outside clicks handled by backdrop */ }}
-              placeholder={placeholder}
-              placeholderTextColor="#999"
-              autoCorrect={false}
-              autoCapitalize="none"
-            />
-            {value.length > 0 ? (
-              <TouchableOpacity style={styles.iconButton} onPress={handleClear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name="close-circle" size={20} color="#999" />
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.iconButton}>
-                <Ionicons name="search" size={20} color="#999" />
-              </View>
-            )}
-          </View>
-        </TouchableWithoutFeedback>
-        {/* Chips rendered inside dropdown to ensure visibility above backdrop */}
-        {showDropdown && (
-          <>
-            <TouchableWithoutFeedback onPress={() => { if (chipsExpanded) { setChipsExpanded(false); } else { setShowDropdown(false); setIsFocused(false); } }}>
-              <View style={[
-                styles.backdrop,
-                { top: -inputPosition.y, left: -inputPosition.x, width: windowWidth, height: windowHeight }
-              ]} />
-            </TouchableWithoutFeedback>
-            <View
-              style={[
-                styles.dropdownContainer,
-                { width: inputPosition.width },
-              ]}
-            >
-              <ThemedView style={styles.dropdownCard}>
-                {showCategoryChips && (
-                  <View style={styles.headerChipsContainer}>
-                    {chipsExpanded ? (
-                      <View style={styles.chipsWrap}>
-                        {chips.map((chip) => {
-                          const isActive = activeCategoryId === chip.id;
-                          const isMine = chip.id === 'MINE';
-                          const isAll = chip.id === 'ALL';
-                          const backgroundColor = isActive
-                            ? (isMine ? themeColors.lightRed : isAll ? '#E5E7EB' : getCategoryColor(chip.id))
-                            : '#F3F4F6';
-                          const textColor = isActive && isMine ? '#FFFFFF' : '#111827';
-                          return (
-                            <TouchableOpacity
-                              key={chip.id}
-                              style={[
-                                styles.chip,
-                                styles.chipWrapItem,
-                                { backgroundColor },
-                                isActive && isAll ? { borderWidth: 1, borderColor: '#111827' } : null,
-                              ]}
-                              onPress={() => { setActiveCategoryId(chip.id as any); setShowDropdown(true); setChipsExpanded(false); }}
-                            >
-                              <ThemedText style={[styles.chipText, { color: textColor }]}>
-                                {chip.name}
-                              </ThemedText>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    ) : (
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-                        {chips.map((chip) => {
-                          const isActive = activeCategoryId === chip.id;
-                          const isMine = chip.id === 'MINE';
-                          const isAll = chip.id === 'ALL';
-                          const backgroundColor = isActive
-                            ? (isMine ? themeColors.lightRed : isAll ? '#E5E7EB' : getCategoryColor(chip.id))
-                            : '#F3F4F6';
-                          const textColor = isActive && isMine ? '#FFFFFF' : '#111827';
-                          return (
-                            <TouchableOpacity
-                              key={chip.id}
-                              style={[
-                                styles.chip,
-                                { backgroundColor },
-                                isActive && isAll ? { borderWidth: 1, borderColor: '#111827' } : null,
-                              ]}
-                              onPress={() => { setActiveCategoryId(chip.id as any); setShowDropdown(true); setChipsExpanded(false); }}
-                            >
-                              <ThemedText style={[styles.chipText, { color: textColor }]}>
-                                {chip.name}
-                              </ThemedText>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </ScrollView>
-                    )}
-      
-                  </View>
-                )}
-                <ScrollView
-                  style={[styles.suggestions, { maxHeight: Math.min(windowHeight * 0.6, 520) }]}
-                  keyboardShouldPersistTaps="handled"
-                  nestedScrollEnabled
-                  onScrollBeginDrag={() => { if (chipsExpanded) setChipsExpanded(false); }}
-                >
-                  {combinedList.map((item) => (
-                    <TouchableOpacity key={item.id} style={[styles.itemRow, suggestedIds.has(item.id) && styles.suggestedRow]} onPress={() => handleSelectItem(item)} activeOpacity={0.7}>
-                      <View style={styles.itemRowInner}>
-                        {renderHighlightedTitle(item.title, value)}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          {item.isMine && (
-                            <View style={[styles.mineTag, { backgroundColor: themeColors.lightRed }]}>
-                              <ThemedText style={styles.mineTagText}>Mine</ThemedText>
-                            </View>
-                          )}
-                          {item.categoryName && (
-                            <View style={[styles.categoryTag, { backgroundColor: getCategoryColor(item.categoryId) }] }>
-                              <ThemedText style={styles.categoryTagText}>{item.categoryName}</ThemedText>
-                            </View>
-                          )}
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                  {combinedList.length === 0 && (
-                    <View style={styles.emptyState}><ThemedText>No results</ThemedText></View>
-                  )}
-                </ScrollView>
-
-                <View style={styles.dropdownFooter}>
-                  <TouchableOpacity onPress={() => { setShowDropdown(false); setIsFocused(false); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <Ionicons name="chevron-up" size={20} color="#666" />
-                  </TouchableOpacity>
-                </View>
-              </ThemedView>
+      <TouchableWithoutFeedback onPress={(e) => { e.stopPropagation(); inputRef.current?.focus(); }}>
+        <View ref={containerRef} style={[styles.inputContainer]} onLayout={measureInputPosition}>
+          <TextInput
+            ref={inputRef}
+            style={[styles.textInput, { color: textColor }]}
+            value={value}
+            onChangeText={(text) => { onChangeText(text); setShowDropdown(true); }}
+            onFocus={() => { setIsFocused(true); measureInputPosition(); setShowDropdown(true); }}
+            onBlur={() => { /* keep dropdown open when interacting with chips/list; outside clicks handled by backdrop */ }}
+            placeholder={placeholder}
+            placeholderTextColor="#999"
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+          {value.length > 0 ? (
+            <TouchableOpacity style={styles.iconButton} onPress={handleClear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="close-circle" size={20} color="#999" />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.iconButton}>
+              <Ionicons name="search" size={20} color="#999" />
             </View>
-          </>
-        )}
-      </View>
-  
+          )}
+        </View>
+      </TouchableWithoutFeedback>
+      {/* Chips rendered inside dropdown to ensure visibility above backdrop */}
+      {showDropdown && (
+        <>
+          <TouchableWithoutFeedback onPress={() => { if (chipsExpanded) { setChipsExpanded(false); } else { setShowDropdown(false); setIsFocused(false); } }}>
+            <View style={[
+              styles.backdrop,
+              { top: -inputPosition.y, left: -inputPosition.x, width: windowWidth, height: windowHeight }
+            ]} />
+          </TouchableWithoutFeedback>
+          <View
+            style={[
+              styles.dropdownContainer,
+              { width: inputPosition.width },
+            ]}
+          >
+            <ThemedCard style={styles.dropdownCard}>
+              {showCategoryChips && (
+                <View style={styles.headerChipsContainer}>
+                  {chipsExpanded ? (
+                    <View style={styles.chipsWrap}>
+                      {chips.map((chip) => {
+                        const isActive = activeCategoryId === chip.id;
+                        const isMine = chip.id === 'MINE';
+                        const isAll = chip.id === 'ALL';
+                        const backgroundColor = isMine
+                          ? '#fee2e2'
+                          : isAll
+                            ? '#F3F4F6'
+                            : getCategoryColor(chip.id);
+                        const textColor = '#111827';
+                        return (
+                          <TouchableOpacity
+                            key={chip.id}
+                            style={[
+                              styles.chip,
+                              styles.chipWrapItem,
+                              { backgroundColor },
+                              isActive ? { borderWidth: 1, borderColor: '#111827' } : null,
+                            ]}
+                            onPress={() => { setActiveCategoryId(chip.id as any); setShowDropdown(true); setChipsExpanded(false); }}
+                          >
+                            <ThemedText style={[styles.chipText, { color: textColor }]}>
+                              {chip.name}
+                            </ThemedText>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  ) : (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+                      {chips.map((chip) => {
+                        const isActive = activeCategoryId === chip.id;
+                        const isMine = chip.id === 'MINE';
+                        const isAll = chip.id === 'ALL';
+                        const backgroundColor = isMine
+                          ? '#fee2e2'
+                          : isAll
+                            ? '#F3F4F6'
+                            : getCategoryColor(chip.id);
+                        const textColor = isMine || isAll ? '#111827' : '#FFFFFF';
+
+                        return (
+                          <TouchableOpacity
+                            key={chip.id}
+                            style={[
+                              styles.chip,
+                              { backgroundColor },
+                              isActive ? { borderWidth: 1, borderColor: '#111827' } : null,
+                            ]}
+                            onPress={() => { setActiveCategoryId(chip.id as any); setShowDropdown(true); setChipsExpanded(false); }}
+                          >
+                            <ThemedText style={[styles.chipText, { color: textColor }]}>
+                              {chip.name}
+                            </ThemedText>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  )}
+
+                </View>
+              )}
+              <ScrollView
+                style={[styles.suggestions, { maxHeight: Math.min(windowHeight * 0.6, 520) }]}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
+                onScrollBeginDrag={() => { if (chipsExpanded) setChipsExpanded(false); }}
+              >
+                {combinedList.map((item) => (
+                  <TouchableOpacity key={item.id} style={[styles.itemRow, suggestedIds.has(item.id) && styles.suggestedRow]} onPress={() => handleSelectItem(item)} activeOpacity={0.7}>
+                    <View style={styles.itemRowInner}>
+                      <View style={{ flexShrink: 1 }}>
+                        {renderHighlightedTitle(item.title, value)}
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        {item.isMine && (
+                          <View style={[styles.mineTag, { backgroundColor: '#fee2e2' }]}>
+                            <ThemedText style={styles.mineTagText}>Mine</ThemedText>
+                          </View>
+                        )}
+                        {item.categoryName && (
+                          <View style={[styles.categoryTag, { backgroundColor: getCategoryColor(item.categoryId) }]}>
+                            <ThemedText style={styles.categoryTagText}>{item.categoryName}</ThemedText>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+                {combinedList.length === 0 && (
+                  <View style={styles.emptyState}><ThemedText>No results</ThemedText></View>
+                )}
+              </ScrollView>
+
+              <View style={styles.dropdownFooter}>
+                <TouchableOpacity onPress={() => { setShowDropdown(false); setIsFocused(false); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name="chevron-up" size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
+            </ThemedCard>
+          </View>
+        </>
+      )}
+    </View>
+
   );
 };
 
@@ -403,9 +410,9 @@ const styles = StyleSheet.create({
   },
   chipsRow: {
     paddingHorizontal: 8,
-    paddingTop: 8,
+    paddingTop: 4,
     paddingBottom: 4,
-    gap: 6,
+    gap: 8,
   },
   chipsRowInlineContainer: {
     marginTop: 8,
@@ -428,7 +435,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
-    marginRight: 8,
   },
   chipWrapItem: {
     marginRight: 6,
@@ -481,10 +487,11 @@ const styles = StyleSheet.create({
   },
   categoryTagText: {
     fontSize: 12,
+    color: '#FFFFFF', // Added for contrast
   },
   mineTagText: {
     fontSize: 12,
-    color: '#fff',
+    color: '#111827',
     fontWeight: '700',
   },
   emptyState: {

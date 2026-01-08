@@ -1,6 +1,6 @@
 # Maestro E2E Tests
 
-This directory contains Maestro end-to-end tests for the BeJiuJitsu React Native app.
+This directory contains Maestro end-to-end tests for the DoJits React Native app.
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ maestro test --device="iPhone 16 Pro" maestro/flows/
 ## Test Organization
 
 ### Smoke Tests (`smoke/`)
-- **app-launch.yaml**: Launches Expo Go, handles BeJiuJitsu selection, verifies Home screen
+- **app-launch.yaml**: Launches Expo Go, handles DoJits selection, verifies Home screen
 
 ### Navigation Flows (`navigation/`)
 Navigation utilities that use smoke/app-launch first:

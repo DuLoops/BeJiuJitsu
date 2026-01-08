@@ -1,6 +1,6 @@
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import DropdownPicker, { DropdownPickerRef } from '@/src/components/ui/molecules/DropdownPicker';
 import VideoPlayer from '@/src/components/ui/molecules/VideoPlayer';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 // import { router } from 'expo-router';
 import SkillFormModal from '@/src/_features/skill/screens/SkillFormModal';
 import React, { useRef, useState } from 'react';
-import { TextInput } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { TrainingActivityRecord, TrainingValue } from './TrainingActivityCard';
 
 type TrainingType = Enums<'TrainingType'>;
@@ -18,7 +18,7 @@ type TrainingUnit = Enums<'TrainingUnit'>;
 // Available training types from the database
 const TrainingTypesArray: TrainingType[] = [
   'Gi',
-  'NoGi', 
+  'NoGi',
   'Wrestling',
   'Roll',
   'Drill',
@@ -32,7 +32,7 @@ const TrainingTypesArray: TrainingType[] = [
 // Available training units from the database
 const TrainingUnitsArray: TrainingUnit[] = [
   'Minutes',
-  'Hours', 
+  'Hours',
   'Rounds',
   'Reps',
   'Submissions'
@@ -55,8 +55,11 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
   autoOpenType = false,
 }) => {
   const iconColor = useThemeColor({}, 'icon');
+  const inputBackground = useThemeColor({}, 'card');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
   const [showSkillModal, setShowSkillModal] = useState(false);
-  
+
   // Training values state - initialize from activity or empty array
   const [trainingValues, setTrainingValues] = useState<TrainingValue[]>(
     activity.training_values || []
@@ -98,7 +101,7 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
     const updatedValues = [...trainingValues, newValue];
     setTrainingValues(updatedValues);
     onUpdateActivity(activity.id, { training_values: updatedValues });
-    
+
     // Open the dropdown for the new value after a short delay
     setTimeout(() => {
       if (dropdownRefs.current[newValueId]) {
@@ -114,7 +117,7 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
   };
 
   const updateTrainingValue = (valueId: string, updates: Partial<TrainingValue>) => {
-    const updatedValues = trainingValues.map(v => 
+    const updatedValues = trainingValues.map(v =>
       v.id === valueId ? { ...v, ...updates } : v
     );
     setTrainingValues(updatedValues);
@@ -126,16 +129,16 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
   };
 
   return (
-    <ThemedView style={styles.activityDetails}>
+    <View style={styles.activityDetails}>
       {/* Video Player if video exists */}
       {activity.video_url && (
-        <ThemedView style={styles.videoSection}>
+        <View style={styles.videoSection}>
           <VideoPlayer />
-        </ThemedView>
+        </View>
       )}
 
       {/* Training Type Selection */}
-      <ThemedView style={styles.formRow}>
+      <View style={styles.formRow}>
         <ThemedText style={styles.fieldLabel}>Training Type</ThemedText>
         <DropdownPicker
           ref={(ref) => { typeDropdownRef.current = ref; }}
@@ -148,27 +151,27 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
           placeholder="Select training type"
           style={styles.dropdown}
         />
-      </ThemedView>
+      </View>
 
       {/* Training Records Section */}
-      <ThemedView style={styles.formRow}>
+      <View style={styles.formRow}>
         <ThemedText style={styles.fieldLabel}>Training Records</ThemedText>
-        
+
         {trainingValues.map((trainingValue) => (
-          <ThemedView key={trainingValue.id} style={styles.valueRow}>
-            <ThemedView style={styles.valueInput}>
+          <View key={trainingValue.id} style={styles.valueRow}>
+            <View style={styles.valueInput}>
               <TextInput
                 ref={(ref) => { valueInputRefs.current[trainingValue.id] = ref; }}
-                style={styles.textInput}
+                style={[styles.textInput, { backgroundColor: inputBackground, color: textColor, borderColor }]}
                 value={trainingValue.value.toString()}
                 onChangeText={(text) => updateTrainingValue(trainingValue.id, { value: parseInt(text) || 0 })}
-
+                placeholderTextColor={textColor}
                 keyboardType="numeric"
                 maxLength={4}
                 testID={`training-value-input-${trainingValue.id}`}
               />
-            </ThemedView>
-            <ThemedView style={styles.unitInput}>
+            </View>
+            <View style={styles.unitInput}>
               <DropdownPicker
                 ref={(ref) => { dropdownRefs.current[trainingValue.id] = ref; }}
                 options={unitOptions}
@@ -185,16 +188,16 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
                 style={styles.dropdown}
 
               />
-            </ThemedView>
+            </View>
             <ThemedButton
               title=""
               onPress={() => removeTrainingValue(trainingValue.id)}
               style={styles.removeValueButton}
               icon={<Ionicons name="trash-bin-outline" size={16} color="white" />}
             />
-          </ThemedView>
+          </View>
         ))}
-        
+
         <ThemedButton
           title="Add Record"
           onPress={addTrainingValue}
@@ -202,24 +205,25 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
           icon={<Ionicons name="add" size={16} color={iconColor} />}
           testID="add-record-button"
         />
-      </ThemedView>
+      </View>
 
       {/* Notes (Always Visible) */}
-      <ThemedView style={styles.formRow}>
+      <View style={styles.formRow}>
         <ThemedText style={styles.fieldLabel}>Notes</ThemedText>
         <TextInput
-          style={styles.noteInput}
+          style={[styles.noteInput, { backgroundColor: inputBackground, color: textColor, borderColor }]}
           value={activity.notes || ''}
           onChangeText={(text) => onUpdateActivity(activity.id, { notes: text })}
           placeholder="Add notes about this activity..."
+          placeholderTextColor={textColor}
           multiline
           numberOfLines={3}
           testID="training-notes-input"
         />
-      </ThemedView>
+      </View>
 
       {/* Action Buttons */}
-      <ThemedView style={styles.actionButtons}>
+      <View style={styles.actionButtons}>
         <ThemedButton
           title="Skill"
           onPress={handleAddSkill}
@@ -232,17 +236,17 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
           icon={<Ionicons name="videocam" size={16} color={iconColor} />}
           style={styles.actionButton}
         />
-      </ThemedView>
+      </View>
 
       {/* Bottom buttons - Delete only */}
-      <ThemedView style={styles.bottomButtons}>
+      <View style={styles.bottomButtons}>
         <ThemedButton
           title="Delete Activity"
           onPress={() => onDeleteActivity(activity.id)}
           style={styles.deleteButton}
           icon={<Ionicons name="trash-bin-outline" size={16} color="white" />}
         />
-      </ThemedView>
+      </View>
 
       {/* Skill Modal */}
       <SkillFormModal
@@ -251,7 +255,7 @@ const TrainingActivityForm: React.FC<TrainingActivityFormProps> = ({
         source={'TRAINING'}
         trainingActivityId={activity.id}
       />
-    </ThemedView>
+    </View>
   );
 };
 
@@ -259,7 +263,7 @@ export default TrainingActivityForm;
 
 const styles = {
   activityDetails: {
-    marginTop: 15,
+    marginVertical: 12,
   },
   videoSection: {
     marginBottom: 15,
@@ -273,21 +277,17 @@ const styles = {
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
     fontSize: 16,
   },
   dropdown: {
-    backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
   },
   addValueButton: {
     backgroundColor: '#28a745',
@@ -315,12 +315,10 @@ const styles = {
     minWidth: 40,
   },
   noteInput: {
-    backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
     minHeight: 80,
     textAlignVertical: 'top' as const,
     fontSize: 16,

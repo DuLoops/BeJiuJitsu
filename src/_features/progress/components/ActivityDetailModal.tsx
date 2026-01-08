@@ -192,8 +192,8 @@ export function ActivityDetailModal({
                         match.outcome === 'Win'
                           ? '#10B981'
                           : match.outcome === 'Loss'
-                          ? '#EF4444'
-                          : '#6B7280',
+                            ? '#EF4444'
+                            : '#6B7280',
                     },
                   ]}
                 >

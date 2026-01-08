@@ -579,7 +579,7 @@ ORDER BY c.created_at DESC;
       notVisible: "ExploreScreen"  
     commands:
       - launchApp
-      - tapOn: "BeJiuJitsu"
+      - tapOn: "DoJits"
 ```
 
 ### Error Recovery Patterns

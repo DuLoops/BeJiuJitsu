@@ -8,7 +8,7 @@ import { validateUsername } from '@/src/_features/profile/utils/validation';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton'; // For TouchableOpacity
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput'; // For TextInput
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useAuthStore } from '@/src/stores/authStore'; // Import Zustand store
 import { Enums } from '@/src/supabase/types'; // Added for Belt enum
 import { router } from 'expo-router';
@@ -160,9 +160,9 @@ export default function CreateProfileScreen() {
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <ThemedText style={styles.title}>Create Your Profile</ThemedText>
 
-      <ThemedView style={styles.section}>
+      <ThemedCard style={styles.section}>
         <ThemedText style={styles.label}>Username</ThemedText>
-        <ThemedView style={styles.usernameContainer}>
+        <ThemedCard style={styles.usernameContainer}>
           <ThemedInput
             style={[styles.input, styles.usernameInput]}
             value={userName}
@@ -171,7 +171,7 @@ export default function CreateProfileScreen() {
             autoCapitalize="none"
           />
           {/* Check button removed as query runs on debounce. UI feedback is via text. */}
-        </ThemedView>
+        </ThemedCard>
         {isCheckingUsername && <ThemedText style={styles.infoText}>Checking username...</ThemedText>}
         {usernameDisplayError && (
             <ThemedText style={styles.errorText}>{usernameDisplayError}</ThemedText>
@@ -179,20 +179,20 @@ export default function CreateProfileScreen() {
         {isUsernameAvailable === true && userName === debouncedUserName && !isCheckingUsername && !isUsernameQueryError && (
           <ThemedText style={styles.successText}>Username is available!</ThemedText>
         )}
-      </ThemedView>
+      </ThemedCard>
 
-      <ThemedView style={styles.section}>
+      <ThemedCard style={styles.section}>
         <SelectRank
           belt={belt}
           stripes={stripes}
           onBeltChange={setBelt}
           onStripesChange={setStripes}
         />
-      </ThemedView>
+      </ThemedCard>
 
-      <ThemedView style={styles.section}>
+      <ThemedCard style={styles.section}>
         <GoalsList items={goals} onItemsChange={setGoals} title="Training Goals" />
-      </ThemedView>
+      </ThemedCard>
 
       {overallIsLoading ? (
         <ActivityIndicator size="large" color={styles.activityIndicatorColor.color} /> // Assuming styles.activityIndicatorColor.color is defined or use a theme color
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    // backgroundColor: '#fff', // ThemedView will handle background
+    // backgroundColor: '#fff', // ThemedCard will handle background
   },
   title: {
     fontSize: 24,

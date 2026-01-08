@@ -1,5 +1,5 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
@@ -83,18 +83,19 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
   }
 
   const { setContent, activeInputContainerRef, activeBlurCallback } = context;
-  
+
   const [filteredData, setFilteredData] = useState<AutocompleteDropdownItem[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
-  
+
   const textColor = useThemeColor({}, 'text');
   const iconColor = useThemeColor({}, 'icon');
-  const backgroundColor = useThemeColor({}, 'background');
+  const backgroundColor = useThemeColor({}, 'card');
+  const borderColor = useThemeColor({}, 'border');
   const tintColor = useThemeColor({}, 'tint');
 
-  // Create blur function that can be called externally
+  // Create blur function that can be called e  xternally
   const blurInput = () => {
     setIsFocused(false);
     setShowDropdown(false);
@@ -105,7 +106,7 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
   // Register blur callback with context
   useEffect(() => {
     activeBlurCallback.current = blurInput;
-    
+
     // Cleanup on unmount
     return () => {
       if (activeBlurCallback.current === blurInput) {
@@ -125,7 +126,7 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
     const queryLower = query.toLowerCase();
     const matches = data.filter(item => {
       const titleLower = item.title.toLowerCase();
-      
+
       return (
         titleLower.startsWith(queryLower) ||
         titleLower.includes(queryLower) ||
@@ -133,7 +134,7 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
         isSequenceMatch(titleLower, queryLower)
       );
     })
-    .slice(0, maxSuggestions);
+      .slice(0, maxSuggestions);
 
     setFilteredData(matches);
     return matches.length > 0;
@@ -143,14 +144,14 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
   const isSequenceMatch = (text: string, query: string): boolean => {
     let textIndex = 0;
     let queryIndex = 0;
-    
+
     while (textIndex < text.length && queryIndex < query.length) {
       if (text[textIndex] === query[queryIndex]) {
         queryIndex++;
       }
       textIndex++;
     }
-    
+
     return queryIndex === query.length;
   };
 
@@ -213,7 +214,7 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
   return (
     <View style={[styles.container, style]}>
       <View
-        style={[styles.inputContainer, { borderColor: isFocused ? tintColor : '#e1e5e9' }, inputContainerStyle]}
+        style={[styles.inputContainer, { borderColor: isFocused ? tintColor : borderColor, backgroundColor }, inputContainerStyle]}
       >
         <TextInput
           ref={inputRef}
@@ -243,8 +244,8 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
       </View>
 
       {showDropdown && filteredData.length > 0 && (
-        <ThemedView style={[styles.dropdownCard, styles.inlineDropdown]}>
-          <ScrollView 
+        <ThemedCard style={[styles.dropdownCard, styles.inlineDropdown, { backgroundColor }]}>
+          <ScrollView
             style={styles.scrollView}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -266,7 +267,7 @@ const AutocompleteDropdown: React.FC<AutocompleteDropdownProps> = ({
               </TouchableOpacity>
             ))}
           </ScrollView>
-        </ThemedView>
+        </ThemedCard>
       )}
     </View>
   );

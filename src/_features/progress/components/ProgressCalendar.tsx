@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import { useQueryClient } from '@tanstack/react-query';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
+import { useUIStore } from '@/src/store/uiStore';
 import { CalendarDay, ActivityType } from '../types/progress';
 import { getActivityColor } from '@/src/constants/Colors';
+import { useActivitySummary } from '../hooks/useProgressData';
+import { getActivitySummaryByDate } from '../services/progressService';
 
 interface ProgressCalendarProps {
+  userId?: string;
   selectedDate?: Date;
   onDateSelect?: (date: Date) => void;
-  activitySummary?: Record<string, { count: number; types: ActivityType[] }>;
-  onMonthChange?: (year: number, month: number) => void;
   testID?: string;
 }
 
@@ -22,19 +25,52 @@ const MONTHS = [
 ];
 
 export function ProgressCalendar({
+  userId,
   selectedDate,
   onDateSelect,
-  activitySummary = {},
-  onMonthChange,
   testID = 'progress-calendar'
 }: ProgressCalendarProps) {
   const [currentDate, setCurrentDate] = useState(selectedDate || new Date());
-  const textColor = useThemeColor({}, 'text');
+  const { isCalendarCollapsed, toggleCalendarCollapsed } = useUIStore();
 
-  // Notify parent when month changes
+  const textColor = useThemeColor({}, 'text');
+  const secondaryTextColor = useThemeColor({}, 'icon');
+  const borderColor = useThemeColor({}, 'border');
+
+  const queryClient = useQueryClient();
+
+  // Data fetching
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
+
+  const { data: activitySummary = {} } = useActivitySummary(currentYear, currentMonth);
+
+  // Prefetch adjacent months
+  const prefetchAdjacentMonths = useCallback((year: number, month: number) => {
+    if (!userId) return;
+
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? year + 1 : year;
+
+    queryClient.prefetchQuery({
+      queryKey: ['activity-summary', userId, prevYear, prevMonth],
+      queryFn: () => getActivitySummaryByDate(userId, prevYear, prevMonth),
+      staleTime: 10 * 60 * 1000,
+    });
+
+    queryClient.prefetchQuery({
+      queryKey: ['activity-summary', userId, nextYear, nextMonth],
+      queryFn: () => getActivitySummaryByDate(userId, nextYear, nextMonth),
+      staleTime: 10 * 60 * 1000,
+    });
+  }, [userId, queryClient]);
+
   useEffect(() => {
-    onMonthChange?.(currentDate.getFullYear(), currentDate.getMonth() + 1);
-  }, [currentDate, onMonthChange]);
+    prefetchAdjacentMonths(currentYear, currentMonth);
+  }, [currentYear, currentMonth, prefetchAdjacentMonths]);
 
   const generateCalendarDays = (): CalendarDay[] => {
     const year = currentDate.getFullYear();
@@ -128,8 +164,8 @@ export function ProgressCalendar({
   const getActivityIndicator = (activities: ActivityType[], day: number, isToday: boolean, isSelected: boolean) => {
     if (activities.length === 0) return null;
 
-    // Order: Training (innermost), Footage (middle), Competition (outermost)
-    const activityOrder: ActivityType[] = ['training', 'footage', 'competition'];
+    // Order: Training (innermost), Video (middle), Competition (outermost)
+    const activityOrder: ActivityType[] = ['training', 'video', 'competition'];
     const sortedActivities = [...new Set(activities)].sort((a, b) =>
       activityOrder.indexOf(a) - activityOrder.indexOf(b)
     );
@@ -178,91 +214,140 @@ export function ProgressCalendar({
     );
   };
 
+  const shadowColor = useThemeColor({}, 'shadow');
+  const cardBackgroundColor = useThemeColor({}, 'card');
+
   const calendarDays = generateCalendarDays();
 
   return (
-    <ThemedView style={styles.container} testID={testID}>
-
-      <ThemedView style={styles.monthHeader}>
-        <TouchableOpacity
-          onPress={() => navigateMonth('prev')}
-          style={styles.monthButton}
-          testID="calendar-prev-month"
-        >
-          <Ionicons name="chevron-back" size={20} color={textColor} />
-        </TouchableOpacity>
-
-        <ThemedText style={styles.monthTitle}>
-          {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
+    <ThemedCard
+      style={[
+        styles.container,
+        {
+          borderColor: borderColor,
+          shadowColor: shadowColor,
+        }
+      ]}
+      testID={testID}
+    >
+      <TouchableOpacity
+        onPress={toggleCalendarCollapsed}
+        style={styles.header}
+        testID="calendar-toggle-button"
+        activeOpacity={0.7}
+      >
+        <ThemedText style={[styles.headerText, { color: textColor }]}>
+          Calendar
         </ThemedText>
+        <Ionicons
+          name={isCalendarCollapsed ? 'chevron-down' : 'chevron-up'}
+          size={24}
+          color={secondaryTextColor}
+        />
+      </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => navigateMonth('next')}
-          style={styles.monthButton}
-          testID="calendar-next-month"
-        >
-          <Ionicons name="chevron-forward" size={20} color={textColor} />
-        </TouchableOpacity>
-      </ThemedView>
-
-      <ThemedView style={styles.daysHeader}>
-        {DAYS_OF_WEEK.map(day => (
-          <ThemedText key={day} style={styles.dayHeaderText}>
-            {day}
-          </ThemedText>
-        ))}
-      </ThemedView>
-
-      <ThemedView style={styles.calendar}>
-        {calendarDays.map((calendarDay, index) => {
-          const isSelected = selectedDate &&
-            selectedDate.getDate() === calendarDay.day &&
-            selectedDate.getMonth() === currentDate.getMonth() &&
-            selectedDate.getFullYear() === currentDate.getFullYear() &&
-            calendarDay.isCurrentMonth;
-
-          return (
+      {!isCalendarCollapsed && (
+        <View style={styles.content}>
+          <View style={[styles.monthHeader]}>
             <TouchableOpacity
-              key={index}
-              style={[
-                styles.dayContainer,
-                calendarDay.isToday && styles.todayContainer,
-                isSelected && styles.selectedContainer,
-                !calendarDay.isCurrentMonth && styles.otherMonthContainer,
-              ]}
-              onPress={() => handleDayPress(calendarDay)}
-              disabled={!calendarDay.isCurrentMonth}
-              testID={`calendar-day-${calendarDay.day}`}
+              onPress={() => navigateMonth('prev')}
+              style={styles.monthButton}
+              testID="calendar-prev-month"
             >
-              {calendarDay.hasActivity ? (
-                getActivityIndicator(calendarDay.activities, calendarDay.day, calendarDay.isToday, !!isSelected)
-              ) : (
-                <Text
-                  style={[
-                    styles.dayText,
-                    { color: textColor },
-                    isSelected && { color: '#fff' },
-                    !calendarDay.isCurrentMonth && styles.otherMonthText,
-                  ]}
-                >
-                  {calendarDay.day}
-                </Text>
-              )}
+              <Ionicons name="chevron-back" size={20} color={textColor} />
             </TouchableOpacity>
-          );
-        })}
-      </ThemedView>
-    </ThemedView>
+
+            <ThemedText style={styles.monthTitle}>
+              {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
+            </ThemedText>
+
+            <TouchableOpacity
+              onPress={() => navigateMonth('next')}
+              style={styles.monthButton}
+              testID="calendar-next-month"
+            >
+              <Ionicons name="chevron-forward" size={20} color={textColor} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.daysHeader]}>
+            {DAYS_OF_WEEK.map(day => (
+              <ThemedText key={day} style={styles.dayHeaderText}>
+                {day}
+              </ThemedText>
+            ))}
+          </View>
+
+          <View style={[styles.calendar]}>
+            {calendarDays.map((calendarDay, index) => {
+              const isSelected = selectedDate &&
+                selectedDate.getDate() === calendarDay.day &&
+                selectedDate.getMonth() === currentDate.getMonth() &&
+                selectedDate.getFullYear() === currentDate.getFullYear() &&
+                calendarDay.isCurrentMonth;
+
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.dayContainer,
+                    ,
+                    calendarDay.isToday && [styles.todayContainer, { borderColor: textColor }],
+                    isSelected && styles.selectedContainer,
+                    !calendarDay.isCurrentMonth && styles.otherMonthContainer,
+                  ]}
+                  onPress={() => handleDayPress(calendarDay)}
+                  disabled={!calendarDay.isCurrentMonth}
+                  testID={`calendar-day-${calendarDay.day}`}
+                >
+                  {calendarDay.hasActivity ? (
+                    getActivityIndicator(calendarDay.activities, calendarDay.day, calendarDay.isToday, !!isSelected)
+                  ) : (
+                    <Text
+                      style={[
+                        styles.dayText,
+                        { color: textColor },
+                        isSelected && { color: '#fff' },
+                        !calendarDay.isCurrentMonth && styles.otherMonthText,
+                      ]}
+                    >
+                      {calendarDay.day}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      )}
+    </ThemedCard>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 6,
+    marginHorizontal: 0, // Removed margin to align with other elements
+    marginVertical: 16,
+    borderRadius: 2,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
-  calendarTitle: {
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: '#ccc',
+  },
+  headerText: {
     fontSize: 18,
     fontWeight: '600',
+
+  },
+  content: {
+    marginTop: 6,
   },
   monthHeader: {
     flexDirection: 'row',
@@ -290,8 +375,7 @@ const styles = StyleSheet.create({
   calendar: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: 1
-
+    padding: 1,
   },
   dayContainer: {
     width: '14.28%', // 100% / 7 days
@@ -302,12 +386,11 @@ const styles = StyleSheet.create({
   },
   todayContainer: {
     borderWidth: 2,
-    borderColor: '#000',
-    borderRadius: 8,
+    borderRadius: 2,
   },
   selectedContainer: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
+    backgroundColor: '#B73225', // Vermilion Stamp
+    borderRadius: 2,
   },
   otherMonthContainer: {
     opacity: 0.3,

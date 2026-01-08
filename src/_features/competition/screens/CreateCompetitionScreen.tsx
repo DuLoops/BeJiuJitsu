@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import CompetitionDetails from '@/src/_features/competition/components/CompetitionDetails';
 import MatchCard from '@/src/_features/competition/components/MatchCard';
@@ -16,7 +16,8 @@ import VideoRecorderModal from '@/src/_features/competition/components/VideoReco
 import { DivisionData } from '@/src/_features/competition/components/DivisionCard';
 import TitleAndDateInput from '@/src/components/layout/TitleAndDateInput';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import Alert from '@/src/components/ui/molecules/Alert';
 import { AutocompleteDropdownItem, AutocompleteDropdownContextProvider } from '@/src/components/ui/molecules/AutocompleteDropdown';
 
@@ -24,6 +25,7 @@ import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { useAuthStore } from '@/src/stores/authStore';
 import { TournamentBrand } from '@/src/types/competition';
 import { MatchRecord } from '@/src/types/match';
+import ResultFormModal from '@/src/_features/competition/components/ResultFormModal';
 
 const generateTempId = () => `temp_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -31,7 +33,7 @@ const createInitialMatch = (): MatchRecord => ({
   id: generateTempId(),
   bjjType: 'GI',
   outcome: 'WIN',
-  outcomeMethod: 'SUBMISSION',
+  outcomeMethod: null,
   name: 'Match 1',
   note: null,
   videoUrl: null,
@@ -54,7 +56,6 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
   const { session } = useAuthStore();
   const userId = session?.user?.id;
   const queryClient = useQueryClient();
-  const backgroundColor = useThemeColor({}, 'background');
 
   // ScrollView ref for auto-scrolling to new matches
   const scrollViewRef = useRef<ScrollView>(null);
@@ -77,6 +78,16 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
 
   // Video recorder state
   const [showVideoRecorder, setShowVideoRecorder] = useState<string | null>(null);
+
+  // Result state
+  const [results, setResults] = useState<{
+    divisionTempId: string;
+    outcome: string;
+    rank: number | null;
+    notes: string | null;
+  }[]>([]);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [editingResultDivisionId, setEditingResultDivisionId] = useState<string | null>(null);
 
   // Alert state
   const [alertConfig, setAlertConfig] = useState<{
@@ -126,19 +137,19 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
 
   // Division management functions
   const handleUpdateDivision = (divisionId: string, updates: Partial<DivisionData>) => {
-    setDivisions(prev => prev.map(d => 
+    setDivisions(prev => prev.map(d =>
       d.tempId === divisionId ? { ...d, ...updates } : d
     ));
   };
 
   const handleAddDivision = () => {
-    setDivisions(prev => [...prev, { 
-      tempId: generateTempId(), 
-      bjjType: 'GI', 
+    setDivisions(prev => [...prev, {
+      tempId: generateTempId(),
+      bjjType: 'GI',
       weightType: 'open',
-      weightClassUnderKg: null, 
-      ageCategory: null, 
-      overallResultInDivision: null 
+      weightClassUnderKg: null,
+      ageCategory: null,
+      overallResultInDivision: null
     }]);
   };
 
@@ -241,9 +252,20 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
             ageCategory: null,
             overallResultInDivision: null,
             competitionMatches: [] as any[],
+            outcome: null,
           };
         }
       };
+
+      // Add results to buckets
+      results.forEach(result => {
+        const div = divisions.find(d => d.tempId === result.divisionTempId);
+        if (div) {
+          ensureBucket(div.tempId, div.bjjType);
+          divisionBuckets[div.tempId].outcome = result.outcome;
+          divisionBuckets[div.tempId].overallResultInDivision = result.rank;
+        }
+      });
 
       validMatches.forEach((match) => {
         const div = divisions.find(d => d.tempId === match.divisionTempId);
@@ -341,21 +363,23 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
     getMatchCount: () => matches.length,
   }));
 
+  const backgroundColor = useThemeColor({}, 'background');
+
   return (
     <AutocompleteDropdownContextProvider>
-      <ThemedView style={[styles.container, { backgroundColor }]}>
-          <ScrollView
+      <View style={[styles.container, { backgroundColor }]}>
+        <ScrollView
           ref={scrollViewRef}
           style={styles.scrollView}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <ThemedView style={styles.innerContainer}>
+          <ThemedCard style={styles.innerContainer}>
             {/* Title and Date Input */}
             <TitleAndDateInput
               title={title}
               onTitleChange={setTitle}
-              titlePlaceholder="Competition" 
+              titlePlaceholder="Competition"
               date={date}
               onDateChange={handleDateChange}
             />
@@ -382,6 +406,7 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
                 match={match}
                 index={index}
                 onToggleExpansion={toggleMatchExpansion}
+                divisions={divisions}
               >
                 <MatchForm
                   match={match}
@@ -403,11 +428,75 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
               testID="add-match-button"
             />
 
+            {/* Results Section */}
+            <ThemedCard style={{ marginTop: 20 }}>
+              <ThemedText type="subtitle" style={{ marginBottom: 10 }}>Competition Results</ThemedText>
+              {divisions.length === 0 ? (
+                <ThemedText style={{ fontStyle: 'italic', opacity: 0.7 }}>
+                  Add a division to record results.
+                </ThemedText>
+              ) : (
+                divisions.map(division => {
+                  const result = results.find(r => r.divisionTempId === division.tempId);
+                  return (
+                    <ThemedCard key={division.tempId} variant="card" style={{ marginBottom: 10, padding: 10, borderRadius: 8 }}>
+                      <ThemedText style={{ fontWeight: 'bold' }}>
+                        {division.bjjType} - {division.weightType === 'open' ? 'Open' : `${division.weightClassUnderKg} ${division.weightType.replace('_', ' ')}`}
+                      </ThemedText>
+                      {result ? (
+                        <ThemedCard variant="card" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 5 }}>
+                          <ThemedText>Result: {result.outcome} {result.rank ? `(Rank: ${result.rank})` : ''}</ThemedText>
+                          <ThemedButton
+                            title="Edit"
+                            size="sm"
+                            variant="outline"
+                            onPress={() => {
+                              setEditingResultDivisionId(division.tempId);
+                              setShowResultModal(true);
+                            }}
+                          />
+                        </ThemedCard>
+                      ) : (
+                        <ThemedButton
+                          title="Add Result"
+                          size="sm"
+                          variant="outline"
+                          style={{ marginTop: 5 }}
+                          onPress={() => {
+                            setEditingResultDivisionId(division.tempId);
+                            setShowResultModal(true);
+                          }}
+                        />
+                      )}
+                    </ThemedCard>
+                  );
+                })
+              )}
+            </ThemedCard>
+
             {/* Video Recorder Modal */}
             <VideoRecorderModal
               visible={!!showVideoRecorder}
               onClose={() => setShowVideoRecorder(null)}
               matchId={showVideoRecorder || undefined}
+            />
+
+            {/* Result Form Modal */}
+            <ResultFormModal
+              visible={showResultModal}
+              onClose={() => setShowResultModal(false)}
+              divisionName={divisions.find(d => d.tempId === editingResultDivisionId) ?
+                `${divisions.find(d => d.tempId === editingResultDivisionId)?.bjjType} - ${divisions.find(d => d.tempId === editingResultDivisionId)?.weightType === 'open' ? 'Open' : `${divisions.find(d => d.tempId === editingResultDivisionId)?.weightClassUnderKg} ${divisions.find(d => d.tempId === editingResultDivisionId)?.weightType.replace('_', ' ')}`}`
+                : ''}
+              initialResult={editingResultDivisionId ? results.find(r => r.divisionTempId === editingResultDivisionId) : undefined}
+              onSave={(resultData) => {
+                if (editingResultDivisionId) {
+                  setResults(prev => {
+                    const existing = prev.filter(r => r.divisionTempId !== editingResultDivisionId);
+                    return [...existing, { divisionTempId: editingResultDivisionId, ...resultData }];
+                  });
+                }
+              }}
             />
 
             {/* Alert */}
@@ -418,9 +507,9 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
               actions={getAlertActions()}
               onDismiss={handleAlertDismiss}
             />
-          </ThemedView>
+          </ThemedCard>
         </ScrollView>
-      </ThemedView>
+      </View>
     </AutocompleteDropdownContextProvider>
   );
 });

@@ -1,4 +1,4 @@
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import AutocompleteDropdown, { AutocompleteDropdownItem } from '@/src/components/ui/molecules/AutocompleteDropdown';
 import { TournamentBrand } from '@/src/types/competition';
 import React from 'react';

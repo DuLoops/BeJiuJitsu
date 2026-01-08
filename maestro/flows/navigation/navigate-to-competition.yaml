@@ -2,7 +2,7 @@ appId: host.exp.Exponent
 ---
 # Navigate to Competition screen - reusable navigation flow
 
-# 1. Launch app and open BeJiuJitsu
+# 1. Launch app and open DoJits
 - runFlow: ../smoke/app-launch.yaml
 
 # 2. Navigate to Competition screen

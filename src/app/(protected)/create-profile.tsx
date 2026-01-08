@@ -2,7 +2,7 @@ import { createProfile } from '@/src/_features/profile/services/profileService';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useAuthStore } from '@/src/stores/authStore';
 import { Tables, TablesInsert } from '@/src/supabase/types';
 import { router } from 'expo-router';
@@ -50,7 +50,7 @@ export default function CreateProfileScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedCard style={styles.container}>
       <ThemedText type="title" style={styles.title}>Create Your Profile</ThemedText>
       <ThemedInput
         style={styles.input}
@@ -95,7 +95,7 @@ export default function CreateProfileScreen() {
         autoCapitalize="none"
       />
       <ThemedButton title={loading ? "Creating Profile..." : "Create Profile"} onPress={handleCreateProfile} disabled={loading} />
-    </ThemedView>
+    </ThemedCard>
   );
 }
 

@@ -3,7 +3,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Tabs, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -16,6 +16,10 @@ export default function ProtectedTabsLayout() {
   const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
   const backgroundColor = useThemeColor({}, 'background');
+  const tabBarBackground = useThemeColor({ light: '#FFFFFF', dark: '#000000' }, 'background');
+  const tabBarActiveTintColor = useThemeColor({}, 'tabIconSelected');
+  const tabBarInactiveTintColor = useThemeColor({}, 'tabIconDefault');
+  const tabBarBorderColor = useThemeColor({}, 'border');
 
   const handleLogTraining = () => {
     setModalVisible(false);
@@ -39,14 +43,29 @@ export default function ProtectedTabsLayout() {
 
   return (
     <>
-
-      <Tabs screenOptions={{ headerShown: false, tabBarShowLabel: false, tabBarStyle: { display: 'flex', flexDirection: 'row', alignItems: 'center' } }} initialRouteName='index'>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarShowLabel: false,
+          tabBarStyle: {
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: tabBarBackground,
+            borderTopColor: tabBarBorderColor,
+            borderTopWidth: 1, // Ensure border is visible
+          },
+          tabBarActiveTintColor: tabBarActiveTintColor,
+          tabBarInactiveTintColor: tabBarInactiveTintColor,
+        }}
+        initialRouteName='index'
+      >
         <Tabs.Screen
           name='index'
           options={{
             title: 'Explore',
-            tabBarIcon: ({ focused }) => (
-              <Ionicons name={focused ? 'bulb' : 'bulb-outline'} size={30} color={focused ? '#000' : '#666'} testID="explore-tab" />
+            tabBarIcon: ({ focused, color }) => (
+              <Ionicons name={focused ? 'bulb' : 'bulb-outline'} size={30} color={color} testID="explore-tab" />
             ),
           }} />
         <Tabs.Screen
@@ -55,14 +74,14 @@ export default function ProtectedTabsLayout() {
             title: 'Create',
             tabBarButton: () => (
               <Pressable style={{ alignItems: 'center', margin: 'auto' }} onPress={() => setModalVisible(true)} testID="create-tab">
-                <Ionicons name={modalVisible ? 'add-circle' : 'add-circle-outline'} size={40} color={modalVisible ? '#000' : '#666'} />
+                <Ionicons name={modalVisible ? 'add-circle' : 'add-circle-outline'} size={40} color={modalVisible ? tabBarActiveTintColor : tabBarInactiveTintColor} />
               </Pressable>
             ),
           }} />
         <Tabs.Screen name="progress" options={{
           title: 'Progress',
-          tabBarIcon: ({ focused }) =>
-            <MaterialCommunityIcons name={focused ? 'signal-cellular-3' : 'signal-cellular-1'} size={30} color={focused ? '#000' : '#666'} testID="progress-tab" />
+          tabBarIcon: ({ focused, color }) =>
+            <MaterialCommunityIcons name={focused ? 'signal-cellular-3' : 'signal-cellular-1'} size={30} color={color} testID="progress-tab" />
 
         }} />
       </Tabs>
@@ -78,14 +97,14 @@ export default function ProtectedTabsLayout() {
           onPressOut={() => setModalVisible(false)}
         >
           <View style={styles.modalContent}>
-            <ThemedView style={[styles.contentContainer, { backgroundColor }]}>
+            <ThemedCard style={[styles.contentContainer, { backgroundColor }]}>
               <View style={styles.handleBar} />
               <View style={styles.content}>
                 <View style={styles.buttonContainer}>
                   <ThemedButton
                     title="Training"
                     variant="primary"
-                  size="lg"
+                    size="lg"
                     onPress={handleLogTraining}
                     icon={<Ionicons name="barbell" size={24} color="white" />}
                     style={styles.button}
@@ -123,7 +142,7 @@ export default function ProtectedTabsLayout() {
                   />
                 </View>
               </View>
-            </ThemedView>
+            </ThemedCard>
           </View>
         </TouchableOpacity>
       </Modal>

@@ -1,4 +1,4 @@
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useAuthStore } from '@/src/stores/authStore';
 
 import { Stack, router, usePathname } from 'expo-router';
@@ -23,18 +23,18 @@ export default function ProtectedLayout() {
 
   if (loading || !isInitialized) {
     return (
-      <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <ThemedCard style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" />
-      </ThemedView>
+      </ThemedCard>
     );
   }
 
   // DEVELOPMENT: Session check disabled for easier testing
   // if (!loading && !session) {
   //   return (
-  //     <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+  //     <ThemedCard style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
   //       <ActivityIndicator size="large" />
-  //     </ThemedView>
+  //     </ThemedCard>
   //   );
   // }
 

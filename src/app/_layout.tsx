@@ -42,12 +42,9 @@ function RootLayoutNav() {
     const inProtectedGroup = segments[0] === '(protected)';
     const isPotentiallyAtRootOrAppEntry = !inAuthGroup && !inProtectedGroup;
 
-    console.log('Auth check - session:', !!session, 'segments:', segments);
-
     if (session) {
       // User is authenticated
       if (inAuthGroup || isPotentiallyAtRootOrAppEntry) {
-        console.log('Redirecting authenticated user to protected area');
         router.replace('/(protected)/(tabs)');
       } else {
         hideSplashSafely();
@@ -55,7 +52,6 @@ function RootLayoutNav() {
     } else {
       // User is not authenticated
       if (!inAuthGroup) {
-        console.log('Redirecting unauthenticated user to login');
         router.replace('/(auth)/login');
       } else {
         hideSplashSafely();
@@ -69,7 +65,7 @@ function RootLayoutNav() {
   }
 
   return (
-    <Stack>
+    <Stack >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(protected)" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
@@ -77,15 +73,44 @@ function RootLayoutNav() {
   );
 }
 
+import { Colors } from '../constants/Colors';
+import { useColorScheme } from 'react-native';
+
+// ... (imports remain the same)
+
 export default function RootLayout() {
-  // const colorScheme = useColorScheme();
-  const colorScheme = 'light'; // Keep light theme for now
+  const colorScheme = useColorScheme();
+
+  const MyTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: Colors.light.background,
+      text: Colors.light.text,
+      card: Colors.light.card || Colors.light.background,
+      border: Colors.light.border,
+      primary: Colors.light.tint,
+    },
+  };
+
+  const MyDarkTheme = {
+    ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      background: Colors.dark.background,
+      text: Colors.dark.text,
+      card: Colors.dark.card || Colors.dark.background,
+      border: Colors.dark.border,
+      primary: Colors.dark.tint,
+    },
+  };
+
 
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={colorScheme === 'light' ? DefaultTheme : DarkTheme}>
-          <StatusBar style="auto" />
+        <ThemeProvider value={colorScheme === 'light' ? MyTheme : MyDarkTheme}>
+          <StatusBar style={colorScheme === 'light' ? 'dark' : 'light'} />
           <RootLayoutNav />
         </ThemeProvider>
         {/* {__DEV__ && <ReactQueryDevtools client={queryClient} />} */}

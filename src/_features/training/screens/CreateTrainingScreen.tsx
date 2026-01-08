@@ -5,7 +5,8 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import {
   Alert,
   ScrollView,
-  StyleSheet
+  StyleSheet,
+  View
 } from 'react-native';
 
 import TrainingActivityCard, { TrainingActivityRecord } from '@/src/_features/training/components/TrainingActivityCard';
@@ -15,7 +16,8 @@ import {
 } from '@/src/_features/training/services/trainingService';
 import TitleAndDateInput from '@/src/components/layout/TitleAndDateInput';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
+import VideoRecorderModal from '@/src/_features/competition/components/VideoRecorderModal';
 
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { useAuthStore } from '@/src/stores/authStore';
@@ -52,9 +54,6 @@ const CreateTrainingScreen = forwardRef<CreateTrainingScreenRef, CreateTrainingS
   const { session } = useAuthStore();
   const queryClient = useQueryClient();
   const userId = session?.user?.id;
-  
-  const iconColor = useThemeColor({}, 'icon');
-  const backgroundColor = useThemeColor({}, 'background');
 
   // ScrollView ref for auto-scrolling to new activities
   const scrollViewRef = useRef<ScrollView>(null);
@@ -124,7 +123,7 @@ const CreateTrainingScreen = forwardRef<CreateTrainingScreenRef, CreateTrainingS
     const updatedActivities = activities
       .filter(a => a.id !== activityId)
       .map((a, idx) => ({ ...a, activity_order: idx + 1 }));
-      setActivities(updatedActivities);
+    setActivities(updatedActivities);
 
 
   };
@@ -141,6 +140,12 @@ const CreateTrainingScreen = forwardRef<CreateTrainingScreenRef, CreateTrainingS
 
   const handleAddVideo = (activityId: string) => {
     setShowVideoRecorder(activityId);
+  };
+
+  const handleVideoSelected = (uri: string) => {
+    if (showVideoRecorder) {
+      updateActivity(showVideoRecorder, { video_url: uri });
+    }
   };
 
   const isFormValid = () => {
@@ -168,7 +173,7 @@ const CreateTrainingScreen = forwardRef<CreateTrainingScreenRef, CreateTrainingS
 
     const trainingDataPayload = {
       title: title.trim(),
-      useId: userId,
+      user_id: userId,
     } as Omit<Training, 'id' | 'created_at' | 'updated_at'>;
 
     const activitiesDataPayload = validActivities.map((activity, index) => ({
@@ -183,8 +188,8 @@ const CreateTrainingScreen = forwardRef<CreateTrainingScreenRef, CreateTrainingS
       })) || [],
     }));
 
-    mutation.mutate({ 
-      trainingData: trainingDataPayload, 
+    mutation.mutate({
+      trainingData: trainingDataPayload,
       activitiesData: activitiesDataPayload
     });
   };
@@ -196,15 +201,17 @@ const CreateTrainingScreen = forwardRef<CreateTrainingScreenRef, CreateTrainingS
     getActivityCount: () => activities.length,
   }));
 
+  const backgroundColor = useThemeColor({}, 'background');
+
   return (
-    <ThemedView style={[styles.container, { backgroundColor }]}>
-      <ScrollView 
+    <View style={[styles.container, { backgroundColor }]}>
+      <ScrollView
         ref={scrollViewRef}
-        style={styles.scrollView} 
+        style={styles.scrollView}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <ThemedView style={styles.innerContainer}>
+        <View style={styles.innerContainer}>
           {/* Title and Date Input */}
           <TitleAndDateInput
             title={title}
@@ -240,9 +247,17 @@ const CreateTrainingScreen = forwardRef<CreateTrainingScreenRef, CreateTrainingS
             icon={<Ionicons name="add" size={20} color="white" />}
             testID="add-activity-button"
           />
-        </ThemedView>
+        </View>
       </ScrollView>
-    </ThemedView>
+
+      {/* Video Recorder Modal */}
+      <VideoRecorderModal
+        visible={!!showVideoRecorder}
+        onClose={() => setShowVideoRecorder(null)}
+        matchId={showVideoRecorder || undefined}
+        onVideoSelected={handleVideoSelected}
+      />
+    </View>
   );
 });
 
@@ -251,7 +266,7 @@ CreateTrainingScreen.displayName = 'CreateTrainingScreen';
 export default CreateTrainingScreen;
 
 const styles = StyleSheet.create({
-  container: {  
+  container: {
     flex: 1,
   },
   scrollView: {
@@ -259,6 +274,6 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     padding: 16,
-    gap: 12
+    gap: 12,
   },
 });

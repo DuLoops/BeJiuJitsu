@@ -1,6 +1,6 @@
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import DropdownPicker, { DropdownPickerRef } from '@/src/components/ui/molecules/DropdownPicker';
 import VideoPlayer from '@/src/components/ui/molecules/VideoPlayer';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
@@ -34,6 +34,9 @@ const MatchForm: React.FC<MatchFormProps> = ({
   autoOpenOutcome = false,
 }) => {
   const iconColor = useThemeColor({}, 'icon');
+  const inputBackground = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
   const [showScores, setShowScores] = useState(false);
   const outcomeDropdownRef = React.useRef<DropdownPickerRef | null>(null);
   const [showSkillModal, setShowSkillModal] = useState(false);
@@ -65,33 +68,33 @@ const MatchForm: React.FC<MatchFormProps> = ({
   }, [autoOpenOutcome]);
 
   return (
-    <ThemedView style={styles.matchDetails}>
+    <ThemedCard style={styles.matchDetails}>
       {/* Video Player if video exists */}
       {match.videoUrl && (
-        <ThemedView style={styles.videoSection}>
+        <ThemedCard style={styles.videoSection}>
           <VideoPlayer />
-        </ThemedView>
+        </ThemedCard>
       )}
 
       {/* Division Selection (replaces BJJ type) */}
       {divisions.length > 1 && (
-        <ThemedView style={styles.formRow}>
+        <ThemedCard style={styles.formRow}>
           <ThemedText style={styles.fieldLabel}>Division</ThemedText>
           <DropdownPicker
-            options={divisions.map(d => ({ 
-              label: `${d.bjjType} - ${d.weightType === 'open' ? 'Open' : `${d.weightClassUnderKg} ${d.weightType.replace('_', ' ')}`}`, 
-              value: d.tempId 
+            options={divisions.map(d => ({
+              label: `${d.bjjType} - ${d.weightType === 'open' ? 'Open' : `${d.weightClassUnderKg} ${d.weightType.replace('_', ' ')}`}`,
+              value: d.tempId
             }))}
             selectedValue={match.divisionTempId || ''}
             onValueChange={(value) => onUpdateMatch(match.id, { divisionTempId: value })}
             placeholder="Select division"
             style={styles.dropdown}
           />
-        </ThemedView>
+        </ThemedCard>
       )}
 
       {/* Win/Tie/Lose Selection */}
-      <ThemedView style={styles.formRow}>
+      <ThemedCard style={styles.formRow}>
         <ThemedText style={styles.fieldLabel}>Outcome</ThemedText>
         <DropdownPicker
           ref={(ref) => { outcomeDropdownRef.current = ref; }}
@@ -102,10 +105,10 @@ const MatchForm: React.FC<MatchFormProps> = ({
           style={styles.dropdown}
           testID="match-outcome-dropdown"
         />
-      </ThemedView>
+      </ThemedCard>
 
       {/* Method Dropdown */}
-      <ThemedView style={styles.formRow}>
+      <ThemedCard style={styles.formRow}>
         <ThemedText style={styles.fieldLabel}>Method</ThemedText>
         <DropdownPicker
           options={methodOptions}
@@ -115,12 +118,12 @@ const MatchForm: React.FC<MatchFormProps> = ({
           style={styles.dropdown}
           testID="match-method-dropdown"
         />
-      </ThemedView>
+      </ThemedCard>
 
 
 
       {/* Add Scores Button */}
-      <ThemedView style={styles.formRow}>
+      <ThemedCard style={styles.formRow}>
         <ThemedButton
           title={showScores ? "Remove Scores" : "Add Scores"}
           onPress={() => setShowScores(!showScores)}
@@ -128,40 +131,42 @@ const MatchForm: React.FC<MatchFormProps> = ({
           icon={<Ionicons name={showScores ? "chevron-up" : "chevron-down"} size={16} color={iconColor} />}
           testID="toggle-scores-button"
         />
-      </ThemedView>
+      </ThemedCard>
 
       {/* Collapsible Score inputs */}
       {showScores && (
-        <ThemedView style={styles.scoreRow}>
-          <ThemedView style={styles.scoreInput}>
+        <ThemedCard style={styles.scoreRow}>
+          <ThemedCard style={styles.scoreInput}>
             <ThemedText style={styles.scoreLabel}>My Score</ThemedText>
             <TextInput
-              style={styles.scoreField}
+              style={[styles.scoreField, { backgroundColor: inputBackground, color: textColor, borderColor }]}
               value={match.myScore?.toString() || ''}
               onChangeText={(text) => onUpdateMatch(match.id, { myScore: parseInt(text) || 0 })}
               placeholder="0"
+              placeholderTextColor={textColor}
               keyboardType="numeric"
               maxLength={2}
               testID="my-score-input"
             />
-          </ThemedView>
-          <ThemedView style={styles.scoreInput}>
+          </ThemedCard>
+          <ThemedCard style={styles.scoreInput}>
             <ThemedText style={styles.scoreLabel}>Opponent Score</ThemedText>
             <TextInput
-              style={styles.scoreField}
+              style={[styles.scoreField, { backgroundColor: inputBackground, color: textColor, borderColor }]}
               value={match.opponentScore?.toString() || ''}
               onChangeText={(text) => onUpdateMatch(match.id, { opponentScore: parseInt(text) || 0 })}
               placeholder="0"
+              placeholderTextColor={textColor}
               keyboardType="numeric"
               maxLength={2}
               testID="opponent-score-input"
             />
-          </ThemedView>
-        </ThemedView>
+          </ThemedCard>
+        </ThemedCard>
       )}
 
       {/* Action Buttons */}
-      <ThemedView style={styles.actionButtons}>
+      <ThemedCard style={styles.actionButtons}>
         <ThemedButton
           title="Note"
           onPress={() => {
@@ -184,29 +189,30 @@ const MatchForm: React.FC<MatchFormProps> = ({
           icon={<Ionicons name="videocam" size={16} color={iconColor} />}
           style={styles.actionButton}
         />
-      </ThemedView>
+      </ThemedCard>
 
       {/* Note Input */}
       {match.note !== null && (
         <TextInput
-          style={styles.noteInput}
+          style={[styles.noteInput, { backgroundColor: inputBackground, color: textColor, borderColor }]}
           value={match.note}
           onChangeText={(text) => onUpdateMatch(match.id, { note: text })}
           placeholder="Add your note here..."
+          placeholderTextColor={textColor}
           multiline
           testID="match-note-input"
         />
       )}
 
       {/* Bottom buttons - Delete only */}
-      <ThemedView style={styles.bottomButtons}>
+      <ThemedCard style={styles.bottomButtons}>
         <ThemedButton
           title="Delete"
           onPress={() => onDeleteMatch(match.id)}
           style={styles.deleteButton}
           icon={<Ionicons name="trash-bin-outline" size={16} color="white" />}
         />
-      </ThemedView>
+      </ThemedCard>
 
       {/* Skill Modal */}
       <SkillFormModal
@@ -215,7 +221,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
         source={'COMPETITION'}
         matchId={match.id}
       />
-    </ThemedView>
+    </ThemedCard>
   );
 };
 
@@ -248,12 +254,10 @@ const styles = {
     marginBottom: 8,
   },
   dropdown: {
-    backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
   },
   scoreRow: {
     flexDirection: 'row' as const,
@@ -265,12 +269,10 @@ const styles = {
     flex: 1,
   },
   scoreField: {
-    backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
     textAlign: 'center' as const,
   },
   scoreLabel: {
@@ -278,12 +280,10 @@ const styles = {
     marginBottom: 5,
   },
   noteInput: {
-    backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
     minHeight: 80,
     textAlignVertical: 'top' as const,
     marginTop: 15,
@@ -311,11 +311,9 @@ const styles = {
     backgroundColor: '#dc3545',
   },
   textInput: {
-    backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
   },
 }; 

@@ -1,20 +1,28 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { StyleSheet, ActivityIndicator, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
-import { useQueryClient } from '@tanstack/react-query';
-import { Ionicons } from '@expo/vector-icons';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import ThemedText  from '@/src/components/ui/atoms/ThemedText';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { ProgressCalendar } from '../components/ProgressCalendar';
 import { ActivityFilter } from '../components/ActivityFilter';
 import { ActivityList } from '../components/ActivityList';
 import { ActivityDetailModal } from '../components/ActivityDetailModal';
-import { useProgressData, useActivitySummary, useActivityCounts } from '../hooks/useProgressData';
+import { SkillStatsCard } from '../components/SkillStatsCard';
+import { AchievementStatsCard } from '../components/AchievementStatsCard';
+import { useProgressData, useActivityCounts } from '../hooks/useProgressData';
 import { ActivityType, UnifiedActivityLog } from '../types/progress';
 import { useAuthStore } from '@/src/stores/authStore';
-import { getActivitySummaryByDate } from '../services/progressService';
+import { useRouter } from 'expo-router';
+import { CustomHeader } from '@/src/components/ui/molecules/CustomHeader';
+import { Avatar } from '@/src/components/ui/atoms/Avatar';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useFetchCurrentUserProfile } from '../../profile/hooks/useProfileQueries';
+
+import { fetchUserSkills } from '@/src/_features/skill/services/skillService';
+import { useFetchGoals } from '@/src/_features/profile/hooks/useGoals';
 
 interface ProgressScreenProps {
   testID?: string;
@@ -25,18 +33,16 @@ export function ProgressScreen({ testID = 'progress-screen' }: ProgressScreenPro
   const [selectedFilter, setSelectedFilter] = useState<'all' | ActivityType>('all');
   const [refreshing, setRefreshing] = useState(false);
   const [displayCount, setDisplayCount] = useState(10); // Pagination: show 10 at a time
-  const [isCalendarCollapsed, setIsCalendarCollapsed] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalActivities, setModalActivities] = useState<UnifiedActivityLog[]>([]);
   const [modalInitialIndex, setModalInitialIndex] = useState(0);
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
-
-  const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
+
   const secondaryTextColor = useThemeColor({}, 'icon');
-  const borderColor = useThemeColor({}, 'border');
-  const cardBackgroundColor = useThemeColor({ light: '#F9FAFB', dark: '#1F2937' }, 'background');
+  const router = useRouter();
+  const { data: profile } = useFetchCurrentUserProfile();
+  const iconColor = useThemeColor({}, 'icon');
+
 
   const queryClient = useQueryClient();
   const { session } = useAuthStore();
@@ -49,60 +55,62 @@ export function ProgressScreen({ testID = 'progress-screen' }: ProgressScreenPro
     refetch
   } = useProgressData();
 
-  const {
-    data: activitySummary = {},
-    refetch: refetchSummary
-  } = useActivitySummary(currentYear, currentMonth);
-
   const activityCounts = useActivityCounts(activities);
 
-  // Prefetch adjacent months for smoother navigation
-  const prefetchAdjacentMonths = useCallback((year: number, month: number) => {
-    if (!userId) return;
+  // Fetch User Skills Count
+  const { data: userSkills = [] } = useQuery({
+    queryKey: ['user-skills', userId],
+    queryFn: () => userId ? fetchUserSkills(userId) : Promise.resolve([]),
+    enabled: !!userId,
+  });
 
-    // Calculate prev month
-    const prevMonth = month === 1 ? 12 : month - 1;
-    const prevYear = month === 1 ? year - 1 : year;
+  // Fetch Goals
+  const { data: goals = [] } = useFetchGoals(userId);
 
-    // Calculate next month
-    const nextMonth = month === 12 ? 1 : month + 1;
-    const nextYear = month === 12 ? year + 1 : year;
+  // Calculate Achievement Stats
+  const achievementStats = useMemo(() => {
+    const completedGoals = goals.filter(g => g.completed).length;
 
-    // Prefetch prev month
-    queryClient.prefetchQuery({
-      queryKey: ['activity-summary', userId, prevYear, prevMonth],
-      queryFn: () => getActivitySummaryByDate(userId, prevYear, prevMonth),
-      staleTime: 10 * 60 * 1000,
-    });
+    // Calculate Medals (Wins in competitions)
+    const medalsCount = activities
+      .filter(a => a.type === 'competition')
+      .reduce((count, activity) => {
+        // Check matches for wins if details exist, otherwise just count the competition as an event
+        const compActivity = activity as UnifiedActivityLog & { matches?: any[] };
+        if (compActivity.matches) {
+          return count + compActivity.matches.filter((m: any) => m.outcome === 'WIN' || m.outcome === 'Win').length;
+        }
+        return count;
+      }, 0);
 
-    // Prefetch next month
-    queryClient.prefetchQuery({
-      queryKey: ['activity-summary', userId, nextYear, nextMonth],
-      queryFn: () => getActivitySummaryByDate(userId, nextYear, nextMonth),
-      staleTime: 10 * 60 * 1000,
-    });
-  }, [userId, queryClient]);
+    const practicesCount = activities.filter(a => a.type === 'training').length;
 
-  // Handle month change from calendar
-  const handleMonthChange = useCallback((year: number, month: number) => {
-    setCurrentYear(year);
-    setCurrentMonth(month);
-    prefetchAdjacentMonths(year, month);
-  }, [prefetchAdjacentMonths]);
+    return {
+      completedGoals,
+      medalsCount,
+      practicesCount
+    };
+  }, [goals, activities]);
 
-  // Auto-refetch when tab gains focus (e.g., after creating training/competition)
+  // Auto-refetch when tab gains focus
   useFocusEffect(
     React.useCallback(() => {
       refetch();
-      refetchSummary();
-      prefetchAdjacentMonths(currentYear, currentMonth);
-    }, [refetch, refetchSummary, prefetchAdjacentMonths, currentYear, currentMonth])
+      // Invalidate calendar summary to ensure it stays fresh
+      queryClient.invalidateQueries({ queryKey: ['activity-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['user-skills'] });
+    }, [refetch, queryClient])
   );
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refetch(), refetchSummary()]);
+      await Promise.all([
+        refetch(),
+        queryClient.invalidateQueries({ queryKey: ['activity-summary'] }),
+        queryClient.invalidateQueries({ queryKey: ['user-skills'] }),
+        queryClient.invalidateQueries({ queryKey: ['goals'] })
+      ]);
       setDisplayCount(10); // Reset pagination on refresh
     } finally {
       setRefreshing(false);
@@ -138,12 +146,12 @@ export function ProgressScreen({ testID = 'progress-screen' }: ProgressScreenPro
     if (paginatedFilteredCount >= filteredCount) return null;
 
     return (
-      <ThemedView style={styles.footerLoader}>
+      <ThemedCard style={styles.footerLoader}>
         <ActivityIndicator size="small" color={secondaryTextColor} />
         <ThemedText style={[styles.footerText, { color: secondaryTextColor }]}>
           Loading more...
         </ThemedText>
-      </ThemedView>
+      </ThemedCard>
     );
   };
 
@@ -172,80 +180,87 @@ export function ProgressScreen({ testID = 'progress-screen' }: ProgressScreenPro
 
   if (error) {
     return (
-      <ThemedView style={[styles.container, { backgroundColor }]}>
-        <ThemedView style={styles.errorContainer}>
-          <ThemedText style={[styles.errorText, { color: textColor }]}>
+      <ThemedCard style={styles.container}>
+        <ThemedCard style={styles.errorContainer}>
+          <ThemedText style={styles.errorText}>
             Error loading progress data
           </ThemedText>
-          <ThemedText style={[styles.errorSubtext, { color: secondaryTextColor }]}>
+          <ThemedText style={styles.errorSubtext}>
             Please try again later
           </ThemedText>
-        </ThemedView>
-      </ThemedView>
+        </ThemedCard>
+      </ThemedCard>
     );
   }
 
   const renderListHeader = () => (
     <>
-      {/* Header */}
-      <ThemedView style={styles.header}>
-        <ThemedText style={[styles.title, { color: textColor }]}>
-          Progress
-        </ThemedText>
-        <ThemedText style={[styles.subtitle, { color: secondaryTextColor }]}>
-          Track your Jiu-Jitsu journey
-        </ThemedText>
-      </ThemedView>
+      {/* Stats Section */}
+      <View style={styles.statsRow}>
+        <SkillStatsCard skillCount={userSkills.length} />
+        <AchievementStatsCard
+          completedGoalsCount={achievementStats.completedGoals}
+          medalsCount={achievementStats.medalsCount}
+          practicesCount={achievementStats.practicesCount}
+        />
+      </View>
 
-      {/* Calendar Section with Collapse Toggle */}
-      <ThemedView
-        style={[
-          styles.calendarSection,
-          {
-            backgroundColor: cardBackgroundColor,
-            borderColor: borderColor,
-          }
-        ]}
-      >
-        <TouchableOpacity
-          onPress={() => setIsCalendarCollapsed(!isCalendarCollapsed)}
-          style={styles.calendarHeader}
-          testID="calendar-toggle-button"
-          activeOpacity={0.7}
-        >
-          <ThemedText style={[styles.calendarHeaderText, { color: textColor }]}>
-            Calendar
-          </ThemedText>
-          <Ionicons
-            name={isCalendarCollapsed ? 'chevron-down' : 'chevron-up'}
-            size={24}
-            color={secondaryTextColor}
-          />
-        </TouchableOpacity>
-
-        {!isCalendarCollapsed && (
-          <ProgressCalendar
-            selectedDate={selectedDate}
-            onDateSelect={handleDateSelect}
-            activitySummary={activitySummary}
-            onMonthChange={handleMonthChange}
-            testID="progress-calendar"
-          />
-        )}
-      </ThemedView>
-
-      {/* Activity Filter */}
-      <ActivityFilter
-        selectedFilter={selectedFilter}
-        onFilterChange={setSelectedFilter}
-        activityCounts={activityCounts}
-        testID="activity-filter"
+      {/* Calendar Section */}
+      <ProgressCalendar
+        userId={userId}
+        selectedDate={selectedDate}
+        onDateSelect={handleDateSelect}
+        testID="progress-calendar"
       />
+
+      {/* Recent Activity Header with Filter */}
+      <View style={styles.recentActivityHeader}>
+        <View style={styles.headerTitleRow}>
+          <ThemedText type="subtitle" style={[styles.recentActivityTitle, { color: textColor }]}>
+            Log
+          </ThemedText>
+          <ThemedText style={[styles.recentActivityCount, { color: secondaryTextColor }]}>
+            {filteredCount}
+          </ThemedText>
+        </View>
+
+        <ActivityFilter
+          selectedFilter={selectedFilter}
+          onFilterChange={setSelectedFilter}
+          activityCounts={activityCounts}
+          testID="activity-filter"
+        />
+      </View>
     </>
   );
 
+  const handleProfilePress = () => {
+    if (profile?.id) {
+      router.push(`/(protected)/profile/${profile.id}`);
+    }
+  };
+
+  const handleSettingsPress = () => {
+    router.push('/(protected)/settings');
+  };
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]} testID={testID} edges={['top']}>
+    <View style={styles.container} testID={testID}>
+      <CustomHeader
+        title="Progress"
+        leftComponent={
+          <Avatar
+            source={profile?.avatar}
+            size={32}
+            onPress={handleProfilePress}
+          />
+        }
+        rightComponent={
+          <TouchableOpacity onPress={handleSettingsPress}>
+            <Ionicons name="settings-outline" size={24} color={iconColor} />
+          </TouchableOpacity>
+        }
+      />
       {/* Activity List */}
       <ActivityList
         activities={paginatedActivities}
@@ -267,7 +282,7 @@ export function ProgressScreen({ testID = 'progress-screen' }: ProgressScreenPro
         onClose={() => setModalVisible(false)}
         testID="activity-detail-modal"
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -283,7 +298,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    paddingTop:10
+    paddingVertical: 4
   },
   subtitle: {
     fontSize: 16,
@@ -316,23 +331,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  calendarSection: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
-
+  statsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 0, // Removed padding to match calendar
+    marginBottom: 8,
+    marginTop: 8,
+    gap: 0,
   },
-  calendarHeader: {
+  recentActivityHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 0, // Removed padding to match general alignment
+    marginTop: 16,
+    marginBottom: 8,
   },
-  calendarHeaderText: {
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  recentActivityTitle: {
     fontSize: 18,
     fontWeight: '600',
+  },
+  recentActivityCount: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

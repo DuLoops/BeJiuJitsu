@@ -8,47 +8,67 @@ const tintColorDark = '#fff';
 
 export const themeColors = {
   // Main theme colors
-    black: '#030712',      // black
-    white: '#F9FAFB',     // white
-    blue: '#2563EB',     // blue
-    red: '#B91C1C',    // red
-    lightBlue: '#93C5FD',     // light blue
-    lightRed: '#EF4444',    // light red
- };
+  black: '#030712',      // black
+  white: '#F9FAFB',     // white
+  blue: '#2563EB',     // blue
+  red: '#B91C1C',    // red
+  lightBlue: '#93C5FD',     // light blue
+  lightRed: '#EF4444',    // light red
+};
+
+export const PALETTE = {
+  light: {
+    cardShadow: '#2B2B2B', // Sumi Charcoal
+  },
+  dark: {
+    textPrimary: '#F0EFE7', // Vellum White
+  },
+  common: {
+    accent: '#B73225', // Vermilion Stamp
+    success: '#3B704E',
+  }
+};
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-    success: '#28a745',
-    border: '#E5E7EB',
+    text: '#2B2B2B',      // Sumi Charcoal
+    background: '#FAF3DD', // Aged Vellum
+    tint: '#B73225',      // Vermilion Stamp (Accent)
+    icon: '#405059',      // Slate Indigo (Secondary)
+    tabIconDefault: '#405059',
+    tabIconSelected: '#B73225',
+    success: '#3B704E',
+    border: '#405059',    // Secondary UI
+    card: '#FFFFFF',      // Pure White
+    shadow: '#2B2B2B',    // Hard Shadow color
+    // Additional Semantic Colors
+    secondaryText: '#405059',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-    success: '#28a745',
-    border: '#374151',
+    text: '#F0EFE7',      // Vellum White
+    background: '#0F1419', // Sumi Wash
+    tint: '#B73225',      // Vermilion Stamp
+    icon: '#849BAA',      // Faded Slate
+    tabIconDefault: '#849BAA',
+    tabIconSelected: '#B73225',
+    success: '#3B704E',
+    border: '#849BAA',    // Faded Slate
+    card: '#1E2833',      // Deep Indigo
+    shadow: '#000000',    // Dark Shadow (kept black for depth on dark)
+    // Additional Semantic Colors
+    secondaryText: '#849BAA',
   },
 };
 
 // Category color palette and helpers (global)
+// Using theme-compliant muted tones instead of pastels
 export const categoryColorPalette = [
-  '#E3F2FD', // blue-50
-  '#E8F5E9', // green-50
-  '#FFF3E0', // orange-50
-  '#FCE4EC', // pink-50
-  '#EDE7F6', // purple-50
-  '#E0F2F1', // teal-50
-  '#F3E5F5', // violet-50
-  '#FFFDE7', // yellow-50
+  '#405059', // Slate Indigo
+  '#B73225', // Vermilion
+  '#2B2B2B', // Charcoal
+  '#3B704E', // Success Green
+  '#849BAA', // Faded Slate
+  '#1E2833', // Deep Indigo
 ] as const;
 
 function hashToIndex(input?: string | null): number {
@@ -84,11 +104,12 @@ export function getBeltColor(belt?: string | null): string {
 }
 
 // Activity type colors (global - use these consistently throughout the app)
+// Mapped to "Shou Sugi Ban & Indigo" palette
 export const ActivityColors = {
-  all: '#2563EB',        // Blue
-  training: '#8B5CF6',   // Purple
-  footage: '#A16207',    // Brown
-  competition: '#374151', // Black/Dark Gray
+  all: '#405059',        // Slate Indigo (Secondary UI)
+  training: '#405059',   // Slate Indigo (Foundational)
+  footage: '#2B2B2B',    // Sumi Charcoal (Ink/Media)
+  competition: '#B73225', // Vermilion Stamp (Action/High Stakes)
 };
 
 export function getActivityColor(activityType: 'all' | 'training' | 'footage' | 'competition'): string {

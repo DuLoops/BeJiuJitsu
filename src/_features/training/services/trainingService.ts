@@ -30,15 +30,15 @@ export const fetchUserSkillsForSelection = async (userId: string): Promise<any[]
     console.error('Error fetching user skills for selection:', error);
     throw error;
   }
-  return data || []; 
+  return data || [];
 };
 
 // Create Training entry
-export const createTraining = async (trainingData: { title: string; useId?: string | null }): Promise<Training> => {
+export const createTraining = async (trainingData: { title: string; user_id?: string | null }): Promise<Training> => {
   const insertData: TablesInsert<'trainings'> = {
     id: generateUUID(),
     title: trainingData.title,
-    useId: trainingData.useId || null,
+    user_id: trainingData.user_id || null,
   };
 
   const { data, error } = await supabase
@@ -59,8 +59,8 @@ export const createTraining = async (trainingData: { title: string; useId?: stri
 // Create Training Activities (batch) with their values
 export const createTrainingActivities = async (
   trainingId: string,
-  activitiesData: (Omit<TrainingActivity, 'id' | 'created_at' | 'updated_at' | 'training_id'> & { 
-    training_values?: { value: number; unit: string; order: number }[] 
+  activitiesData: (Omit<TrainingActivity, 'id' | 'created_at' | 'updated_at' | 'training_id'> & {
+    training_values?: { value: number; unit: string; order: number }[]
   })[]
 ): Promise<TrainingActivity[]> => {
   const activitiesToInsert = activitiesData.map(activity => {
@@ -82,17 +82,17 @@ export const createTrainingActivities = async (
   }
 
   const createdActivities = data as TrainingActivity[];
-  
+
   // Create training activity values for each activity
   for (let i = 0; i < createdActivities.length; i++) {
     const activity = createdActivities[i];
     const activityData = activitiesData[i];
-    
+
     if (activityData.training_values && activityData.training_values.length > 0) {
       await createTrainingActivityValues(activity.id, activityData.training_values);
     }
   }
-  
+
   return createdActivities;
 };
 
@@ -130,9 +130,9 @@ export const createTrainingSessionWithActivities = async ({
   trainingData,
   activitiesData,
 }: {
-  trainingData: { title: string; useId?: string | null };
-  activitiesData: (Omit<TrainingActivity, 'id' | 'created_at' | 'updated_at' | 'training_id'> & { 
-    training_values?: { value: number; unit: string; order: number }[] 
+  trainingData: { title: string; user_id?: string | null };
+  activitiesData: (Omit<TrainingActivity, 'id' | 'created_at' | 'updated_at' | 'training_id'> & {
+    training_values?: { value: number; unit: string; order: number }[]
   })[];
 }): Promise<Training> => {
   const newTraining = await createTraining(trainingData);
@@ -153,7 +153,7 @@ export const createTrainingSessionWithSkillUsages = async ({
   trainingData,
   skillUsagesData,
 }: {
-  trainingData: { title: string; useId?: string | null };
+  trainingData: { title: string; user_id?: string | null };
   skillUsagesData: any[];
 }): Promise<Training> => {
   // For now, just create the training without skill usages since the schema doesn't support it yet
@@ -162,14 +162,14 @@ export const createTrainingSessionWithSkillUsages = async ({
 
 // Fetch Training sessions for a user, optionally with linked Activities
 export const fetchTrainingsForUser = async (userId: string, includeActivities: boolean = false) => {
-  let selectQuery = includeActivities 
+  let selectQuery = includeActivities
     ? '*, training_activities(*)'
     : '*';
 
   const { data, error } = await supabase
     .from('trainings')
     .select(selectQuery)
-    .eq('useId', userId)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {

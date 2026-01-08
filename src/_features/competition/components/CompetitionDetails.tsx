@@ -1,6 +1,7 @@
 import React from 'react';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Collapsible } from '@/src/components/ui/molecules/Collapsible';
 import { AutocompleteDropdownItem } from '@/src/components/ui/molecules/AutocompleteDropdown';
 import CompetitionSearch from './CompetitionSearch';
@@ -13,14 +14,14 @@ interface CompetitionDetailsProps {
   // Competition Level
   competitionLevel: 'WHITE' | 'BLUE' | 'PURPLE' | 'BROWN' | 'BLACK' | 'GRAY' | 'YELLOW' | 'ORANGE' | 'GREEN' | 'ABSOLUTE';
   onCompetitionLevelChange: (level: 'WHITE' | 'BLUE' | 'PURPLE' | 'BROWN' | 'BLACK' | 'GRAY' | 'YELLOW' | 'ORANGE' | 'GREEN' | 'ABSOLUTE') => void;
-  
+
   // Tournament Search
   searchText: string;
   onSearchTextChange: (text: string) => void;
   onSelectCompetition: (item: AutocompleteDropdownItem | null) => void;
   tournamentBrands: TournamentBrand[] | undefined;
   isLoadingBrands: boolean;
-  
+
   // Divisions
   divisions: DivisionData[];
   onUpdateDivision: (divisionId: string, updates: Partial<DivisionData>) => void;
@@ -41,16 +42,17 @@ const CompetitionDetails: React.FC<CompetitionDetailsProps> = ({
   onAddDivision,
   onRemoveDivision,
 }) => {
+  const borderColor = useThemeColor({}, 'border');
   return (
-    <Collapsible title="Details" style={styles.detailsWrapper}>
-      <ThemedView style={styles.detailsContainer}>
-        
+    <Collapsible title="Details" style={[styles.detailsWrapper, { borderColor }]}>
+      <ThemedCard style={styles.detailsContainer}>
+
         <CompetitionLevelSelector
           competitionLevel={competitionLevel}
           onCompetitionLevelChange={onCompetitionLevelChange}
         />
 
-        <ThemedView>
+        <ThemedCard>
           <ThemedText style={styles.fieldLabel}>Tournament</ThemedText>
           <CompetitionSearch
             searchText={searchText}
@@ -59,7 +61,7 @@ const CompetitionDetails: React.FC<CompetitionDetailsProps> = ({
             tournamentBrands={tournamentBrands}
             isLoading={isLoadingBrands}
           />
-        </ThemedView>
+        </ThemedCard>
 
         <DivisionManager
           divisions={divisions}
@@ -68,7 +70,7 @@ const CompetitionDetails: React.FC<CompetitionDetailsProps> = ({
           onRemoveDivision={onRemoveDivision}
         />
 
-      </ThemedView>
+      </ThemedCard>
     </Collapsible>
   );
 };
@@ -76,7 +78,7 @@ const CompetitionDetails: React.FC<CompetitionDetailsProps> = ({
 const styles = {
   detailsWrapper: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    // borderColor: '#ddd', // Should use theme border
     borderRadius: 12,
     marginBottom: 8,
   },

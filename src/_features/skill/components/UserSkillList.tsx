@@ -1,10 +1,10 @@
 import {
-    deleteUserSkill,
-    fetchUserSkillsWithDetails,
+  deleteUserSkill,
+  fetchUserSkillsWithDetails,
 } from '@/src/_features/skill/services/skillService';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useAuthStore } from '@/src/stores/authStore';
 import { Category, SequenceDetail, Skill, SkillSequence, UserSkill } from '@/src/types/skills'; // Assuming Category and Skill might be needed for display
 import { Ionicons } from '@expo/vector-icons';
@@ -29,11 +29,11 @@ const UserSkillListItem: React.FC<UserSkillListItemProps> = ({ item, onDelete, o
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <ThemedView style={styles.itemContainer}>
+    <ThemedCard style={styles.itemContainer}>
       <TouchableOpacity onPress={() => setExpanded(!expanded)} style={styles.itemHeader}>
         <View style={styles.itemTitleContainer}>
-            <ThemedText style={styles.itemTitle}>{item.skill?.name || 'Unknown Skill'}</ThemedText>
-            <ThemedText style={styles.itemSubtitle}>Category: {item.skill?.category?.name || 'N/A'}</ThemedText>
+          <ThemedText style={styles.itemTitle}>{item.skill?.name || 'Unknown Skill'}</ThemedText>
+          <ThemedText style={styles.itemSubtitle}>Category: {item.skill?.category?.name || 'N/A'}</ThemedText>
         </View>
         <Ionicons name={expanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={24} />
       </TouchableOpacity>
@@ -45,7 +45,7 @@ const UserSkillListItem: React.FC<UserSkillListItemProps> = ({ item, onDelete, o
           <ThemedText style={styles.detailText}>Notes: {item.note || 'N/A'}</ThemedText>
           <ThemedText style={styles.detailText}>Source: {item.source || 'N/A'}</ThemedText>
           <ThemedText style={styles.detailText}>Video: {item.videoUrl || 'N/A'}</ThemedText>
-          
+
           <ThemedText style={styles.sequencesTitle}>Sequences:</ThemedText>
           {item.sequences && item.sequences.length > 0 ? (
             item.sequences.map((seq, index) => (
@@ -65,7 +65,7 @@ const UserSkillListItem: React.FC<UserSkillListItemProps> = ({ item, onDelete, o
           </View>
         </View>
       )}
-    </ThemedView>
+    </ThemedCard>
   );
 };
 
@@ -112,10 +112,10 @@ export default function UserSkillList() {
   if (error) return <View style={styles.centered}><Text>Error fetching skills: {error.message}</Text></View>;
   if (!userSkills || userSkills.length === 0) {
     return (
-        <ThemedView style={styles.centered}>
-            <ThemedText>No skills added yet.</ThemedText>
-            <ThemedButton title="Add Your First Skill" onPress={() => router.push('/(protected)/(modal)/create/skill')} style={{marginTop: 20}} />
-        </ThemedView>
+      <ThemedCard style={styles.centered}>
+        <ThemedText>No skills added yet.</ThemedText>
+        <ThemedButton title="Add Your First Skill" onPress={() => router.push('/(protected)/(modal)/create/skill')} style={{ marginTop: 20 }} />
+      </ThemedCard>
     );
   }
 
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   itemContainer: {
-    backgroundColor: '#fff', // Adjust with ThemedView for dark mode compatibility
+    backgroundColor: '#fff', // Adjust with ThemedCard for dark mode compatibility
     padding: 15,
     marginBottom: 10,
     borderRadius: 8,

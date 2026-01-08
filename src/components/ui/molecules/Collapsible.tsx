@@ -2,7 +2,7 @@ import { PropsWithChildren, useState } from 'react';
 import { StyleSheet, TouchableOpacity, StyleProp, ViewStyle } from 'react-native';
 
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +12,7 @@ export function Collapsible({ children, title, style, contentStyle }: PropsWithC
   const theme = useColorScheme() ?? 'light';
 
   return (
-    <ThemedView style={style}>
+    <ThemedCard style={style}>
       <TouchableOpacity
         style={[styles.heading, styles.titlePill]}
         onPress={() => setIsOpen((value) => !value)}
@@ -25,8 +25,8 @@ export function Collapsible({ children, title, style, contentStyle }: PropsWithC
           color="#666"
         />
       </TouchableOpacity>
-      {isOpen && <ThemedView style={[styles.content, contentStyle]}>{children}</ThemedView>}
-    </ThemedView>
+      {isOpen && <ThemedCard style={[styles.content, contentStyle]}>{children}</ThemedCard>}
+    </ThemedCard>
   );
 }
 

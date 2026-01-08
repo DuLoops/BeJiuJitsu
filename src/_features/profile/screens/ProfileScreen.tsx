@@ -24,7 +24,7 @@ import {
 
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 
 export default function ProfileTabScreen() {
   const { session } = useAuthStore();
@@ -119,7 +119,7 @@ export default function ProfileTabScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <ThemedView style={styles.innerContainer}>
+      <ThemedCard style={styles.innerContainer}>
         {/* Profile Details Section */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
@@ -169,10 +169,10 @@ export default function ProfileTabScreen() {
               data={userSkills.slice(0, 3)} // Show a summary, e.g., first 3
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
-                <ThemedView style={styles.listItem}>
+                <ThemedCard style={styles.listItem}>
                   <ThemedText style={styles.listItemTitle}>{item.skill.name}</ThemedText>
                   <ThemedText style={styles.listItemSubtitle}>Category: {item.skill.category.name}</ThemedText>
-                </ThemedView>
+                </ThemedCard>
               )}
               ListEmptyComponent={<ThemedText>No skills added yet.</ThemedText>}
             />
@@ -225,7 +225,7 @@ export default function ProfileTabScreen() {
           )}
         </View>
 
-      </ThemedView>
+      </ThemedCard>
     </ScrollView>
   );
 }

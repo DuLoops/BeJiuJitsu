@@ -1,5 +1,5 @@
 {
-  "name": "bejiujitsu",
+  "name": "dojits",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -24,6 +24,7 @@
     "@types/uuid": "^10.0.0",
     "aes-js": "^3.1.2",
     "expo": "~53.0.9",
+    "expo-av": "~15.1.7",
     "expo-blur": "~14.1.4",
     "expo-constants": "~17.1.6",
     "expo-font": "~13.3.1",

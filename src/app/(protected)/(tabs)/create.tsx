@@ -5,7 +5,7 @@ import { StyleSheet, View } from 'react-native';
 
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 
 export default function CreateScreen() {
@@ -29,7 +29,7 @@ export default function CreateScreen() {
   };
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor }]}>
+    <ThemedCard style={[styles.container, { backgroundColor }]}>
       <View style={styles.content}>
         <ThemedText style={styles.title}>Create</ThemedText>
         <ThemedText style={styles.subtitle}>What would you like to log?</ThemedText>
@@ -76,7 +76,7 @@ export default function CreateScreen() {
           />
         </View>
       </View>
-    </ThemedView>
+    </ThemedCard>
   );
 }
 

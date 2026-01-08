@@ -1,6 +1,6 @@
-# BeJiuJitsu: Train, Learn, Compete, Connect
+# DoJits: Train, Learn, Compete, Connect
 
-BeJiuJitsu is a comprehensive mobile application designed specifically for Brazilian Jiu-Jitsu practitioners of all levels. This app seamlessly integrates training management, skill progression tracking, competition results, and community engagement into one intuitive platform.
+DoJits is a comprehensive mobile application designed specifically for Brazilian Jiu-Jitsu practitioners of all levels. This app seamlessly integrates training management, skill progression tracking, competition results, and community engagement into one intuitive platform.
 
 ## Features
 
@@ -61,8 +61,8 @@ BeJiuJitsu is a comprehensive mobile application designed specifically for Brazi
 ### Setup
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/bejiujitsu.git
-   cd bejiujitsu
+   git clone https://github.com/yourusername/dojits.git
+   cd dojits
    ```
 
 2. Install backend dependencies
@@ -104,7 +104,7 @@ BeJiuJitsu is a comprehensive mobile application designed specifically for Brazi
 
 ## Project Structure
 ```
-bejiujitsu/
+dojits/
 ├── backend/
 │   ├── prisma/
 │   ├── src/
@@ -130,15 +130,15 @@ bejiujitsu/
 ```
 
 
-## Why BeJiuJitsu?
+## Why DoJits?
 
-BeJiuJitsu combines practical training management tools with social features to create a holistic platform for your jiu-jitsu journey. Whether you're a beginner looking to establish consistent training habits, an intermediate practitioner focused on expanding your technical repertoire, or a competitor preparing for tournaments, BeJiuJitsu provides the structure and support to help you achieve your goals while connecting with the broader BJJ community.
+DoJits combines practical training management tools with social features to create a holistic platform for your jiu-jitsu journey. Whether you're a beginner looking to establish consistent training habits, an intermediate practitioner focused on expanding your technical repertoire, or a competitor preparing for tournaments, DoJits provides the structure and support to help you achieve your goals while connecting with the broader BJJ community.
 
-Built by practitioners for practitioners, BeJiuJitsu understands the unique needs and challenges of the Brazilian Jiu-Jitsu lifestyle and offers thoughtful solutions to enhance your development both on and off the mats.
+Built by practitioners for practitioners, DoJits understands the unique needs and challenges of the Brazilian Jiu-Jitsu lifestyle and offers thoughtful solutions to enhance your development both on and off the mats.
 
 *Track. Learn. Compete. Connect. Your complete BJJ companion.*
 
 
 ---
 
-© 2025 BeJiuJitsu. All rights reserved.
+© 2025 DoJits. All rights reserved.

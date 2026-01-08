@@ -18,7 +18,7 @@ export const fetchTrainingActivities = async (
         training_activity_values(value, unit)
       )
     `)
-    .eq('useId', userId)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (startDate) {
@@ -164,15 +164,6 @@ export const fetchFootageActivities = async (
       *,
       user_skill:user_skills!inner(
         skill:skills(name, category)
-      ),
-      skill_content_links!user_skill_video_id(
-        training_activity:training_activities(
-          training:trainings(title)
-        ),
-        competition_match:competition_matches(
-          name,
-          competition:competitions(title)
-        )
       )
     `)
     .eq('user_skill.user_id', userId)
@@ -197,18 +188,13 @@ export const fetchFootageActivities = async (
 
   return (data || []).map(video => {
     const skillName = video.user_skill?.skill?.name || 'Skill Video';
-
-    // skill_content_links is an array, get the first link if it exists
-    const contentLink = video.skill_content_links?.[0];
-    const source = contentLink?.training_activity?.training?.title ||
-                  contentLink?.competition_match?.competition?.title ||
-                  'Independent';
+    const source = 'Independent';
 
     return {
       id: video.id,
       type: 'footage' as const,
       title: skillName,
-      date: video.created_at,
+      date: video.created_at || new Date().toISOString(),
       videoUrl: video.video_url,
       notes: video.note || undefined,
       skillName,

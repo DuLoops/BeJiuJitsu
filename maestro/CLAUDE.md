@@ -1,4 +1,4 @@
-# Maestro Testing Guide for BeJiuJitsu
+# Maestro Testing Guide for DoJits
 
 This file provides comprehensive testing guidance for Claude Code when working with Maestro E2E tests.
 
@@ -24,7 +24,7 @@ npx expo start --android    # Android testing
 
 ### Test Flow Components
 
-- **Smoke test**: `smoke/app-launch.yaml` - Handles Expo Go launcher, BeJiuJitsu selection, and Home screen verification
+- **Smoke test**: `smoke/app-launch.yaml` - Handles Expo Go launcher, DoJits selection, and Home screen verification
 - **Navigation flows**: `navigation/` - utilities that use smoke/app-launch first
   - `navigate-to-log.yaml`: Launch app and navigate to Log screen
   - `navigate-to-progress.yaml`: Launch app and navigate to Progress screen

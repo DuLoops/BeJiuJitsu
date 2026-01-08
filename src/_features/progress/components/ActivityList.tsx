@@ -5,6 +5,8 @@ import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { UnifiedActivityLog, ActivityType } from '../types/progress';
 import { getActivityColor } from '@/src/constants/Colors';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ActivityListProps {
   activities: UnifiedActivityLog[];
@@ -29,16 +31,18 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onPress }) => {
   const textColor = useThemeColor({}, 'text');
   const secondaryTextColor = useThemeColor({}, 'icon');
 
+  // ...
+
   const getActivityIcon = (type: ActivityType) => {
     switch (type) {
       case 'training':
-        return '🥋';
+        return <Ionicons name="barbell" size={24} color="white" />;
       case 'competition':
-        return '🏆';
+        return <Ionicons name="trophy" size={24} color="white" />;
       case 'footage':
-        return '📹';
+        return <Ionicons name="videocam" size={24} color="white" />;
       default:
-        return '📝';
+        return <Ionicons name="document-text" size={24} color="white" />;
     }
   };
 
@@ -103,7 +107,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onPress }) => {
       onPress={() => onPress?.(activity)}
       testID={`activity-item-${activity.id}`}
     >
-      <View style={styles.activityContent}>
+      <ThemedCard style={styles.activityContent}>
         <View style={styles.leftContent}>
           <View
             style={[
@@ -111,9 +115,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onPress }) => {
               { backgroundColor: getActivityColor(activity.type) }
             ]}
           >
-            <ThemedText style={styles.iconText}>
-              {getActivityIcon(activity.type)}
-            </ThemedText>
+            {getActivityIcon(activity.type)}
           </View>
           <View style={styles.textContent}>
             <ThemedText style={[styles.titleText, { color: textColor }]} numberOfLines={1}>
@@ -127,7 +129,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onPress }) => {
             {formatDate(activity.date)}
           </ThemedText>
         </View>
-      </View>
+      </ThemedCard>
     </TouchableOpacity>
   );
 };
@@ -180,7 +182,6 @@ export function ActivityList({
   const combinedHeader = () => (
     <>
       {ListHeaderComponent}
-      {renderInternalHeader()}
     </>
   );
 
@@ -230,15 +231,12 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   activityItem: {
-    borderRadius: 12,
-    borderWidth: 1,
     marginBottom: 8,
-    overflow: 'hidden',
   },
   activityContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 10,
   },
   leftContent: {
     flex: 1,
@@ -248,13 +246,10 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
-  },
-  iconText: {
-    fontSize: 20,
   },
   textContent: {
     flex: 1,

@@ -1,7 +1,7 @@
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useAuthStore } from '@/src/stores/authStore';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useGlobalSearchParams } from 'expo-router';
@@ -38,8 +38,8 @@ export default function LoginScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedView style={[styles.verticallySpaced, styles.mt20]}>
+    <ThemedCard style={styles.container}>
+      <ThemedCard style={[styles.verticallySpaced, styles.mt20]}>
         <ThemedInput
           label="Email"
           icon={<Ionicons name="mail" size={24} color="black" />}
@@ -48,8 +48,8 @@ export default function LoginScreen() {
           placeholder="email@address.com"
           autoCapitalize={'none'}
         />
-      </ThemedView>
-      <ThemedView style={styles.verticallySpaced}>
+      </ThemedCard>
+      <ThemedCard style={styles.verticallySpaced}>
         <ThemedInput
           label="Password"
           icon={<Ionicons name="lock-closed" size={24} color="black" />}
@@ -59,15 +59,15 @@ export default function LoginScreen() {
           placeholder="Password"
           autoCapitalize={'none'}
         />
-      </ThemedView>
-      <ThemedView style={[styles.verticallySpaced, styles.mt20]}>
+      </ThemedCard>
+      <ThemedCard style={[styles.verticallySpaced, styles.mt20]}>
         <ThemedButton disabled={loading} onPress={handleSignIn} title="Sign in" />
-      </ThemedView>
-      <ThemedView style={styles.verticallySpaced}>
+      </ThemedCard>
+      <ThemedCard style={styles.verticallySpaced}>
         <ThemedButton onPress={() => router.push('/(auth)/signup')} title="Create account" />
-      </ThemedView>
+      </ThemedCard>
       {errorMessage ? <ThemedText style={styles.errorText}>{errorMessage}</ThemedText> : null}
-    </ThemedView>
+    </ThemedCard>
   );
 }
 

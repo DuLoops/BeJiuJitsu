@@ -1,7 +1,7 @@
 import React from 'react';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import DivisionCard, { DivisionData } from './DivisionCard';
 
 interface DivisionManagerProps {
@@ -20,7 +20,7 @@ const DivisionManager: React.FC<DivisionManagerProps> = ({
   style,
 }) => {
   return (
-    <ThemedView style={style}>
+    <ThemedCard style={style}>
       <ThemedText style={styles.fieldLabel}>Divisions</ThemedText>
       {divisions.map((division) => (
         <DivisionCard
@@ -35,7 +35,7 @@ const DivisionManager: React.FC<DivisionManagerProps> = ({
         onPress={onAddDivision}
         style={styles.addDivisionButton}
       />
-    </ThemedView>
+    </ThemedCard>
   );
 };
 

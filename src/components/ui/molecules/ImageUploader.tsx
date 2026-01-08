@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 
@@ -89,20 +89,20 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             style={styles.image}
             contentFit="cover"
           />
-          <ThemedView style={styles.removeOverlay}>
+          <ThemedCard style={styles.removeOverlay}>
             <Ionicons name="close-circle" size={32} color="red" />
             <ThemedText style={[styles.removeText, { color: 'red' }]}>
               Tap to remove
             </ThemedText>
-          </ThemedView>
+          </ThemedCard>
         </>
       ) : (
-        <ThemedView style={styles.placeholder}>
+        <ThemedCard style={styles.placeholder}>
           <Ionicons name="add" size={52} color={iconColor} />
           <ThemedText style={[styles.placeholderText, { color: textColor }]}>
             Add Photo
           </ThemedText>
-        </ThemedView>
+        </ThemedCard>
       )}
     </TouchableOpacity>
   );

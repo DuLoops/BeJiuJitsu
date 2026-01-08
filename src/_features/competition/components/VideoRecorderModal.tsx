@@ -1,47 +1,78 @@
-import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import VideoRecorder from '@/src/components/ui/molecules/VideoRecorder';
 import React from 'react';
+import { Modal, StyleSheet, View } from 'react-native';
+
+import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
+import VideoRecorder from '@/src/components/ui/molecules/VideoRecorder';
 
 interface VideoRecorderModalProps {
   visible: boolean;
   onClose: () => void;
   matchId?: string;
+  onVideoSelected?: (uri: string) => void;
 }
 
 const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({
   visible,
   onClose,
   matchId,
+  onVideoSelected
 }) => {
-  if (!visible) return null;
-
   return (
-    <ThemedView style={styles.videoRecorderContainer}>
-      <VideoRecorder />
-      <ThemedButton
-        title="Close"
-        onPress={onClose}
-        style={styles.closeVideoButton}
-      />
-    </ThemedView>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.backdrop}>
+        <ThemedCard style={styles.modalContent}>
+          <VideoRecorder onVideoSelected={(uri: string) => {
+            onVideoSelected?.(uri);
+            onClose();
+          }} />
+          <ThemedButton
+            title="Close"
+            onPress={onClose}
+            style={styles.closeVideoButton}
+            variant="outline"
+          />
+        </ThemedCard>
+      </View>
+    </Modal>
   );
 };
 
 export default VideoRecorderModal;
 
-const styles = {
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
   videoRecorderContainer: {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    width: '100%',
   },
   closeVideoButton: {
-    marginTop: 20,
+    marginTop: 10,
+    width: '100%',
   },
-}; 
+});
