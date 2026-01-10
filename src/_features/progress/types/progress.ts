@@ -21,6 +21,14 @@ export interface TrainingActivityLog extends ActivityLog {
   }[];
 }
 
+export interface CompetitionDivisionSummary {
+  divisionName: string;
+  wins: number;
+  losses: number;
+  ties: number;
+  rank?: number; // 1 = Gold, 2 = Silver, 3 = Bronze
+}
+
 export interface CompetitionActivityLog extends ActivityLog {
   type: 'competition';
   matches?: {
@@ -29,6 +37,7 @@ export interface CompetitionActivityLog extends ActivityLog {
     outcome: string;
     score?: string;
   }[];
+  divisions?: CompetitionDivisionSummary[];
 }
 
 export interface FootageActivityLog extends ActivityLog {

@@ -115,3 +115,16 @@ export const ActivityColors = {
 export function getActivityColor(activityType: 'all' | 'training' | 'footage' | 'competition'): string {
   return ActivityColors[activityType] || ActivityColors.all;
 }
+
+export const MedalColors = {
+  GOLD: '#FFD700',
+  SILVER: '#C0C0C0',
+  BRONZE: '#CD7F32',
+};
+
+export function getMedalColor(rank?: number): string | undefined {
+  if (rank === 1) return MedalColors.GOLD;
+  if (rank === 2) return MedalColors.SILVER;
+  if (rank === 3) return MedalColors.BRONZE;
+  return undefined;
+}

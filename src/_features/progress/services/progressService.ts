@@ -90,6 +90,7 @@ export const fetchTrainingActivities = async (
 };
 
 // Fetch all competitions for a user within a date range
+// Fetch all competitions for a user within a date range
 export const fetchCompetitionActivities = async (
   userId: string,
   startDate?: string,
@@ -106,7 +107,18 @@ export const fetchCompetitionActivities = async (
         outcome,
         my_score,
         opponent_score,
-        outcome_method
+        outcome_method,
+        competition_division_id
+      ),
+      competition_divisions(
+        id,
+        bjj_type,
+        division_weight_type,
+        division_weight_unit
+      ),
+      competition_results(
+        rank,
+        competition_division_id
       )
     `)
     .eq('user_id', userId)
@@ -129,8 +141,67 @@ export const fetchCompetitionActivities = async (
     throw error;
   }
 
-  return (data || []).map(competition => {
-    const matches = competition.competition_matches?.map(match => ({
+  return (data || []).map((competition: any) => {
+    // Map divisions
+    const divisionsMap = new Map<string, {
+      divisionName: string;
+      wins: number;
+      losses: number;
+      ties: number;
+      rank?: number;
+    }>();
+
+    // Initialize divisions
+    competition.competition_divisions?.forEach((div: any) => {
+      // Construct division name
+      const type = div.bjj_type === 'BOTH' ? 'Gi & NoGi' : (div.bjj_type === 'GI' ? 'Gi' : 'NoGi');
+      const weight = div.division_weight_type === 'open'
+        ? 'Absolute'
+        : `${div.division_weight_unit || ''}${div.division_weight_type === 'kg_under' ? 'kg' : 'lbs'}`;
+
+      divisionsMap.set(div.id, {
+        divisionName: `${type} - ${weight}`,
+        wins: 0,
+        losses: 0,
+        ties: 0
+      });
+    });
+
+    // Add match stats
+    competition.competition_matches?.forEach((match: any) => {
+      if (match.competition_division_id && divisionsMap.has(match.competition_division_id)) {
+        const stats = divisionsMap.get(match.competition_division_id)!;
+        if (match.outcome === 'WIN') stats.wins++;
+        else if (match.outcome === 'LOSE') stats.losses++;
+        else if (match.outcome === 'DRAW') stats.ties++;
+      }
+    });
+
+    // Add results (rank)
+    competition.competition_results?.forEach((result: any) => {
+      if (result.competition_division_id && divisionsMap.has(result.competition_division_id)) {
+        const stats = divisionsMap.get(result.competition_division_id)!;
+        stats.rank = result.rank;
+      }
+    });
+
+    // If no divisions found but matches exist (legacy or unified view), create a default summary
+    if (divisionsMap.size === 0 && (competition.competition_matches?.length || 0) > 0) {
+      let wins = 0, losses = 0, ties = 0;
+      competition.competition_matches?.forEach((match: any) => {
+        if (match.outcome === 'WIN') wins++;
+        else if (match.outcome === 'LOSE') losses++;
+        else if (match.outcome === 'DRAW') ties++;
+      });
+      divisionsMap.set('default', {
+        divisionName: 'All Matches',
+        wins,
+        losses,
+        ties
+      });
+    }
+
+    const matches = competition.competition_matches?.map((match: any) => ({
       name: match.name,
       opponent: match.opponent_name || undefined,
       outcome: match.outcome,
@@ -148,6 +219,7 @@ export const fetchCompetitionActivities = async (
       notes: competition.notes || undefined,
       details: competition.tournament_brand?.name || undefined,
       matches,
+      divisions: Array.from(divisionsMap.values())
     };
   });
 };
@@ -210,9 +282,18 @@ export const fetchAllActivities = async (
   endDate?: string
 ): Promise<UnifiedActivityLog[]> => {
   const [trainings, competitions, footage] = await Promise.all([
-    fetchTrainingActivities(userId, startDate, endDate),
-    fetchCompetitionActivities(userId, startDate, endDate),
-    fetchFootageActivities(userId, startDate, endDate),
+    fetchTrainingActivities(userId, startDate, endDate).catch(err => {
+      console.error('Failed to fetch training activities:', err);
+      return [];
+    }),
+    fetchCompetitionActivities(userId, startDate, endDate).catch(err => {
+      console.error('Failed to fetch competition activities:', err);
+      return [];
+    }),
+    fetchFootageActivities(userId, startDate, endDate).catch(err => {
+      console.error('Failed to fetch footage activities:', err);
+      return [];
+    }),
   ]);
 
   const allActivities = [...trainings, ...competitions, ...footage];

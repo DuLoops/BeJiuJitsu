@@ -4,7 +4,7 @@ import ThemedView from '@/src/components/ui/atoms/ThemedView';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { UnifiedActivityLog, ActivityType } from '../types/progress';
-import { getActivityColor } from '@/src/constants/Colors';
+import { getActivityColor, getMedalColor } from '@/src/constants/Colors';
 import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -70,7 +70,17 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onPress }) => {
   const renderDetails = () => {
     switch (activity.type) {
       case 'training':
-        if (activity.duration) {
+        if (activity.activities && activity.activities.length > 0) {
+          return (
+            <View style={{ marginTop: 4 }}>
+              {activity.activities.map((act, index) => (
+                <ThemedText key={index} style={[styles.detailText, { color: secondaryTextColor, fontSize: 13 }]}>
+                  • {act.type} {act.duration ? `(${act.duration})` : ''}
+                </ThemedText>
+              ))}
+            </View>
+          );
+        } else if (activity.duration) {
           return (
             <ThemedText style={[styles.detailText, { color: secondaryTextColor }]}>
               {activity.duration}
@@ -80,7 +90,33 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onPress }) => {
         }
         break;
       case 'competition':
-        if (activity.location || activity.details) {
+        if (activity.divisions && activity.divisions.length > 0) {
+          return (
+            <View style={{ marginTop: 4, gap: 4 }}>
+              {activity.divisions.map((div, index) => (
+                <View key={index} style={styles.divisionRow}>
+                  <View style={styles.divisionHeader}>
+                    {div.divisionName !== 'All Matches' && (
+                      <ThemedText style={[styles.divisionName, { color: textColor }]}>
+                        {div.divisionName}
+                      </ThemedText>
+                    )}
+                    {div.rank && (
+                      <View style={[styles.medalBadge, { backgroundColor: getMedalColor(div.rank) }]}>
+                        <ThemedText style={styles.medalText}>
+                          {div.rank === 1 ? 'GOLD' : div.rank === 2 ? 'SILVER' : 'BRONZE'}
+                        </ThemedText>
+                      </View>
+                    )}
+                  </View>
+                  <ThemedText style={[styles.statsText, { color: secondaryTextColor }]}>
+                    {div.wins}W - {div.losses}L - {div.ties}D
+                  </ThemedText>
+                </View>
+              ))}
+            </View>
+          );
+        } else if (activity.location || activity.details) {
           return (
             <ThemedText style={[styles.detailText, { color: secondaryTextColor }]}>
               {activity.location || activity.details}
@@ -235,13 +271,13 @@ const styles = StyleSheet.create({
   },
   activityContent: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     padding: 10,
   },
   leftContent: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   iconContainer: {
     width: 48,
@@ -282,5 +318,35 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     fontSize: 14,
+  },
+  divisionRow: {
+    marginBottom: 4,
+  },
+  divisionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  divisionName: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  medalBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  medalText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  statsText: {
+    fontSize: 13,
+    fontWeight: '500',
   },
 });

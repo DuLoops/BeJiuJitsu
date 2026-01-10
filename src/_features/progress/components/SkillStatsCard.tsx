@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons, Foundation } from '@expo/vector-icons';
 import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
@@ -24,17 +24,17 @@ export function SkillStatsCard({ skillCount }: SkillStatsCardProps) {
             <ThemedCard style={styles.card}>
                 <View style={styles.header}>
                     <ThemedText type="defaultSemiBold" style={styles.title}>Skill</ThemedText>
+                    <Ionicons name="chevron-forward-circle-outline" size={24} color={iconColor} style={{ opacity: 0.5 }} />
                 </View>
 
                 <View style={styles.content}>
-                    <MaterialCommunityIcons name="pine-tree-box" size={24} color={iconColor} style={styles.icon} />
                     <ThemedText style={styles.statsText}>
-                        <ThemedText type="title" style={styles.count}>{skillCount}</ThemedText> skills
+                        <ThemedText style={styles.count}>{skillCount}</ThemedText> skills
                     </ThemedText>
                 </View>
 
                 <View style={styles.backgroundIcon}>
-                    <MaterialCommunityIcons name="pine-tree" size={120} color={iconColor} style={{ opacity: 0.05 }} />
+                    <Foundation name="trees" size={120} color={iconColor} style={{ opacity: 0.05 }} />
                 </View>
             </ThemedCard>
         </TouchableOpacity>
@@ -53,28 +53,25 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 4,
     },
     title: {
         fontSize: 16,
     },
     content: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        marginBottom: 12,
         marginTop: 'auto',
-    },
-    icon: {
-        marginRight: 8,
     },
     statsText: {
         fontSize: 14,
-        flexDirection: 'row',
-        alignItems: 'baseline',
+        fontWeight: '500',
     },
     count: {
-        fontSize: 24,
+        fontSize: 18,
         fontWeight: 'bold',
-        lineHeight: 28,
     },
     backgroundIcon: {
         position: 'absolute',
