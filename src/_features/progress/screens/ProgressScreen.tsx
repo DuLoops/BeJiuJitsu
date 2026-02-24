@@ -10,20 +10,17 @@ import { ProgressCalendar } from '../components/ProgressCalendar';
 import { ActivityFilter } from '../components/ActivityFilter';
 import { ActivityList } from '../components/ActivityList';
 import { ActivityDetailModal } from '../components/ActivityDetailModal';
-import { SkillStatsCard } from '../components/SkillStatsCard';
-import { AchievementStatsCard } from '../components/AchievementStatsCard';
 import { useProgressData, useActivityCounts } from '../hooks/useProgressData';
 import { ActivityType, UnifiedActivityLog } from '../types/progress';
 import { useAuthStore } from '@/src/stores/authStore';
 import { useRouter } from 'expo-router';
 import { CustomHeader } from '@/src/components/ui/molecules/CustomHeader';
 import { Avatar } from '@/src/components/ui/atoms/Avatar';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFetchCurrentUserProfile } from '../../profile/hooks/useProfileQueries';
-
 import { fetchUserSkills } from '@/src/_features/skill/services/skillService';
 import { useFetchGoals } from '@/src/_features/profile/hooks/useGoals';
-
+import { CardButton, CardButtonItem } from '@/src/components/ui/molecules/CardButton';
+import { Icons } from '@/src/assets/icons';
 interface ProgressScreenProps {
   testID?: string;
 }
@@ -193,15 +190,51 @@ export function ProgressScreen({ testID = 'progress-screen' }: ProgressScreenPro
     );
   }
 
+
+  // ... (keep imports)
+
+  // ...
+
+  const achievementItems: CardButtonItem[] = [];
+  if (achievementStats.completedGoals > 0) {
+    achievementItems.push({
+      count: achievementStats.completedGoals,
+      icon: <Icons.Check size={20} color={iconColor} />
+    });
+  }
+  if (achievementItems.length < 2) {
+    achievementItems.push({
+      count: achievementStats.medalsCount,
+      icon: <Icons.Medal size={20} color={iconColor} />
+    });
+  }
+  if (achievementItems.length < 2) {
+    achievementItems.push({
+      count: achievementStats.practicesCount,
+      icon: <Icons.Practice size={20} color={iconColor} />
+    });
+  }
+
   const renderListHeader = () => (
     <>
       {/* Stats Section */}
       <View style={styles.statsRow}>
-        <SkillStatsCard skillCount={userSkills.length} />
-        <AchievementStatsCard
-          completedGoalsCount={achievementStats.completedGoals}
-          medalsCount={achievementStats.medalsCount}
-          practicesCount={achievementStats.practicesCount}
+        <CardButton
+          title="Skill"
+          items={[{
+            count: userSkills.length,
+            icon: <Icons.Skill size={20} color={iconColor} />
+          }]}
+          onPress={() => router.push('/(protected)/(modal)/progress/skills')}
+          backgroundIcon={<Icons.Trees size={120} color={iconColor} style={{ opacity: 0.05 }} />}
+          style={{ marginRight: 8 }}
+        />
+        <CardButton
+          title="Achievement"
+          items={achievementItems}
+          onPress={() => router.push('/(protected)/(modal)/progress/achievements')}
+          backgroundIcon={<Icons.Trophy size={120} color={iconColor} style={{ opacity: 0.05 }} />}
+          style={{ marginLeft: 8 }}
         />
       </View>
 
@@ -257,7 +290,7 @@ export function ProgressScreen({ testID = 'progress-screen' }: ProgressScreenPro
         }
         rightComponent={
           <TouchableOpacity onPress={handleSettingsPress}>
-            <Ionicons name="settings-outline" size={24} color={iconColor} />
+            <Icons.Settings size={24} color={iconColor} />
           </TouchableOpacity>
         }
       />

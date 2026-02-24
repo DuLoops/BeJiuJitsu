@@ -259,18 +259,55 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
 
       // Add results to buckets
       results.forEach(result => {
-        const div = divisions.find(d => d.tempId === result.divisionTempId);
-        if (div) {
-          ensureBucket(div.tempId, div.bjjType);
-          divisionBuckets[div.tempId].outcome = result.outcome;
-          divisionBuckets[div.tempId].overallResultInDivision = result.rank;
+        if (result.divisionTempId === 'generic') {
+          // Handle generic result - add to a default/generic bucket
+          // We'll use a specific tempId for generic bucket to aggregate generic matches/results
+          const genericId = 'generic_bucket';
+          if (!divisionBuckets[genericId]) {
+            divisionBuckets[genericId] = {
+              tempId: genericId,
+              bjjType: 'GI', // Default
+              divisionWeightUnit: 'kg',
+              divisionWeightType: 'open',
+              ageCategory: 'Adult',
+              overallResultInDivision: null,
+              competitionMatches: [] as any[],
+              outcome: null,
+            };
+          }
+          divisionBuckets[genericId].outcome = result.outcome;
+          divisionBuckets[genericId].overallResultInDivision = result.rank;
+        } else {
+          const div = divisions.find(d => d.tempId === result.divisionTempId);
+          if (div) {
+            ensureBucket(div.tempId, div.bjjType);
+            divisionBuckets[div.tempId].outcome = result.outcome;
+            divisionBuckets[div.tempId].overallResultInDivision = result.rank;
+          }
         }
       });
 
       validMatches.forEach((match) => {
         const div = divisions.find(d => d.tempId === match.divisionTempId);
-        const bucketId = div?.tempId || 'default';
-        ensureBucket(bucketId, div?.bjjType || 'GI');
+        // If match has no division (generic), assign to generic bucket
+        const bucketId = div?.tempId || 'generic_bucket';
+
+        // Ensure bucket exists if it's generic_bucket and wasn't created by results
+        if (bucketId === 'generic_bucket' && !divisionBuckets[bucketId]) {
+          divisionBuckets[bucketId] = {
+            tempId: bucketId,
+            bjjType: match.bjjType || 'GI',
+            divisionWeightUnit: 'kg',
+            divisionWeightType: 'open',
+            ageCategory: 'Adult',
+            overallResultInDivision: null,
+            competitionMatches: [] as any[],
+            outcome: null,
+          };
+        } else if (bucketId !== 'generic_bucket') {
+          ensureBucket(bucketId, div?.bjjType || 'GI');
+        }
+
         divisionBuckets[bucketId].competitionMatches.push({
           tempId: match.id,
           name: match.name,
@@ -374,7 +411,7 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <ThemedCard style={styles.innerContainer}>
+          <ThemedCard variant="plain" style={styles.innerContainer}>
             {/* Title and Date Input */}
             <TitleAndDateInput
               title={title}
@@ -429,49 +466,84 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
             />
 
             {/* Results Section */}
-            <ThemedCard style={{ marginTop: 20 }}>
+            <ThemedCard variant="plain" style={{ marginTop: 20, backgroundColor: 'transparent' }}>
               <ThemedText type="subtitle" style={{ marginBottom: 10 }}>Competition Results</ThemedText>
-              {divisions.length === 0 ? (
-                <ThemedText style={{ fontStyle: 'italic', opacity: 0.7 }}>
-                  Add a division to record results.
-                </ThemedText>
-              ) : (
-                divisions.map(division => {
-                  const result = results.find(r => r.divisionTempId === division.tempId);
-                  return (
-                    <ThemedCard key={division.tempId} variant="card" style={{ marginBottom: 10, padding: 10, borderRadius: 8 }}>
-                      <ThemedText style={{ fontWeight: 'bold' }}>
-                        {division.bjjType} - {division.weightType === 'open' ? 'Open' : `${division.weightClassUnderKg} ${division.weightType.replace('_', ' ')}`}
-                      </ThemedText>
-                      {result ? (
-                        <ThemedCard variant="card" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 5 }}>
-                          <ThemedText>Result: {result.outcome} {result.rank ? `(Rank: ${result.rank})` : ''}</ThemedText>
-                          <ThemedButton
-                            title="Edit"
-                            size="sm"
-                            variant="outline"
-                            onPress={() => {
-                              setEditingResultDivisionId(division.tempId);
-                              setShowResultModal(true);
-                            }}
-                          />
-                        </ThemedCard>
-                      ) : (
+
+              {/* Division Results */}
+              {divisions.map(division => {
+                const result = results.find(r => r.divisionTempId === division.tempId);
+                return (
+                  <ThemedCard key={division.tempId} variant="plain" style={{ marginBottom: 10, padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#e5e7eb', backgroundColor: '#fff' }}>
+                    <ThemedText style={{ fontWeight: 'bold' }}>
+                      {division.bjjType} - {division.weightType === 'open' ? 'Open' : `${division.weightClassUnderKg} ${division.weightType.replace('_', ' ')}`}
+                    </ThemedText>
+                    {result ? (
+                      <ThemedCard variant="plain" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 5 }}>
+                        <ThemedText>Result: {result.outcome} {result.rank ? `(Rank: ${result.rank})` : ''}</ThemedText>
                         <ThemedButton
-                          title="Add Result"
+                          title="Edit"
                           size="sm"
                           variant="outline"
-                          style={{ marginTop: 5 }}
                           onPress={() => {
                             setEditingResultDivisionId(division.tempId);
                             setShowResultModal(true);
                           }}
                         />
-                      )}
-                    </ThemedCard>
-                  );
-                })
-              )}
+                      </ThemedCard>
+                    ) : (
+                      <ThemedButton
+                        title="Add Result"
+                        size="sm"
+                        variant="outline"
+                        style={{ marginTop: 5 }}
+                        onPress={() => {
+                          setEditingResultDivisionId(division.tempId);
+                          setShowResultModal(true);
+                        }}
+                      />
+                    )}
+                  </ThemedCard>
+                );
+              })}
+
+              {/* Overall/Generic Result */}
+              {(() => {
+                // Hide overall if exactly one division exists (user wants only division result in that case)
+                if (divisions.length === 1) return null;
+
+                // Check if we have a generic result (divisionTempId is 'generic' or empty)
+                const genericResult = results.find(r => r.divisionTempId === 'generic');
+                return (
+                  <ThemedCard variant="plain" style={{ marginBottom: 10, padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#e5e7eb', backgroundColor: '#fff' }}>
+                    <ThemedText style={{ fontWeight: 'bold' }}>Overall / No Division</ThemedText>
+                    {genericResult ? (
+                      <ThemedCard variant="plain" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 5 }}>
+                        <ThemedText>Result: {genericResult.outcome} {genericResult.rank ? `(Rank: ${genericResult.rank})` : ''}</ThemedText>
+                        <ThemedButton
+                          title="Edit"
+                          size="sm"
+                          variant="outline"
+                          onPress={() => {
+                            setEditingResultDivisionId('generic');
+                            setShowResultModal(true);
+                          }}
+                        />
+                      </ThemedCard>
+                    ) : (
+                      <ThemedButton
+                        title="Add Overall Result"
+                        size="sm"
+                        variant="outline"
+                        style={{ marginTop: 5 }}
+                        onPress={() => {
+                          setEditingResultDivisionId('generic');
+                          setShowResultModal(true);
+                        }}
+                      />
+                    )}
+                  </ThemedCard>
+                );
+              })()}
             </ThemedCard>
 
             {/* Video Recorder Modal */}
@@ -485,9 +557,11 @@ const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCom
             <ResultFormModal
               visible={showResultModal}
               onClose={() => setShowResultModal(false)}
-              divisionName={divisions.find(d => d.tempId === editingResultDivisionId) ?
-                `${divisions.find(d => d.tempId === editingResultDivisionId)?.bjjType} - ${divisions.find(d => d.tempId === editingResultDivisionId)?.weightType === 'open' ? 'Open' : `${divisions.find(d => d.tempId === editingResultDivisionId)?.weightClassUnderKg} ${divisions.find(d => d.tempId === editingResultDivisionId)?.weightType.replace('_', ' ')}`}`
-                : ''}
+              divisionName={
+                editingResultDivisionId === 'generic' ? 'Overall Competition' :
+                  divisions.find(d => d.tempId === editingResultDivisionId) ?
+                    `${divisions.find(d => d.tempId === editingResultDivisionId)?.bjjType} - ${divisions.find(d => d.tempId === editingResultDivisionId)?.weightType === 'open' ? 'Open' : `${divisions.find(d => d.tempId === editingResultDivisionId)?.weightClassUnderKg} ${divisions.find(d => d.tempId === editingResultDivisionId)?.weightType.replace('_', ' ')}`}`
+                    : ''}
               initialResult={editingResultDivisionId ? results.find(r => r.divisionTempId === editingResultDivisionId) : undefined}
               onSave={(resultData) => {
                 if (editingResultDivisionId) {

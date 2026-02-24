@@ -7,6 +7,7 @@
   - **Design & Components:**
     - Use `ThemedCard`, `ThemedText`, `ThemedButton` from `src/components/ui/atoms/*`
     - Use `Colors` constant from `src/constants/Colors.ts` for all colors.
+    - Use `Icons` constant from `src/assets/icons.tsx` for all icons.
     - Adhere to the design guide (`docs/design-guide.md`) and ensure a consistent look.
   - **Database:**
     - When modifying the database, use the `supabase-mcp-server` of project id: `ejzgwpqhsrnazpckndkb`.

@@ -10,8 +10,10 @@ import {
   MatchOutcomeMethodArray,
 } from '@/src/supabase/constants';
 import { MatchRecord } from '@/src/types/match';
-import { Ionicons } from '@expo/vector-icons';
+
 // import { router } from 'expo-router';
+import { Icons } from '@/src/assets/icons';
+import { ActivityColors, themeColors } from '@/src/constants/Colors';
 import SkillFormModal from '@/src/_features/skill/screens/SkillFormModal';
 import React, { useState } from 'react';
 import { TextInput } from 'react-native';
@@ -68,17 +70,17 @@ const MatchForm: React.FC<MatchFormProps> = ({
   }, [autoOpenOutcome]);
 
   return (
-    <ThemedCard style={styles.matchDetails}>
+    <ThemedCard variant="plain" style={[styles.matchDetails, { backgroundColor: 'transparent' }]}>
       {/* Video Player if video exists */}
       {match.videoUrl && (
-        <ThemedCard style={styles.videoSection}>
+        <ThemedCard variant="plain" style={[styles.videoSection, { backgroundColor: 'transparent' }]}>
           <VideoPlayer />
         </ThemedCard>
       )}
 
       {/* Division Selection (replaces BJJ type) */}
       {divisions.length > 1 && (
-        <ThemedCard style={styles.formRow}>
+        <ThemedCard variant="plain" style={[styles.formRow, { backgroundColor: 'transparent' }]}>
           <ThemedText style={styles.fieldLabel}>Division</ThemedText>
           <DropdownPicker
             options={divisions.map(d => ({
@@ -94,7 +96,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
       )}
 
       {/* Win/Tie/Lose Selection */}
-      <ThemedCard style={styles.formRow}>
+      <ThemedCard variant="plain" style={[styles.formRow, { backgroundColor: 'transparent' }]}>
         <ThemedText style={styles.fieldLabel}>Outcome</ThemedText>
         <DropdownPicker
           ref={(ref) => { outcomeDropdownRef.current = ref; }}
@@ -108,7 +110,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
       </ThemedCard>
 
       {/* Method Dropdown */}
-      <ThemedCard style={styles.formRow}>
+      <ThemedCard variant="plain" style={[styles.formRow, { backgroundColor: 'transparent' }]}>
         <ThemedText style={styles.fieldLabel}>Method</ThemedText>
         <DropdownPicker
           options={methodOptions}
@@ -123,20 +125,20 @@ const MatchForm: React.FC<MatchFormProps> = ({
 
 
       {/* Add Scores Button */}
-      <ThemedCard style={styles.formRow}>
+      <ThemedCard variant="plain" style={[styles.formRow, { backgroundColor: 'transparent' }]}>
         <ThemedButton
           title={showScores ? "Remove Scores" : "Add Scores"}
           onPress={() => setShowScores(!showScores)}
           style={styles.scoresToggleButton}
-          icon={<Ionicons name={showScores ? "chevron-up" : "chevron-down"} size={16} color={iconColor} />}
+          icon={showScores ? <Icons.ChevronUp size={16} color={iconColor} /> : <Icons.ChevronDown size={16} color={iconColor} />}
           testID="toggle-scores-button"
         />
       </ThemedCard>
 
       {/* Collapsible Score inputs */}
       {showScores && (
-        <ThemedCard style={styles.scoreRow}>
-          <ThemedCard style={styles.scoreInput}>
+        <ThemedCard variant="plain" style={[styles.scoreRow, { backgroundColor: 'transparent' }]}>
+          <ThemedCard variant="plain" style={[styles.scoreInput, { backgroundColor: 'transparent' }]}>
             <ThemedText style={styles.scoreLabel}>My Score</ThemedText>
             <TextInput
               style={[styles.scoreField, { backgroundColor: inputBackground, color: textColor, borderColor }]}
@@ -149,7 +151,7 @@ const MatchForm: React.FC<MatchFormProps> = ({
               testID="my-score-input"
             />
           </ThemedCard>
-          <ThemedCard style={styles.scoreInput}>
+          <ThemedCard variant="plain" style={[styles.scoreInput, { backgroundColor: 'transparent' }]}>
             <ThemedText style={styles.scoreLabel}>Opponent Score</ThemedText>
             <TextInput
               style={[styles.scoreField, { backgroundColor: inputBackground, color: textColor, borderColor }]}
@@ -166,28 +168,28 @@ const MatchForm: React.FC<MatchFormProps> = ({
       )}
 
       {/* Action Buttons */}
-      <ThemedCard style={styles.actionButtons}>
+      <ThemedCard variant="plain" style={[styles.actionButtons, { backgroundColor: 'transparent' }]}>
         <ThemedButton
           title="Note"
           onPress={() => {
             // Toggle note input
             onUpdateMatch(match.id, { note: match.note ? null : '' });
           }}
-          icon={<Ionicons name="document-text" size={16} color={iconColor} />}
-          style={styles.actionButton}
+          icon={<Icons.Note size={20} color="white" />}
+          style={[styles.actionButton, { backgroundColor: themeColors.red }]}
           testID="toggle-note-button"
         />
         <ThemedButton
           title="Skill"
           onPress={() => handleAddSkill(match.id)}
-          icon={<Ionicons name="fitness" size={16} color={iconColor} />}
-          style={styles.actionButton}
+          icon={<Icons.Skill size={20} color="white" />}
+          style={[styles.actionButton, { backgroundColor: themeColors.blue }]}
         />
         <ThemedButton
           title="Video"
           onPress={() => onAddVideo(match.id)}
-          icon={<Ionicons name="videocam" size={16} color={iconColor} />}
-          style={styles.actionButton}
+          icon={<Icons.Video size={20} color="white" />}
+          style={[styles.actionButton, { backgroundColor: ActivityColors.footage }]}
         />
       </ThemedCard>
 
@@ -205,12 +207,12 @@ const MatchForm: React.FC<MatchFormProps> = ({
       )}
 
       {/* Bottom buttons - Delete only */}
-      <ThemedCard style={styles.bottomButtons}>
+      <ThemedCard variant="plain" style={[styles.bottomButtons, { backgroundColor: 'transparent' }]}>
         <ThemedButton
           title="Delete"
           onPress={() => onDeleteMatch(match.id)}
           style={styles.deleteButton}
-          icon={<Ionicons name="trash-bin-outline" size={16} color="white" />}
+        // icon={<Icons.Delete size={20} color="white" />}
         />
       </ThemedCard>
 

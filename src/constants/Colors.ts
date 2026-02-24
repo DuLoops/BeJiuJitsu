@@ -18,7 +18,7 @@ export const themeColors = {
 
 export const PALETTE = {
   light: {
-    cardShadow: '#2B2B2B', // Sumi Charcoal
+    cardShadow: '#a8a8a8', // Soft Grey
   },
   dark: {
     textPrimary: '#F0EFE7', // Vellum White
@@ -40,7 +40,7 @@ export const Colors = {
     success: '#3B704E',
     border: '#405059',    // Secondary UI
     card: '#FFFFFF',      // Pure White
-    shadow: '#2B2B2B',    // Hard Shadow color
+    shadow: '#E5E5E5',    // Soft Shadow color
     // Additional Semantic Colors
     secondaryText: '#405059',
   },

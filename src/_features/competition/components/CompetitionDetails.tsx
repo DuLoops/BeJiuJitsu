@@ -77,8 +77,8 @@ const CompetitionDetails: React.FC<CompetitionDetailsProps> = ({
 
 const styles = {
   detailsWrapper: {
-    borderWidth: 1,
-    // borderColor: '#ddd', // Should use theme border
+    // borderWidth: 1, // Removed
+    // borderColor: '#ddd',
     borderRadius: 12,
     marginBottom: 8,
   },

@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, StyleSheet, TouchableOpacity } from 'react-native';
+import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
-import DropdownPicker from '@/src/components/ui/molecules/DropdownPicker';
 import { TextInput } from 'react-native';
 
 interface ResultFormModalProps {
     visible: boolean;
     onClose: () => void;
     onSave: (result: { outcome: string; rank: number | null; notes: string | null }) => void;
-    initialResult?: { outcome: string; rank: number | null; notes: string | null };
+    initialResult?: { outcome: string; rank: number | null; notes: string | null; divisionTempId?: string };
     divisionName: string;
 }
 
@@ -28,11 +28,17 @@ const ResultFormModal: React.FC<ResultFormModalProps> = ({
     const [rank, setRank] = useState<string>(initialResult?.rank?.toString() || '');
     const [notes, setNotes] = useState(initialResult?.notes || '');
 
+    const [selectedDivisionId, setSelectedDivisionId] = useState<string | null>(initialResult?.divisionTempId || null);
+
     useEffect(() => {
         if (visible) {
             setOutcome(initialResult?.outcome || 'Gold');
-            setRank(initialResult?.rank?.toString() || '');
+            setRank(initialResult?.rank?.toString() || '1');
             setNotes(initialResult?.notes || '');
+            // For now, if editing, we stick to that division. If adding new, we might allow selection if implemented. 
+            // But the current parent passes specific divisionName. 
+            // The user request says "I should be able to add result without adding division". 
+            // This implies the modal might need to allow picking a division or 'None'.
         }
     }, [visible, initialResult]);
 
@@ -45,14 +51,6 @@ const ResultFormModal: React.FC<ResultFormModalProps> = ({
         onClose();
     };
 
-    const outcomeOptions = [
-        { label: 'Gold', value: 'Gold' },
-        { label: 'Silver', value: 'Silver' },
-        { label: 'Bronze', value: 'Bronze' },
-        { label: 'Participant', value: 'Participant' },
-        { label: 'Other', value: 'Other' },
-    ];
-
     return (
         <Modal
             visible={visible}
@@ -60,37 +58,48 @@ const ResultFormModal: React.FC<ResultFormModalProps> = ({
             animationType="slide"
             onRequestClose={onClose}
         >
-            <ThemedCard style={styles.modalOverlay}>
-                <ThemedCard style={[styles.modalContent, { backgroundColor }]}>
-                    <ThemedCard style={styles.header}>
-                        <ThemedText type="subtitle">Result for {divisionName}</ThemedText>
+            <View style={styles.modalOverlay}>
+                <ThemedCard variant="plain" style={[styles.modalContent, { backgroundColor: '#fff' }]}>
+                    {/* User requested white background explicitly */}
+                    <View style={styles.header}>
+                        <ThemedText type="subtitle">Result</ThemedText>
                         <TouchableOpacity onPress={onClose}>
                             <Ionicons name="close" size={24} color="#666" />
                         </TouchableOpacity>
-                    </ThemedCard>
+                    </View>
 
-                    <ThemedCard style={styles.formGroup}>
+                    <ThemedText style={{ marginBottom: 10 }}>{divisionName || "Overall Result"}</ThemedText>
+
+                    <View style={styles.formGroup}>
+                        <ThemedText style={styles.label}>Rank</ThemedText>
+                        <View style={styles.pickerContainer}>
+                            <Picker
+                                selectedValue={rank}
+                                onValueChange={(itemValue) => {
+                                    setRank(itemValue);
+                                    const rankNum = parseInt(itemValue);
+                                    if (rankNum === 1) setOutcome('Gold');
+                                    else if (rankNum === 2) setOutcome('Silver');
+                                    else if (rankNum === 3) setOutcome('Bronze');
+                                    else setOutcome('Participant');
+                                }}
+                                style={{ height: 150 }}
+                            >
+                                {Array.from({ length: 10 }, (_, i) => (
+                                    <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
+                                ))}
+                            </Picker>
+                        </View>
+                    </View>
+
+                    <View style={styles.formGroup}>
                         <ThemedText style={styles.label}>Outcome</ThemedText>
-                        <DropdownPicker
-                            options={outcomeOptions}
-                            selectedValue={outcome}
-                            onValueChange={(val) => setOutcome(val as string)}
-                            placeholder="Select outcome"
-                        />
-                    </ThemedCard>
+                        <ThemedText style={[styles.outcomeDisplay, { color: outcome === 'Gold' ? '#FFD700' : outcome === 'Silver' ? '#C0C0C0' : outcome === 'Bronze' ? '#CD7F32' : '#666' }]}>
+                            {outcome}
+                        </ThemedText>
+                    </View>
 
-                    <ThemedCard style={styles.formGroup}>
-                        <ThemedText style={styles.label}>Rank (Optional)</ThemedText>
-                        <TextInput
-                            style={styles.input}
-                            value={rank}
-                            onChangeText={setRank}
-                            placeholder="e.g. 1, 2, 3"
-                            keyboardType="numeric"
-                        />
-                    </ThemedCard>
-
-                    <ThemedCard style={styles.formGroup}>
+                    <View style={styles.formGroup}>
                         <ThemedText style={styles.label}>Notes (Optional)</ThemedText>
                         <TextInput
                             style={[styles.input, styles.textArea]}
@@ -99,11 +108,11 @@ const ResultFormModal: React.FC<ResultFormModalProps> = ({
                             placeholder="Add notes..."
                             multiline
                         />
-                    </ThemedCard>
+                    </View>
 
                     <ThemedButton title="Save Result" onPress={handleSave} variant="primary" />
                 </ThemedCard>
-            </ThemedCard>
+            </View>
         </Modal>
     );
 };
@@ -143,6 +152,16 @@ const styles = StyleSheet.create({
     textArea: {
         minHeight: 80,
         textAlignVertical: 'top',
+    },
+    outcomeDisplay: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        paddingVertical: 10,
+    },
+    pickerContainer: {
+        backgroundColor: '#f9f9f9',
+        borderRadius: 8,
+        overflow: 'hidden',
     },
 });
 

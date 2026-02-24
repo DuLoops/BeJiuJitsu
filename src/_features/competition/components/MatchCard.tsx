@@ -25,7 +25,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
   divisions
 }) => {
   const iconColor = useThemeColor({}, 'icon');
-  const textSecondary = useThemeColor({}, 'textSecondary');
+  const textSecondary = useThemeColor({}, 'secondaryText');
 
   const getOutcomeText = () => {
     const outcome = match.outcome === 'DRAW' ? 'Tie' : match.outcome.charAt(0).toUpperCase() + match.outcome.slice(1).toLowerCase();
@@ -89,10 +89,10 @@ const MatchCard: React.FC<MatchCardProps> = ({
   };
 
   return (
-    <ThemedCard style={styles.matchContainer}>
-      <ThemedCard style={styles.matchHeader}>
+    <ThemedCard variant="plain" style={[styles.matchContainer, { backgroundColor: '#fff' }]}>
+      <ThemedCard variant="plain" style={[styles.matchHeader, { backgroundColor: 'transparent' }]}>
         <ThemedText style={styles.matchNumber}>{index + 1}.</ThemedText>
-        <ThemedCard style={styles.matchResult}>
+        <ThemedCard variant="plain" style={[styles.matchResult, { backgroundColor: 'transparent' }]}>
           <ThemedText style={[
             styles.resultText,
             match.outcome === 'WIN' && styles.winText,
@@ -132,15 +132,11 @@ export default MatchCard;
 
 const styles = {
   matchContainer: {
-    // backgroundColor: '#ffffff', // Handled by ThemedCard
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   matchHeader: {
     flexDirection: 'row' as const,
