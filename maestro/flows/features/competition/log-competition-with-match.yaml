@@ -1,0 +1,34 @@
+appId: host.exp.Exponent
+---
+# Test competition logging with one match
+# Simplified test to verify match creation works
+
+# 1. NAVIGATE: Launch app and go to Competition screen
+- runFlow: ../../navigation/navigate-to-competition.yaml
+
+# 2. Enter competition details
+- tapOn:
+    id: "competition-title-input"
+- inputText: "Local Tournament with Match"
+- waitForAnimationToEnd
+
+# 3. Add one match
+- tapOn:
+    id: "add-match-button"
+- waitForAnimationToEnd
+
+# 4. Save the competition (match will use defaults)
+- tapOn:
+    id: "save-button"
+
+# 5. Handle success alert
+- waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Competition Saved"
+    commands:
+      - tapOn: "OK"
+
+# 6. Verify successful completion
+- waitForAnimationToEnd
+# Success if we complete without errors

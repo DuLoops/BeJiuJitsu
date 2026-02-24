@@ -2,167 +2,241 @@ import { supabase } from '@/src/lib/supabase';
 import { Database, Tables } from '@/src/supabase/types';
 
 // Fetch Functions
-export const fetchCategories = async () => {
-  const { data, error } = await supabase.from('Category').select('*');
-  if (error) throw error;
-  return data as Tables<'Category'>[];
+
+// Fetch categories as predefined list from Category enum
+export const fetchCategories = async (): Promise<Array<{ id: string; name: string }>> => {
+  // Return the Category enum values as a list
+  const categories: Database['public']['Enums']['Category'][] = [
+    'Submission',
+    'Takedown',
+    'Pass',
+    'Control',
+    'Escape',
+    'Guard',
+    'Sweep',
+    'System',
+  ];
+  return categories.map(cat => ({ id: cat, name: cat }));
 };
 
-export const fetchSkills = async (categoryId?: string) => {
-  let query = supabase.from('Skill').select('*');
-  if (categoryId) {
-    query = query.eq('categoryId', categoryId);
+export const fetchSkills = async (category?: Database['public']['Enums']['Category']) => {
+  let query = supabase.from('skills').select('*');
+  if (category) {
+    query = query.eq('category', category);
   }
   const { data, error } = await query;
   if (error) throw error;
-  return data as Tables<'Skill'>[];
+  return data as Tables<'skills'>[];
+};
+
+// Fetch all skills (public OR user-specific) for skill picker
+export const fetchAllSkills = async (userId?: string) => {
+  let query = supabase.from('skills').select('*');
+  if (userId) {
+    query = query.or(`is_public.eq.true,creator_id.eq.${userId}`);
+  } else {
+    query = query.eq('is_public', true);
+  }
+  const { data, error } = await query;
+  if (error) throw error;
+  return data as Tables<'skills'>[];
 };
 
 // Fetches UserSkills with all related details (Skill, Category, Sequences, SequenceDetails)
 export const fetchUserSkillsWithDetails = async (userId: string) => {
   const { data, error } = await supabase
-    .from('UserSkill')
-    .select(`
-      *,
-      skill:Skill!inner(*, category:Category!inner(*)),
-      sequences:SkillSequence!left(*, details:SequenceDetail!left(*))
-    `)
-    .eq('userId', userId);
+    .from('user_skills')
+    .select(`*, skill:skills(*)`)
+    .eq('user_id', userId);
 
   if (error) {
     console.error('Error fetching user skills with details:', error);
     throw error;
   }
-  return data as any[]; // Adjust type based on UserSkillWithDetails from component
+  return data as any[];
 };
 
-
 export const fetchUserSkills = async (userId: string) => {
-  const { data, error } = await supabase.from('UserSkill').select('*').eq('userId', userId);
+  const { data, error } = await supabase.from('user_skills').select('*').eq('user_id', userId);
   if (error) throw error;
-  return data as Tables<'UserSkill'>[];
+  return data as Tables<'user_skills'>[];
+};
+
+// Fetch notes for a specific user_skill
+export const fetchUserSkillNotes = async (userSkillId: string) => {
+  const { data, error } = await supabase
+    .from('user_skill_notes')
+    .select('*')
+    .eq('user_skill_id', userSkillId)
+    .order('note_order', { ascending: true });
+  if (error) throw error;
+  return data as Tables<'user_skill_notes'>[];
+};
+
+// Fetch videos for a specific user_skill
+export const fetchUserSkillVideos = async (userSkillId: string) => {
+  const { data, error } = await supabase
+    .from('user_skill_videos')
+    .select('*')
+    .eq('user_skill_id', userSkillId)
+    .order('video_order', { ascending: true });
+  if (error) throw error;
+  return data as Tables<'user_skill_videos'>[];
+};
+
+// Replace notes and videos for an existing user_skill
+export const replaceUserSkillNotesAndVideos = async ({
+  userSkillId,
+  notes = [],
+  videoUrls = [],
+  source,
+  trainingActivityId,
+  matchId,
+  postId,
+}: {
+  userSkillId: string;
+  notes?: string[];
+  videoUrls?: string[];
+  source?: Database['public']['Enums']['SkillSource'] | string;
+  trainingActivityId?: string;
+  matchId?: string;
+  postId?: string;
+}) => {
+  // Delete existing rows to fully replace (ensures removed entries are cleaned up)
+  const { error: notesDelError } = await supabase.from('user_skill_notes').delete().eq('user_skill_id', userSkillId);
+  if (notesDelError) throw notesDelError;
+  const { error: videosDelError } = await supabase.from('user_skill_videos').delete().eq('user_skill_id', userSkillId);
+  if (videosDelError) throw videosDelError;
+
+  // Insert new notes
+  if (notes.length > 0) {
+    const noteRows = notes
+      .filter((n) => n && n.trim().length > 0)
+      .map((n, idx) => ({
+        user_skill_id: userSkillId,
+        note: n.trim(),
+        note_order: idx,
+        source: (source as any) || 'INDEPENDENT',
+      }));
+
+    const { data: insertedNotes, error: notesError } = await supabase
+      .from('user_skill_notes')
+      .insert(noteRows)
+      .select('id');
+    if (notesError) throw notesError;
+
+    // Create junction table entries if parent entity is specified
+    if (insertedNotes && (trainingActivityId || matchId || postId)) {
+      const linkRows = insertedNotes.map(note => {
+        const link: any = { user_skill_note_id: note.id };
+        if (trainingActivityId) link.training_activity_id = trainingActivityId;
+        if (matchId) link.match_id = matchId;
+        if (postId) link.post_id = postId;
+        return link;
+      });
+      const { error: linkError } = await supabase.from('skill_content_links').insert(linkRows);
+      if (linkError) throw linkError;
+    }
+  }
+
+  // Insert new videos
+  if (videoUrls.length > 0) {
+    const videoRows = videoUrls
+      .filter((v) => v && v.trim().length > 0)
+      .map((v, idx) => ({
+        user_skill_id: userSkillId,
+        video_url: v.trim(),
+        video_order: idx,
+        source: (source as any) || 'INDEPENDENT',
+        note: null,
+      }));
+
+    const { data: insertedVideos, error: videosError } = await supabase
+      .from('user_skill_videos')
+      .insert(videoRows)
+      .select('id');
+    if (videosError) throw videosError;
+
+    // Create junction table entries if parent entity is specified
+    if (insertedVideos && (trainingActivityId || matchId || postId)) {
+      const linkRows = insertedVideos.map(video => {
+        const link: any = { user_skill_video_id: video.id };
+        if (trainingActivityId) link.training_activity_id = trainingActivityId;
+        if (matchId) link.match_id = matchId;
+        if (postId) link.post_id = postId;
+        return link;
+      });
+      const { error: linkError } = await supabase.from('skill_content_links').insert(linkRows);
+      if (linkError) throw linkError;
+    }
+  }
+
+  return true;
 };
 
 // Create Functions
-export const createCategory = async (categoryData: Pick<Tables<'Category'>, 'name'> & Partial<Omit<Tables<'Category'>, 'name'>>, currentUserId: string) => {
+export const createSkill = async (
+  skillData: Pick<Tables<'skills'>, 'name' | 'category'> & Partial<Omit<Tables<'skills'>, 'name' | 'category'>>,
+  currentUserId: string
+) => {
   const { data, error } = await supabase
-    .from('Category')
-    .insert([{ ...categoryData, isPredefined: false, userId: currentUserId, updatedAt: new Date().toISOString() }])
+    .from('skills')
+    .insert([{ ...skillData, is_public: false, creator_id: currentUserId, created_at: new Date().toISOString() }])
     .select()
     .single();
   if (error) throw error;
-  return data as Tables<'Category'>;
+  return data as Tables<'skills'>;
 };
 
-export const createSkill = async (skillData: Pick<Tables<'Skill'>, 'name' | 'categoryId'> & Partial<Omit<Tables<'Skill'>, 'name' | 'categoryId'>>, currentUserId: string) => {
+export const createUserSkill = async (userSkillData: Pick<Tables<'user_skills'>, 'skill_id'> & Partial<Omit<Tables<'user_skills'>, 'skill_id'>>, userId: string) => {
   const { data, error } = await supabase
-    .from('Skill')
-    .insert([{ ...skillData, isPublic: false, creatorId: currentUserId, createdAt: new Date().toISOString() }])
+    .from('user_skills')
+    .insert([
+      {
+        ...userSkillData,
+        user_id: userId,
+        updated_at: new Date().toISOString(),
+      } as Tables<'user_skills'>,
+    ])
     .select()
     .single();
   if (error) throw error;
-  return data as Tables<'Skill'>;
-};
-
-export const createUserSkill = async (userSkillData: Pick<Tables<'UserSkill'>, 'skillId'> & Partial<Omit<Tables<'UserSkill'>, 'skillId'>>, userId: string) => {
-  console.log('userSkillData', userSkillData);
-  const { data, error } = await supabase
-    .from('UserSkill')
-    .insert([{ 
-      ...userSkillData, 
-      source: (['TRAINING', 'COMPETITION', 'INDEPENDENT'].includes(userSkillData.source as string) 
-        ? userSkillData.source 
-        : 'TRAINING') as Database["public"]["Enums"]["SkillSource"],
-      userId, 
-      updatedAt: new Date().toISOString() 
-    }])
-    .select()
-    .single();
-  if (error) throw error;
-  return data as Tables<'UserSkill'>;
+  return data as Tables<'user_skills'>;
 };
 
 // Combined function to handle skill creation (new or existing) and user skill entry
 export const addOrUpdateUserSkill = async ({
   userId,
   skillName,
-  categoryId,
-  categoryName, // For creating new category
-  note,
-  source,
-  isFavorite,
-  videoUrl,
+  category,
 }: {
   userId: string;
   skillName: string;
-  categoryId?: string | null; // Provided if selecting existing category
-  categoryName?: string; // Provided if creating new category
-  note?: string;
-  source?: string;
-  isFavorite?: boolean;
-  videoUrl?: string;
+  category: Database['public']['Enums']['Category'];
 }) => {
-  let finalCategoryId = categoryId;
   let finalSkillId: string | undefined;
 
-  // 1. Find or Create Category
-  if (!finalCategoryId && categoryName) {
-    // Check if a user-defined category with this name already exists for this user
-    const { data: existingUserCategories, error: existingCatError } = await supabase
-      .from('Category')
-      .select('id')
-      .eq('name', categoryName)
-      .eq('userId', userId)
-      .single();
-
-    if (existingCatError && existingCatError.code !== 'PGRST116') throw existingCatError;
-
-    if (existingUserCategories) {
-      finalCategoryId = existingUserCategories.id;
-    } else {
-      // Check for predefined category by name (less likely to be an exact match if user is typing, but good for enum selections)
-      const { data: predefinedCategories, error: predefinedCatError } = await supabase
-        .from('Category')
-        .select('id')
-        .eq('name', categoryName)
-        .eq('isPredefined', true)
-        .single();
-      if (predefinedCatError && predefinedCatError.code !== 'PGRST116') throw predefinedCatError;
-
-      if (predefinedCategories) {
-        finalCategoryId = predefinedCategories.id;
-      } else {
-        const newCategory = await createCategory({ name: categoryName }, userId);
-        finalCategoryId = newCategory.id;
-      }
-    }
-  } else if (!finalCategoryId) {
-    throw new Error("Category information is required to create a skill.");
-  }
-
-  // 2. Find or Create Skill
   // Check if skill already exists (public or user-created for this category)
   const { data: existingSkills, error: existingSkillError } = await supabase
-    .from('Skill')
-    .select('id, name, categoryId, creatorId, isPublic, createdAt')
+    .from('skills')
+    .select('id, name, category, creator_id, is_public, created_at')
     .eq('name', skillName)
-    .eq('categoryId', finalCategoryId!)
-    // .or(`isPublic.eq.true,creatorId.eq.${userId}`) // More complex query if needed
+    .eq('category', category)
     .limit(1);
 
   if (existingSkillError) throw existingSkillError;
 
-  let skillToLink: Tables<'Skill'> | null = null;
+  let skillToLink: Tables<'skills'> | null = null;
   if (existingSkills && existingSkills.length > 0) {
     // Prioritize public skills, then user's own skills
-    skillToLink = existingSkills.find(s => s.isPublic) || existingSkills.find(s => s.creatorId === userId) || existingSkills[0];
+    skillToLink = existingSkills.find(s => s.is_public) || existingSkills.find(s => s.creator_id === userId) || existingSkills[0];
   }
 
   if (skillToLink) {
     finalSkillId = skillToLink.id;
   } else {
     // Create new base skill
-    const newSkill = await createSkill({ name: skillName, categoryId: finalCategoryId! }, userId);
+    const newSkill = await createSkill({ name: skillName, category }, userId);
     finalSkillId = newSkill.id;
   }
 
@@ -171,31 +245,24 @@ export const addOrUpdateUserSkill = async ({
   }
 
   // 3. Check if UserSkill already exists
-  const { data: existingUserSkill, error: existingUserSkillError } = await supabase
-    .from('UserSkill')
+  const { data: existingUserSkillRows, error: existingUserSkillError } = await supabase
+    .from('user_skills')
     .select('id')
-    .eq('userId', userId)
-    .eq('skillId', finalSkillId)
-    .single();
+    .eq('user_id', userId)
+    .eq('skill_id', finalSkillId)
+    .limit(1);
 
-  if (existingUserSkillError && existingUserSkillError.code !== 'PGRST116') {
+  if (existingUserSkillError) {
     throw existingUserSkillError;
   }
 
-  if (existingUserSkill) {
-    throw new Error('You already have this skill in your profile. You can edit it from your skills list.');
-  }
+  const existingUserSkill = (existingUserSkillRows as Array<Pick<Tables<'user_skills'>, 'id'>> | null)?.[0] || null;
+  if (existingUserSkill) return existingUserSkill as Tables<'user_skills'>;
 
   // 4. Create UserSkill entry
   const userSkill = await createUserSkill(
     {
-      skillId: finalSkillId,
-      note,
-      source: source || 'INDEPENDENT', // Default to INDEPENDENT for manually added skills
-      isFavorite,
-      videoUrl,
-      trainingId: null, // Explicitly set to null for manually added skills
-      competitionId: null, // Explicitly set to null for manually added skills
+      skill_id: finalSkillId,
     },
     userId
   );
@@ -204,21 +271,65 @@ export const addOrUpdateUserSkill = async ({
 };
 
 // Create SkillSequence and SequenceDetail entries
-export const createSkillSequences = async (sequences: Array<Pick<Tables<'SkillSequence'>, 'skillId' | 'stepNumber' | 'intention'>>) => {
-  const { data, error } = await supabase.from('SkillSequence').insert(sequences).select();
-  if (error) throw error;
-  return data as Tables<'SkillSequence'>[];
-};
-
-export const createSequenceDetails = async (details: Array<Pick<Tables<'SequenceDetail'>, 'sequenceId' | 'detail'>>) => {
-  const { data, error } = await supabase.from('SequenceDetail').insert(details).select();
-  if (error) throw error;
-  return data as Tables<'SequenceDetail'>[];
-};
+// Removed sequence-related functions to match current schema
 
 // Combined function to add a UserSkill with its sequences and details
+// Removed addUserSkillWithSequences to match current schema
+
+// Add a UserSkill, then optionally attach multiple notes and videos
+export const addUserSkillWithNotesAndVideos = async ({
+  userId,
+  skillName,
+  category,
+  source,
+  trainingActivityId,
+  matchId,
+  postId,
+  notes = [],
+  videoUrls = [],
+}: {
+  userId: string;
+  skillName: string;
+  category: Database['public']['Enums']['Category'];
+  source?: Database['public']['Enums']['SkillSource'] | string;
+  trainingActivityId?: string;
+  matchId?: string;
+  postId?: string;
+  notes?: string[];
+  videoUrls?: string[];
+}) => {
+  const userSkill = await addOrUpdateUserSkill({
+    userId,
+    skillName,
+    category,
+  });
+
+  if (!userSkill || !userSkill.id) throw new Error('Failed to create UserSkill');
+  // Always replace to avoid conflicts when userSkill already exists
+  await replaceUserSkillNotesAndVideos({
+    userSkillId: userSkill.id,
+    notes,
+    videoUrls,
+    source,
+    trainingActivityId,
+    matchId,
+    postId,
+  });
+
+  return userSkill;
+};
+
+// Delete UserSkill
+export const deleteUserSkill = async (userSkillId: string) => {
+  const { error } = await supabase.from('user_skills').delete().eq('id', userSkillId);
+  if (error) throw error;
+  return true;
+};
+
+// Add or update UserSkill with sequences (sequences are currently not stored)
 export const addUserSkillWithSequences = async ({
   userId,
+  userSkillId,
   skillName,
   categoryId,
   categoryName,
@@ -226,78 +337,56 @@ export const addUserSkillWithSequences = async ({
   source,
   isFavorite,
   videoUrl,
-  sequences: sequenceInputs, // Array of { intention: string, details: string[] }
+  sequences,
+  trainingActivityId,
+  matchId,
+  postId,
 }: {
   userId: string;
+  userSkillId?: string | null;
   skillName: string;
   categoryId?: string | null;
   categoryName?: string;
   note?: string;
-  source?: string;
+  source?: Database['public']['Enums']['SkillSource'] | string;
   isFavorite?: boolean;
   videoUrl?: string;
-  sequences?: Array<{ intention?: string | null; detailsArray: Array<{ detail: string }> }>;
+  sequences?: any[];
+  trainingActivityId?: string;
+  matchId?: string;
+  postId?: string;
 }) => {
-  // First, create the UserSkill using the existing function
+  // Determine the category to use
+  let finalCategory: Database['public']['Enums']['Category'];
+
+  if (categoryId) {
+    finalCategory = categoryId as Database['public']['Enums']['Category'];
+  } else if (categoryName) {
+    finalCategory = categoryName as Database['public']['Enums']['Category'];
+  } else {
+    throw new Error('Category is required');
+  }
+
+  // If editing, we don't use userSkillId yet - we just create/link the skill
   const userSkill = await addOrUpdateUserSkill({
     userId,
     skillName,
-    categoryId,
-    categoryName,
-    note,
-    source,
-    isFavorite,
-    videoUrl,
+    category: finalCategory,
   });
 
-  if (!userSkill || !userSkill.id) {
-    throw new Error("Failed to create UserSkill.");
-  }
+  // Store note and videoUrl as notes and videos
+  const notes = note ? [note] : [];
+  const videoUrls = videoUrl ? [videoUrl] : [];
 
-  // If sequences are provided, create them
-  if (sequenceInputs && sequenceInputs.length > 0) {
-    const skillSequenceEntries: Array<Pick<Tables<'SkillSequence'>, 'skillId' | 'stepNumber' | 'intention'> & Partial<Tables<'SkillSequence'>>> = sequenceInputs.map((seq, index) => ({
-      skillId: userSkill.id, // Link to the created UserSkill
-      stepNumber: index + 1,
-      intention: seq.intention || '', // Ensure intention is a string
-      // 'detail' from original requirement is now in SequenceDetail
-    }));
+  await replaceUserSkillNotesAndVideos({
+    userSkillId: userSkill.id,
+    notes,
+    videoUrls,
+    source: source as Database['public']['Enums']['SkillSource'],
+    trainingActivityId,
+    matchId,
+    postId,
+  });
 
-    const createdSequences = await createSkillSequences(skillSequenceEntries as Array<Pick<Tables<'SkillSequence'>, 'skillId' | 'stepNumber' | 'intention'>>); // Cast to satisfy createSkillSequences, though ideally types align better
-
-    // Now create SequenceDetail entries for each SkillSequence
-    const allSequenceDetails: Array<Pick<Tables<'SequenceDetail'>, 'sequenceId' | 'detail'>> = [];
-    createdSequences.forEach((cs, i) => {
-      const detailsForSequence: Array<Pick<Tables<'SequenceDetail'>, 'sequenceId' | 'detail'>> = 
-        sequenceInputs[i].detailsArray.map(d => ({
-          sequenceId: cs.id, 
-          detail: d.detail, // Assuming d.detail is always a string from sequenceInputs type
-      }));
-      allSequenceDetails.push(...detailsForSequence); // Use push with spread operator
-    });
-
-    if (allSequenceDetails.length > 0) {
-      await createSequenceDetails(allSequenceDetails);
-    }
-  }
-
-  return userSkill; // Return the main UserSkill object
-};
-
-// Delete UserSkill and related sequences/details (DB should handle cascade, but explicit calls can be added if not)
-export const deleteUserSkill = async (userSkillId: string) => {
-  // 1. Delete SequenceDetails (if DB doesn't cascade)
-  // const { data: sequences } = await supabase.from('SkillSequence').select('id').eq('userSkillId', userSkillId);
-  // if (sequences) {
-  //   for (const seq of sequences) {
-  //     await supabase.from('SequenceDetail').delete().eq('skillSequenceId', seq.id);
-  //   }
-  // }
-  // 2. Delete SkillSequences (if DB doesn't cascade)
-  // await supabase.from('SkillSequence').delete().eq('userSkillId', userSkillId);
-  
-  // 3. Delete UserSkill
-  const { error } = await supabase.from('UserSkill').delete().eq('id', userSkillId);
-  if (error) throw error;
-  return true;
+  return userSkill;
 };

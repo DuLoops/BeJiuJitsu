@@ -1,5 +1,7 @@
-import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, LayoutRectangle, Animated } from 'react-native';
+import React, { useRef, useState, useLayoutEffect } from 'react';
+import { View, TouchableOpacity, StyleSheet, LayoutRectangle, Animated } from 'react-native';
+import ThemedText from '../atoms/ThemedText';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
 
 interface SegmentedControlProps {
   segments: string[];
@@ -16,27 +18,36 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
   const [segmentWidth, setSegmentWidth] = useState(0);
   const [measurements, setMeasurements] = useState<LayoutRectangle[]>([]);
 
+  const backgroundColor = useThemeColor({}, 'card'); // Track background
+  const borderColor = useThemeColor({}, 'border');
+  const indicatorColor = useThemeColor({}, 'tint'); // Vermilion selection
+  const textColor = useThemeColor({}, 'text');
+  const selectedTextColor = '#FFFFFF'; // White text on Vermilion
+  const shadowColor = useThemeColor({}, 'shadow');
+
   useLayoutEffect(() => {
     if (measurements.length === segments.length) {
       const selectedIndex = segments.indexOf(selectedSegment);
       Animated.spring(translateX, {
         toValue: measurements[selectedIndex]?.x - 2, // Subtract container padding
         useNativeDriver: true,
-        speed: 20, // Slightly faster animation
+        speed: 20,
         bounciness: 0,
       }).start();
     }
   }, [selectedSegment, measurements]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor, borderColor }]}>
       <Animated.View
         style={[
           styles.animatedBackground,
           {
             width: segmentWidth,
             transform: [{ translateX }],
-            left: 2, // Add left offset to match container padding
+            left: 2,
+            backgroundColor: indicatorColor,
+            shadowColor,
           },
         ]}
       />
@@ -44,7 +55,7 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
         <TouchableOpacity
           key={segment}
           onLayout={(event) => {
-            const { width, x } = event.nativeEvent.layout;
+            const { width } = event.nativeEvent.layout;
             setSegmentWidth(width);
             setMeasurements(prev => {
               const newMeasurements = [...prev];
@@ -59,14 +70,15 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
           ]}
           onPress={() => onSegmentChange(segment)}
         >
-          <Text
+          <ThemedText
             style={[
               styles.segmentText,
+              { color: selectedSegment === segment ? selectedTextColor : textColor },
               selectedSegment === segment && styles.selectedSegmentText,
             ]}
           >
             {segment}
-          </Text>
+          </ThemedText>
         </TouchableOpacity>
       ))}
     </View>
@@ -76,24 +88,20 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
     borderRadius: 8,
     padding: 2,
-    paddingVertical: 2, // Explicit vertical padding
     borderWidth: 1,
-    borderColor: '#000',
     marginHorizontal: 16,
   },
   animatedBackground: {
     position: 'absolute',
-    top: 2, // Match container padding
-    bottom: 2, // Match container padding
-    backgroundColor: '#000',
+    top: 2,
+    bottom: 2,
     borderRadius: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
+    // Hard Shadow for "Stamp" effect
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
     elevation: 2,
   },
   segment: {
@@ -114,10 +122,9 @@ const styles = StyleSheet.create({
   },
   segmentText: {
     fontSize: 16,
-    color: '#666',
+    fontFamily: 'System',
   },
   selectedSegmentText: {
-    color: '#fff',
     fontWeight: '600',
   },
 });

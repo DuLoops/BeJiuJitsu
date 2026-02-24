@@ -1,7 +1,7 @@
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -56,7 +56,7 @@ const SkillSequenceBuilder: React.FC<SkillSequenceBuilderProps> = ({ sequences, 
   return (
     <View>
       {sequences.map((sequence, seqIndex) => (
-        <ThemedView key={seqIndex} style={styles.sequenceStepContainer}>
+        <ThemedCard key={seqIndex} style={styles.sequenceStepContainer}>
           <ThemedText style={styles.label}>Step {seqIndex + 1}</ThemedText>
           <ThemedInput
             label="Intention/Goal for this step:"
@@ -66,7 +66,7 @@ const SkillSequenceBuilder: React.FC<SkillSequenceBuilderProps> = ({ sequences, 
             style={styles.input}
           />
           {sequence.detailsArray.map((detailItem, detailIndex) => (
-            <ThemedView key={detailIndex} style={styles.detailContainer}>
+            <ThemedCard key={detailIndex} style={styles.detailContainer}>
               <ThemedInput
                 label={`Detail ${detailIndex + 1}:`}
                 value={detailItem.detail}
@@ -80,13 +80,13 @@ const SkillSequenceBuilder: React.FC<SkillSequenceBuilderProps> = ({ sequences, 
                   <ThemedText style={{color: subduedTextColor}}>Remove Detail</ThemedText>
                 </TouchableOpacity>
               )}
-            </ThemedView>
+            </ThemedCard>
           ))}
           <ThemedButton title="Add Detail to Step" onPress={() => handleAddDetailToStep(seqIndex)} style={styles.addButtonSmall} />
            <TouchableOpacity onPress={() => handleRemoveSequenceStep(seqIndex)} style={styles.removeButton}>
             <ThemedText style={styles.removeButtonText}>Remove Step {seqIndex + 1}</ThemedText>
           </TouchableOpacity>
-        </ThemedView>
+        </ThemedCard>
       ))}
       <ThemedButton title="Add Sequence Step" onPress={handleAddSequenceStep} style={styles.button} />
     </View>
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd', // Consider using theme color
     borderRadius: 5,
     marginBottom: 15,
-    backgroundColor: 'transparent', // Ensure ThemedView controls its background
+    backgroundColor: 'transparent', // Ensure ThemedCard controls its background
   },
   detailContainer: {
     paddingLeft: 10,

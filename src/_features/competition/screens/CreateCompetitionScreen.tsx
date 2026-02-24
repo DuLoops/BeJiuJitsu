@@ -3,437 +3,604 @@ import {
   fetchTournamentBrands,
   fetchUserSkillsForCompetitionSelection,
 } from '@/src/_features/competition/services/competitionService';
-import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList';
-import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
-import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
-import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { useThemeColor } from '@/src/hooks/useThemeColor';
-import { useAuthStore } from '@/src/store/authStore';
-import {
-  BeltsArray,
-  BjjTypesArray,
-  MatchMethodTypesArray,
-  MatchOutcomeTypesArray,
-} from '@/src/supabase/constants';
-import {
-  CompetitionDivisionFormData,
-  CompetitionFormData,
-  MatchFormData,
-  TournamentBrand,
-} from '@/src/types/competition';
-import { UserSkillUsageFormData } from '@/src/types/training';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
+import CompetitionDetails from '@/src/_features/competition/components/CompetitionDetails';
+import MatchCard from '@/src/_features/competition/components/MatchCard';
+import MatchForm from '@/src/_features/competition/components/MatchForm';
+import VideoRecorderModal from '@/src/_features/competition/components/VideoRecorderModal';
+import { DivisionData } from '@/src/_features/competition/components/DivisionCard';
+import TitleAndDateInput from '@/src/components/layout/TitleAndDateInput';
+import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
+import ThemedText from '@/src/components/ui/atoms/ThemedText';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
+import Alert from '@/src/components/ui/molecules/Alert';
+import { AutocompleteDropdownItem, AutocompleteDropdownContextProvider } from '@/src/components/ui/molecules/AutocompleteDropdown';
+
+import { useThemeColor } from '@/src/hooks/useThemeColor';
+import { useAuthStore } from '@/src/stores/authStore';
+import { TournamentBrand } from '@/src/types/competition';
+import { MatchRecord } from '@/src/types/match';
+import ResultFormModal from '@/src/_features/competition/components/ResultFormModal';
 
 const generateTempId = () => `temp_${Math.random().toString(36).substr(2, 9)}`;
 
-export default function CreateCompetitionScreen() {
+const createInitialMatch = (): MatchRecord => ({
+  id: generateTempId(),
+  bjjType: 'GI',
+  outcome: 'WIN',
+  outcomeMethod: null,
+  name: 'Match 1',
+  note: null,
+  videoUrl: null,
+  skillUsages: [],
+  isExpanded: true,
+});
+
+interface CreateCompetitionScreenProps {
+  onSave?: () => void;
+}
+
+export interface CreateCompetitionScreenRef {
+  handleSave: () => void;
+  isValid: () => boolean;
+  isSaving: () => boolean;
+  getMatchCount: () => number;
+}
+
+const CreateCompetitionScreen = forwardRef<CreateCompetitionScreenRef, CreateCompetitionScreenProps>(({ onSave }, ref) => {
   const { session } = useAuthStore();
-  const queryClient = useQueryClient();
   const userId = session?.user?.id;
-  const tintColor = useThemeColor({}, 'tint');
-  const iconColor = useThemeColor({}, 'icon');
-  const dangerColor = useThemeColor({}, 'text');
-  const successColor = useThemeColor({}, 'tint');
+  const queryClient = useQueryClient();
 
-  const [name, setName] = useState('');
-  const [tournamentBrandId, setTournamentBrandId] = useState<string | null>(null);
+  // ScrollView ref for auto-scrolling to new matches
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Competition details
+  const [title, setTitle] = useState('Competition');
   const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(Platform.OS === 'ios');
-  const [location, setLocation] = useState('');
-  const [notes, setNotes] = useState('');
-  const [divisions, setDivisions] = useState<CompetitionDivisionFormData[]>([]);
+  const [selectedCompetition, setSelectedCompetition] = useState<string>('');
+  const [searchText, setSearchText] = useState<string>('');
 
-  const { data: tournamentBrands, isLoading: isLoadingBrands } = useQuery<
-    TournamentBrand[],
-    Error
-  >({
+  const handleDateChange = (selectedDate: Date) => {
+    setDate(selectedDate);
+  };
+
+  // Divisions and matches
+  const [divisions, setDivisions] = useState<DivisionData[]>([]);
+  const [matches, setMatches] = useState<MatchRecord[]>([]);
+  const [lastAddedMatchId, setLastAddedMatchId] = useState<string | null>(null);
+  const [competitionLevel, setCompetitionLevel] = useState<'WHITE' | 'BLUE' | 'PURPLE' | 'BROWN' | 'BLACK' | 'GRAY' | 'YELLOW' | 'ORANGE' | 'GREEN' | 'ABSOLUTE'>('ABSOLUTE');
+
+  // Video recorder state
+  const [showVideoRecorder, setShowVideoRecorder] = useState<string | null>(null);
+
+  // Result state
+  const [results, setResults] = useState<{
+    divisionTempId: string;
+    outcome: string;
+    rank: number | null;
+    notes: string | null;
+  }[]>([]);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [editingResultDivisionId, setEditingResultDivisionId] = useState<string | null>(null);
+
+  // Alert state
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    matchId?: string;
+    isSuccess?: boolean;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  // Loading state for saving
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Start with zero matches by default
+
+  const { data: tournamentBrands, isLoading: isLoadingBrands } = useQuery<TournamentBrand[], Error>({
     queryKey: ['tournamentBrands'],
     queryFn: fetchTournamentBrands,
   });
 
-  const { data: userSkills, isLoading: isLoadingUserSkills } = useQuery<
-    UserSkillWithDetails[],
-    Error
-  >({
+  const { data: userSkills } = useQuery({
     queryKey: ['userSkillsForCompetitionSelection', userId],
     queryFn: () => fetchUserSkillsForCompetitionSelection(userId!),
     enabled: !!userId,
   });
 
-  const mutation = useMutation({
-    mutationFn: (data: CompetitionFormData) => createFullCompetitionEntry(userId!, data),
-    onSuccess: () => {
-      Alert.alert('Success', 'Competition logged!');
-      queryClient.invalidateQueries({ queryKey: ['competitions', userId] });
-      queryClient.invalidateQueries({ queryKey: ['userSkillsWithDetails', userId] });
-      router.back();
-    },
-    onError: (error: Error) => {
-      Alert.alert('Error', `Failed to log competition: ${error.message}`);
-    },
-  });
+  const handleSelectCompetition = (item: AutocompleteDropdownItem | null) => {
+    if (!item?.title) {
+      if (searchText === '' && item === null) {
+        setSelectedCompetition('');
+        setSearchText('');
+      }
+      return;
+    }
+    setSearchText(item.title);
+    setSelectedCompetition(item.title);
+  };
 
-  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    const currentDate = selectedDate || date;
-    setShowDatePicker(Platform.OS === 'ios');
-    setDate(currentDate);
+  const handleCompetitionSearchChange = (text: string) => {
+    setSearchText(text);
+    setSelectedCompetition(text);
+  };
+
+  // Division management functions
+  const handleUpdateDivision = (divisionId: string, updates: Partial<DivisionData>) => {
+    setDivisions(prev => prev.map(d =>
+      d.tempId === divisionId ? { ...d, ...updates } : d
+    ));
   };
 
   const handleAddDivision = () => {
-    setDivisions([
-      ...divisions,
-      {
-        tempId: generateTempId(),
-        beltRank: BeltsArray[0],
-        weightClass: '',
-        ageCategory: '',
-        bjjType: BjjTypesArray[0],
-        overallResultInDivision: '',
-        matches: [],
-      },
-    ]);
+    setDivisions(prev => [...prev, {
+      tempId: generateTempId(),
+      bjjType: 'GI',
+      weightType: 'open',
+      weightClassUnderKg: null,
+      ageCategory: null,
+      overallResultInDivision: null
+    }]);
   };
 
-  const handleRemoveDivision = (tempId: string) => {
-    setDivisions(divisions.filter(div => div.tempId !== tempId));
+  const handleRemoveDivision = (divisionId: string) => {
+    setDivisions(prev => prev.filter(d => d.tempId !== divisionId));
   };
 
-  const handleDivisionChange = (
-    tempId: string,
-    field: keyof Omit<CompetitionDivisionFormData, 'tempId' | 'matches'>,
-    value: any
-  ) => {
-    setDivisions(
-      divisions.map(div => (div.tempId === tempId ? { ...div, [field]: value } : div))
-    );
+  const addMatch = () => {
+    const newMatch = createInitialMatch();
+    newMatch.name = `Match ${matches.length + 1}`;
+    // If exactly one division exists, auto-assign and hide selector later
+    if (divisions.length === 1) newMatch.divisionTempId = divisions[0].tempId;
+    setMatches(prev => [...prev, newMatch]);
+    setLastAddedMatchId(newMatch.id);
+
+    // Scroll to the newly added match with a small delay to ensure rendering
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   };
 
-  const handleAddMatch = (divisionTempId: string) => {
-    setDivisions(
-      divisions.map(div =>
-        div.tempId === divisionTempId
-          ? {
-              ...div,
-              matches: [
-                ...div.matches,
-                {
-                  tempId: generateTempId(),
-                  matchOrder: div.matches.length + 1,
-                  opponentName: '',
-                  result: MatchOutcomeTypesArray[0],
-                  endingMethod: MatchMethodTypesArray[0],
-                  endingMethodDetail: '',
-                  notes: '',
-                  videoUrl: '',
-                  skillUsages: [],
-                },
-              ],
-            }
-          : div
-      )
-    );
+  const removeMatch = (matchId: string) => {
+    const matchIndex = matches.findIndex(m => m.id === matchId);
+    const matchNumber = matchIndex + 1;
+
+    setAlertConfig({
+      visible: true,
+      title: 'Delete Match',
+      message: `Are you sure you want to delete Match ${matchNumber}? This action cannot be undone.`,
+      matchId,
+    });
   };
 
-  const handleRemoveMatch = (divisionTempId: string, matchTempId: string) => {
-    setDivisions(
-      divisions.map(div =>
-        div.tempId === divisionTempId
-          ? { ...div, matches: div.matches.filter(m => m.tempId !== matchTempId) }
-          : div
-      )
-    );
+  const confirmDeleteMatch = () => {
+    if (alertConfig.matchId) {
+      const updatedMatches = matches.filter(m => m.id !== alertConfig.matchId);
+      setMatches(updatedMatches);
+
+      // No auto-add; allow zero matches
+    }
+    setAlertConfig({ visible: false, title: '', message: '' });
   };
 
-  const handleMatchChange = (
-    divisionTempId: string,
-    matchTempId: string,
-    field: keyof Omit<MatchFormData, 'tempId' | 'skillUsages'>,
-    value: any
-  ) => {
-    setDivisions(
-      divisions.map(div =>
-        div.tempId === divisionTempId
-          ? {
-              ...div,
-              matches: div.matches.map(m =>
-                m.tempId === matchTempId ? { ...m, [field]: value } : m
-              ),
-            }
-          : div
-      )
-    );
+  const cancelDeleteMatch = () => {
+    setAlertConfig({ visible: false, title: '', message: '' });
   };
 
-  const handleToggleMatchSkillUsage = (
-    divisionTempId: string,
-    matchTempId: string,
-    skill: UserSkillWithDetails
-  ) => {
-    setDivisions(
-      divisions.map(div =>
-        div.tempId === divisionTempId
-          ? {
-              ...div,
-              matches: div.matches.map(m =>
-                m.tempId === matchTempId
-                  ? {
-                      ...m,
-                      skillUsages: m.skillUsages.find(su => su.userSkillId === skill.id)
-                        ? m.skillUsages.filter(su => su.userSkillId !== skill.id)
-                        : [
-                            ...m.skillUsages,
-                            {
-                              userSkillId: skill.id,
-                              userSkillName: skill.skill.name,
-                              quantity: '1',
-                              success: true,
-                            },
-                          ],
-                    }
-                  : m
-              ),
-            }
-          : div
-      )
-    );
+  const updateMatch = (matchId: string, updates: Partial<MatchRecord>) => {
+    setMatches(matches.map(m => m.id === matchId ? { ...m, ...updates } : m));
   };
 
-  const handleMatchSkillUsageChange = (
-    divisionTempId: string,
-    matchTempId: string,
-    userSkillId: string,
-    field: keyof UserSkillUsageFormData,
-    value: string | boolean
-  ) => {
-    setDivisions(
-      divisions.map(div =>
-        div.tempId === divisionTempId
-          ? {
-              ...div,
-              matches: div.matches.map(m =>
-                m.tempId === matchTempId
-                  ? {
-                      ...m,
-                      skillUsages: m.skillUsages.map(su =>
-                        su.userSkillId === userSkillId ? { ...su, [field]: value } : su
-                      ),
-                    }
-                  : m
-              ),
-            }
-          : div
-      )
-    );
+  const toggleMatchExpansion = (matchId: string) => {
+    setMatches(matches.map(m =>
+      m.id === matchId ? { ...m, isExpanded: !m.isExpanded } : m
+    ));
   };
 
-  const handleSubmit = () => {
+  const handleAddVideo = (matchId: string) => {
+    setShowVideoRecorder(matchId);
+  };
+
+  const isFormValid = () => {
+    if (!userId) return false;
+    if (!title.trim()) return false;
+    return true; // Only require title and date - matches are optional
+  };
+
+  const handleSaveAll = async () => {
     if (!userId) {
-      Alert.alert('Error', 'User not authenticated.');
-      return;
-    }
-    if (!name.trim()) {
-      Alert.alert('Validation Error', 'Competition name is required.');
-      return;
-    }
-    if (!divisions.length) {
-      Alert.alert('Validation Error', 'At least one division is required.');
+      setAlertConfig({
+        visible: true,
+        title: 'Error',
+        message: 'You must be logged in to save.',
+      });
       return;
     }
 
-    const competitionData: CompetitionFormData = {
-      name: name.trim(),
-      tournamentBrandId,
-      date: date.toISOString().split('T')[0],
-      location: location || null,
-      notes: notes || null,
-      divisions: divisions.map(div => ({
-        ...div,
-        beltRank: div.beltRank,
-        bjjType: div.bjjType,
-        weightClass: div.weightClass || null,
-        ageCategory: div.ageCategory || null,
-        overallResultInDivision: div.overallResultInDivision || null,
-        matches: div.matches.map(match => ({
-          ...match,
-          opponentName: match.opponentName || null,
-          result: match.result,
-          endingMethod: match.endingMethod || null,
-          endingMethodDetail: match.endingMethodDetail || null,
-          notes: match.notes || null,
-          videoUrl: match.videoUrl || null,
-          matchOrder: match.matchOrder || null,
-          skillUsages: match.skillUsages.map(su => ({
-            userSkillId: su.userSkillId,
-            userSkillName: su.userSkillName || '',
-            quantity: su.quantity,
-            success: su.success,
+    // Filter valid matches (matches are optional now)
+    const validMatches = matches.filter(match =>
+      match.bjjType && match.outcome && match.outcomeMethod && match.name
+    );
+
+    setIsSaving(true);
+
+    try {
+      // Find the selected tournament brand ID
+      const selectedTournamentBrand = tournamentBrands?.find(brand => brand.name === selectedCompetition);
+
+      // Prepare competition data structure for the API
+      // Group matches by selected division (or default bucket when none)
+      const divisionBuckets: Record<string, any> = {};
+      const ensureBucket = (tempId: string, bjjType: string) => {
+        if (!divisionBuckets[tempId]) {
+          const division = divisions.find(d => d.tempId === tempId);
+          divisionBuckets[tempId] = {
+            tempId,
+            bjjType: bjjType as any,
+            divisionWeightUnit: division?.weightClassUnderKg || null,
+            divisionWeightType: division?.weightType || 'open',
+            ageCategory: null,
+            overallResultInDivision: null,
+            competitionMatches: [] as any[],
+            outcome: null,
+          };
+        }
+      };
+
+      // Add results to buckets
+      results.forEach(result => {
+        if (result.divisionTempId === 'generic') {
+          // Handle generic result - add to a default/generic bucket
+          // We'll use a specific tempId for generic bucket to aggregate generic matches/results
+          const genericId = 'generic_bucket';
+          if (!divisionBuckets[genericId]) {
+            divisionBuckets[genericId] = {
+              tempId: genericId,
+              bjjType: 'GI', // Default
+              divisionWeightUnit: 'kg',
+              divisionWeightType: 'open',
+              ageCategory: 'Adult',
+              overallResultInDivision: null,
+              competitionMatches: [] as any[],
+              outcome: null,
+            };
+          }
+          divisionBuckets[genericId].outcome = result.outcome;
+          divisionBuckets[genericId].overallResultInDivision = result.rank;
+        } else {
+          const div = divisions.find(d => d.tempId === result.divisionTempId);
+          if (div) {
+            ensureBucket(div.tempId, div.bjjType);
+            divisionBuckets[div.tempId].outcome = result.outcome;
+            divisionBuckets[div.tempId].overallResultInDivision = result.rank;
+          }
+        }
+      });
+
+      validMatches.forEach((match) => {
+        const div = divisions.find(d => d.tempId === match.divisionTempId);
+        // If match has no division (generic), assign to generic bucket
+        const bucketId = div?.tempId || 'generic_bucket';
+
+        // Ensure bucket exists if it's generic_bucket and wasn't created by results
+        if (bucketId === 'generic_bucket' && !divisionBuckets[bucketId]) {
+          divisionBuckets[bucketId] = {
+            tempId: bucketId,
+            bjjType: match.bjjType || 'GI',
+            divisionWeightUnit: 'kg',
+            divisionWeightType: 'open',
+            ageCategory: 'Adult',
+            overallResultInDivision: null,
+            competitionMatches: [] as any[],
+            outcome: null,
+          };
+        } else if (bucketId !== 'generic_bucket') {
+          ensureBucket(bucketId, div?.bjjType || 'GI');
+        }
+
+        divisionBuckets[bucketId].competitionMatches.push({
+          tempId: match.id,
+          name: match.name,
+          outcome: match.outcome,
+          outcomeMethod: match.outcomeMethod,
+          myScore: match.myScore,
+          opponentScore: match.opponentScore,
+          note: match.note,
+          videoUrl: match.videoUrl,
+          matchOrder: (divisionBuckets[bucketId].competitionMatches.length || 0) + 1,
+          skillUsages: match.skillUsages.map(skill => ({
+            userSkillId: skill.id,
+            quantity: '1',
+            success: true,
           })),
-        })),
-      })),
-    };
+        });
+      });
 
-    mutation.mutate(competitionData);
+      const competitionData = {
+        title,
+        tournamentBrandId: selectedTournamentBrand?.id || null,
+        competitionLevel,
+        date: date.toISOString().split('T')[0],
+        location: null,
+        notes: null,
+        divisions: Object.values(divisionBuckets),
+      };
+
+      // Save to backend
+      await createFullCompetitionEntry(userId, competitionData);
+
+      // Invalidate progress queries to refresh the progress page
+      queryClient.invalidateQueries({ queryKey: ['progress-activities'] });
+      queryClient.invalidateQueries({ queryKey: ['activity-summary'] });
+
+      setAlertConfig({
+        visible: true,
+        title: 'Competition Saved',
+        message: `Competition "${title}" with ${validMatches.length} match(es) has been saved successfully!`,
+        isSuccess: true,
+      });
+
+    } catch (error) {
+      console.error('Error saving competition:', error);
+      setAlertConfig({
+        visible: true,
+        title: 'Save Error',
+        message: 'Failed to save competition. Please try again.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const handleAlertDismiss = () => {
+    const wasSuccess = alertConfig.isSuccess;
+    setAlertConfig({ visible: false, title: '', message: '' });
+
+    // Navigate back after successful save
+    if (wasSuccess) {
+      try {
+        // For modal screens, use dismiss() instead of back()
+        router.dismiss();
+      } catch (error) {
+        // Fallback to tabs if dismiss fails
+        router.replace('/(protected)/(tabs)');
+      }
+    }
+  };
+
+  const getAlertActions = () => {
+    if (alertConfig.matchId) {
+      // Delete confirmation actions
+      return [
+        { text: 'Cancel', style: 'cancel' as const, onPress: cancelDeleteMatch },
+        { text: 'Delete', style: 'destructive' as const, onPress: confirmDeleteMatch },
+      ];
+    } else {
+      // Regular alert actions
+      return [
+        { text: 'OK', onPress: handleAlertDismiss },
+      ];
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    handleSave: handleSaveAll,
+    isValid: isFormValid,
+    isSaving: () => isSaving,
+    getMatchCount: () => matches.length,
+  }));
+
+  const backgroundColor = useThemeColor({}, 'background');
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <ThemedView style={styles.innerContainer}>
-        <ThemedText style={styles.title}>Log Competition</ThemedText>
+    <AutocompleteDropdownContextProvider>
+      <View style={[styles.container, { backgroundColor }]}>
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <ThemedCard variant="plain" style={styles.innerContainer}>
+            {/* Title and Date Input */}
+            <TitleAndDateInput
+              title={title}
+              onTitleChange={setTitle}
+              titlePlaceholder="Competition"
+              date={date}
+              onDateChange={handleDateChange}
+            />
 
-        {/* Competition Details */}
-        <ThemedText style={styles.sectionTitle}>Competition Details</ThemedText>
-        <ThemedInput label="Competition Name:" value={name} onChangeText={setName} placeholder="e.g., IBJJF Pan Ams 2024" style={styles.input} />
-        
-        <ThemedText style={styles.label}>Tournament Brand (Optional):</ThemedText>
-        {isLoadingBrands ? <ActivityIndicator /> : (
-          <Picker selectedValue={tournamentBrandId} onValueChange={(itemValue) => setTournamentBrandId(itemValue as string | null)} style={styles.picker}>
-            <Picker.Item label="-- Select Brand --" value={null} />
-            {tournamentBrands?.map(brand => <Picker.Item key={brand.id} label={brand.name} value={brand.id} />)}
-          </Picker>
-        )}
+            <CompetitionDetails
+              competitionLevel={competitionLevel}
+              onCompetitionLevelChange={setCompetitionLevel}
+              searchText={searchText}
+              onSearchTextChange={handleCompetitionSearchChange}
+              onSelectCompetition={handleSelectCompetition}
+              tournamentBrands={tournamentBrands}
+              isLoadingBrands={isLoadingBrands}
+              divisions={divisions}
+              onUpdateDivision={handleUpdateDivision}
+              onAddDivision={handleAddDivision}
+              onRemoveDivision={handleRemoveDivision}
+            />
 
-        <ThemedText style={styles.label}>Date:</ThemedText>
-        {Platform.OS !== 'ios' && <ThemedButton onPress={() => setShowDatePicker(true)} title={`Selected: ${date.toLocaleDateString()}`} />}
-        {showDatePicker && <DateTimePicker testID="dateTimePicker" value={date} mode="date" display={Platform.OS === 'ios' ? 'spinner' : 'default'} onChange={onDateChange} />}
 
-        <ThemedInput label="Location (Optional):" value={location} onChangeText={setLocation} placeholder="e.g., Kissimmee, FL" style={styles.input} />
-        <ThemedInput label="Overall Notes (Optional):" value={notes} onChangeText={setNotes} multiline numberOfLines={3} placeholder="General notes about the competition..." style={[styles.input, styles.textArea]} />
-
-        {/* Divisions Section */}
-        <ThemedView style={styles.sectionHeaderContainer}>
-          <ThemedText style={styles.sectionTitle}>Divisions</ThemedText>
-          <ThemedButton title="Add Division" onPress={handleAddDivision} icon={<Ionicons name="add" size={20} color={iconColor}/>} />
-        </ThemedView>
-
-        {divisions.map((division, divIndex) => (
-          <ThemedView key={division.tempId} style={styles.divisionContainer}>
-            <ThemedView style={styles.itemHeader}>
-              <ThemedText style={styles.itemTitle}>Division {divIndex + 1}</ThemedText>
-              <TouchableOpacity onPress={() => handleRemoveDivision(division.tempId)} style={styles.removeButton}>
-                <Ionicons name="trash-bin-outline" size={20} color={dangerColor} />
-              </TouchableOpacity>
-            </ThemedView>
-
-            <ThemedText style={styles.label}>Belt Rank:</ThemedText>
-            <Picker selectedValue={division.beltRank} onValueChange={(value) => handleDivisionChange(division.tempId, 'beltRank', value)} style={styles.picker}>
-              {BeltsArray.map(belt => <Picker.Item key={belt} label={belt} value={belt} />)}
-            </Picker>
-            
-            <ThemedInput label="Weight Class:" value={division.weightClass || ''} onChangeText={(value) => handleDivisionChange(division.tempId, 'weightClass', value)} placeholder="e.g., Medium Heavy" style={styles.input} />
-            <ThemedInput label="Age Category (Optional):" value={division.ageCategory || ''} onChangeText={(value) => handleDivisionChange(division.tempId, 'ageCategory', value)} placeholder="e.g., Master 1" style={styles.input} />
-
-            <ThemedText style={styles.label}>Gi / No-Gi:</ThemedText>
-            <Picker selectedValue={division.bjjType} onValueChange={(value) => handleDivisionChange(division.tempId, 'bjjType', value)} style={styles.picker}>
-              {BjjTypesArray.map(type => <Picker.Item key={type} label={type} value={type} />)}
-            </Picker>
-
-            <ThemedInput label="Overall Result in Division (Optional):" value={division.overallResultInDivision || ''} onChangeText={(value) => handleDivisionChange(division.tempId, 'overallResultInDivision', value)} placeholder="e.g., Gold, Bronze, Qualified" style={styles.input} />
-
-            {/* Matches Section for this Division */}
-            <ThemedView style={styles.sectionHeaderContainer}>
-              <ThemedText style={styles.subSectionTitle}>Matches</ThemedText>
-              <ThemedButton title="Add Match" onPress={() => handleAddMatch(division.tempId)} icon={<Ionicons name="add" size={20} color={iconColor}/>} />
-            </ThemedView>
-
-            {division.matches.map((match, matchIndex) => (
-              <ThemedView key={match.tempId} style={styles.matchContainer}>
-                <ThemedView style={styles.itemHeader}>
-                  <ThemedText style={styles.itemTitle}>Match {matchIndex + 1}</ThemedText>
-                  <TouchableOpacity onPress={() => handleRemoveMatch(division.tempId, match.tempId)} style={styles.removeButton}>
-                    <Ionicons name="trash-bin-outline" size={20} color={dangerColor} />
-                  </TouchableOpacity>
-                </ThemedView>
-
-                <ThemedInput label="Opponent Name (Optional):" value={match.opponentName || ''} onChangeText={(value) => handleMatchChange(division.tempId, match.tempId, 'opponentName', value)} style={styles.input} />
-
-                <ThemedText style={styles.label}>Result:</ThemedText>
-                <Picker selectedValue={match.result} onValueChange={(value) => handleMatchChange(division.tempId, match.tempId, 'result', value)} style={styles.picker}>
-                  {MatchOutcomeTypesArray.map(type => <Picker.Item key={type} label={type} value={type} />)}
-                </Picker>
-
-                <ThemedText style={styles.label}>Ending Method:</ThemedText>
-                <Picker selectedValue={match.endingMethod} onValueChange={(value) => handleMatchChange(division.tempId, match.tempId, 'endingMethod', value)} style={styles.picker}>
-                  {MatchMethodTypesArray.map(type => <Picker.Item key={type} label={type} value={type} />)}
-                </Picker>
-
-                <ThemedInput label="Ending Method Detail (Optional):" value={match.endingMethodDetail || ''} onChangeText={(value) => handleMatchChange(division.tempId, match.tempId, 'endingMethodDetail', value)} placeholder="e.g., RNC, Armbar" style={styles.input} />
-                <ThemedInput label="Match Notes (Optional):" value={match.notes || ''} onChangeText={(value) => handleMatchChange(division.tempId, match.tempId, 'notes', value)} multiline placeholder="Key moments, mistakes..." style={[styles.input, styles.textArea]} />
-                <ThemedInput label="Video URL (Optional):" value={match.videoUrl || ''} onChangeText={(value) => handleMatchChange(division.tempId, match.tempId, 'videoUrl', value)} keyboardType="url" style={styles.input} />
-
-                {/* Skill Usages for this Match */}
-                <ThemedView style={styles.sectionHeaderContainer}>
-                  <ThemedText style={styles.subSectionTitle}>Skills Used/Attempted</ThemedText>
-                  <ThemedButton title="Add New Skill" onPress={() => router.push({
-                      pathname: '/(protected)/(modal)/create/skill',
-                      params: { source: 'COMPETITION' }
-                  })}
-                  icon={<Ionicons name="add" size={20} color={iconColor}/>} />
-                </ThemedView>
-                {isLoadingUserSkills ? <ActivityIndicator /> : userSkills && userSkills.length > 0 ? (
-                  userSkills.map(skillDetail => {
-                    const currentSkillUsage = match.skillUsages.find(su => su.userSkillId === skillDetail.id);
-                    const isSkillSelected = !!currentSkillUsage;
-                    return (
-                      <ThemedView key={skillDetail.id} style={styles.skillUsageItem}>
-                        <TouchableOpacity onPress={() => handleToggleMatchSkillUsage(division.tempId, match.tempId, skillDetail)} style={styles.skillToggle}>
-                          <Ionicons name={isSkillSelected ? 'checkbox-outline' : 'square-outline'} size={24} color={isSkillSelected ? successColor : iconColor} />
-                          <ThemedText style={styles.skillNameText}>{skillDetail.skill.name} ({skillDetail.skill.category.name})</ThemedText>
-                        </TouchableOpacity>
-                        {isSkillSelected && currentSkillUsage && (
-                          <ThemedView style={styles.skillUsageInputs}>
-                            <ThemedInput label="Quantity:" value={currentSkillUsage.quantity} onChangeText={(value) => handleMatchSkillUsageChange(division.tempId, match.tempId, skillDetail.id, 'quantity', value)} keyboardType="numeric" style={styles.smallInput} />
-                            <ThemedView style={styles.switchRow}>
-                              <ThemedText style={styles.label}>Successful?</ThemedText>
-                              <Switch value={currentSkillUsage.success} onValueChange={(value) => handleMatchSkillUsageChange(division.tempId, match.tempId, skillDetail.id, 'success', value)} trackColor={{ false: "#767577", true: tintColor }} thumbColor={currentSkillUsage.success ? tintColor : "#f4f3f4"} />
-                            </ThemedView>
-                          </ThemedView>
-                        )}
-                      </ThemedView>
-                    );
-                  })
-                ) : (
-                  <ThemedText>No skills available to select. Add skills in the Skills tab.</ThemedText>
-                )}
-              </ThemedView>
+            {/* Matches Section */}
+            {matches.map((match, index) => (
+              <MatchCard
+                key={match.id}
+                match={match}
+                index={index}
+                onToggleExpansion={toggleMatchExpansion}
+                divisions={divisions}
+              >
+                <MatchForm
+                  match={match}
+                  onUpdateMatch={updateMatch}
+                  onAddVideo={handleAddVideo}
+                  onDeleteMatch={removeMatch}
+                  divisions={divisions}
+                  autoOpenOutcome={match.id === lastAddedMatchId}
+                />
+              </MatchCard>
             ))}
-          </ThemedView>
-        ))}
 
-        <ThemedButton title={mutation.isPending ? 'Logging Competition...' : 'Log Competition'} onPress={handleSubmit} disabled={mutation.isPending || isLoadingBrands || isLoadingUserSkills} style={styles.button} />
-        {Platform.OS === 'ios' && <ThemedButton title="Close Modal" onPress={() => router.back()} style={styles.button} />}
-      </ThemedView>
-    </ScrollView>
+            {/* Add Match Button */}
+            <ThemedButton
+              title="Add Match"
+              variant="primary"
+              onPress={addMatch}
+              icon={<Ionicons name="add" size={20} color="white" />}
+              testID="add-match-button"
+            />
+
+            {/* Results Section */}
+            <ThemedCard variant="plain" style={{ marginTop: 20, backgroundColor: 'transparent' }}>
+              <ThemedText type="subtitle" style={{ marginBottom: 10 }}>Competition Results</ThemedText>
+
+              {/* Division Results */}
+              {divisions.map(division => {
+                const result = results.find(r => r.divisionTempId === division.tempId);
+                return (
+                  <ThemedCard key={division.tempId} variant="plain" style={{ marginBottom: 10, padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#e5e7eb', backgroundColor: '#fff' }}>
+                    <ThemedText style={{ fontWeight: 'bold' }}>
+                      {division.bjjType} - {division.weightType === 'open' ? 'Open' : `${division.weightClassUnderKg} ${division.weightType.replace('_', ' ')}`}
+                    </ThemedText>
+                    {result ? (
+                      <ThemedCard variant="plain" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 5 }}>
+                        <ThemedText>Result: {result.outcome} {result.rank ? `(Rank: ${result.rank})` : ''}</ThemedText>
+                        <ThemedButton
+                          title="Edit"
+                          size="sm"
+                          variant="outline"
+                          onPress={() => {
+                            setEditingResultDivisionId(division.tempId);
+                            setShowResultModal(true);
+                          }}
+                        />
+                      </ThemedCard>
+                    ) : (
+                      <ThemedButton
+                        title="Add Result"
+                        size="sm"
+                        variant="outline"
+                        style={{ marginTop: 5 }}
+                        onPress={() => {
+                          setEditingResultDivisionId(division.tempId);
+                          setShowResultModal(true);
+                        }}
+                      />
+                    )}
+                  </ThemedCard>
+                );
+              })}
+
+              {/* Overall/Generic Result */}
+              {(() => {
+                // Hide overall if exactly one division exists (user wants only division result in that case)
+                if (divisions.length === 1) return null;
+
+                // Check if we have a generic result (divisionTempId is 'generic' or empty)
+                const genericResult = results.find(r => r.divisionTempId === 'generic');
+                return (
+                  <ThemedCard variant="plain" style={{ marginBottom: 10, padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#e5e7eb', backgroundColor: '#fff' }}>
+                    <ThemedText style={{ fontWeight: 'bold' }}>Overall / No Division</ThemedText>
+                    {genericResult ? (
+                      <ThemedCard variant="plain" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 5 }}>
+                        <ThemedText>Result: {genericResult.outcome} {genericResult.rank ? `(Rank: ${genericResult.rank})` : ''}</ThemedText>
+                        <ThemedButton
+                          title="Edit"
+                          size="sm"
+                          variant="outline"
+                          onPress={() => {
+                            setEditingResultDivisionId('generic');
+                            setShowResultModal(true);
+                          }}
+                        />
+                      </ThemedCard>
+                    ) : (
+                      <ThemedButton
+                        title="Add Overall Result"
+                        size="sm"
+                        variant="outline"
+                        style={{ marginTop: 5 }}
+                        onPress={() => {
+                          setEditingResultDivisionId('generic');
+                          setShowResultModal(true);
+                        }}
+                      />
+                    )}
+                  </ThemedCard>
+                );
+              })()}
+            </ThemedCard>
+
+            {/* Video Recorder Modal */}
+            <VideoRecorderModal
+              visible={!!showVideoRecorder}
+              onClose={() => setShowVideoRecorder(null)}
+              matchId={showVideoRecorder || undefined}
+            />
+
+            {/* Result Form Modal */}
+            <ResultFormModal
+              visible={showResultModal}
+              onClose={() => setShowResultModal(false)}
+              divisionName={
+                editingResultDivisionId === 'generic' ? 'Overall Competition' :
+                  divisions.find(d => d.tempId === editingResultDivisionId) ?
+                    `${divisions.find(d => d.tempId === editingResultDivisionId)?.bjjType} - ${divisions.find(d => d.tempId === editingResultDivisionId)?.weightType === 'open' ? 'Open' : `${divisions.find(d => d.tempId === editingResultDivisionId)?.weightClassUnderKg} ${divisions.find(d => d.tempId === editingResultDivisionId)?.weightType.replace('_', ' ')}`}`
+                    : ''}
+              initialResult={editingResultDivisionId ? results.find(r => r.divisionTempId === editingResultDivisionId) : undefined}
+              onSave={(resultData) => {
+                if (editingResultDivisionId) {
+                  setResults(prev => {
+                    const existing = prev.filter(r => r.divisionTempId !== editingResultDivisionId);
+                    return [...existing, { divisionTempId: editingResultDivisionId, ...resultData }];
+                  });
+                }
+              }}
+            />
+
+            {/* Alert */}
+            <Alert
+              visible={alertConfig.visible}
+              title={alertConfig.title}
+              message={alertConfig.message}
+              actions={getAlertActions()}
+              onDismiss={handleAlertDismiss}
+            />
+          </ThemedCard>
+        </ScrollView>
+      </View>
+    </AutocompleteDropdownContextProvider>
   );
-}
+});
+
+CreateCompetitionScreen.displayName = 'CreateCompetitionScreen';
+
+export default CreateCompetitionScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  innerContainer: { padding: 16, gap: 12 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' },
-  sectionTitle: { fontSize: 20, fontWeight: 'bold', marginTop: 16, marginBottom: 8 },
-  subSectionTitle: { fontSize: 18, fontWeight: '600', marginTop: 12, marginBottom: 6 },
-  sectionHeaderContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  itemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  itemTitle: { fontSize: 18, fontWeight: '500' },
-  label: { fontSize: 16, marginBottom: 4, marginTop: 8 },
-  input: { marginBottom: 8 },
-  textArea: { minHeight: 70, textAlignVertical: 'top' },
-  picker: { marginBottom: 8, height: Platform.OS === 'ios' ? 180 : 50, backgroundColor: '#f0f0f0' },
-  divisionContainer: { padding: 12, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 16, gap: 4 },
-  matchContainer: { padding: 10, borderWidth: 1, borderColor: '#eee', borderRadius: 6, marginTop: 10, marginLeft: 10, gap: 4 },
-  removeButton: { padding: 4 },
-  skillUsageItem: { paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#f0f0f0', marginTop: 6 },
-  skillToggle: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
-  skillNameText: { marginLeft: 8, fontSize: 16, flexShrink: 1 },
-  skillUsageInputs: { paddingLeft: 28, gap: 6, marginTop: 4 },
-  smallInput: { /* styles for smaller input */ },
-  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
-  button: { marginTop: 24, marginBottom: Platform.OS === 'ios' ? 0 : 16 },
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  innerContainer: {
+    padding: 16,
+    gap: 12
+  },
 });

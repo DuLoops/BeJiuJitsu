@@ -1,0 +1,10 @@
+appId: host.exp.Exponent
+---
+# Debug: Tap create tab directly
+
+# 1. Launch app
+- runFlow: ../smoke/app-launch.yaml
+
+# 2. Try to tap create tab
+- tapOn:
+    id: "create-tab"

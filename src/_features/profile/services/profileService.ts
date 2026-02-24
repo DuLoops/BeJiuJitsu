@@ -1,30 +1,90 @@
 import { supabase } from '@/src/lib/supabase';
-// import { Profile } from '@/src/types'; // Removed
-import { Tables, TablesInsert, TablesUpdate } from '@/src/supabase/types'; // Added Tables helpers
+import { Tables, TablesInsert, TablesUpdate, Enums } from '@/src/supabase/types';
 
-type Profile = Tables<'profiles'>;
+export type Profile = Tables<'profiles'>;
+export type ProfileInsert = TablesInsert<'profiles'>;
+export type ProfileUpdate = TablesUpdate<'profiles'>;
+type BeltType = Enums<'Belts'>;
 
-// For createProfile, we expect the user's ID to be passed in.
-// The actual DB schema might autogenerate `id` if it's a serial type, 
-// but Supabase client often expects `id` for `insert` if it's a UUID set by auth.
-// Assuming `id` is provided by the caller (e.g., from auth.session.user.id)
+export interface UpsertProfileParams {
+  id: string;
+  username: string;
+  belt: BeltType;
+  stripes: number;
+  weight?: number;
+  academy_id?: number;
+  full_name?: string;
+  role?: string;
+}
+
+// Username validation
+export const checkSupabaseUsername = async (
+  username: string,
+): Promise<boolean> => {
+  if (!username || username.trim() === '') {
+    return false;
+  }
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('username', username)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking username availability in service:', error);
+      throw new Error(error.message || 'Failed to check username availability');
+    }
+    return !data;
+  } catch (err) {
+    console.error('Catch block error in checkSupabaseUsername:', err);
+    if (err instanceof Error) throw err;
+    throw new Error('An unexpected error occurred while checking username.');
+  }
+};
+
+// Create profile
 export const createProfile = async (profileData: TablesInsert<'profiles'>) => {
   const { data, error } = await supabase
     .from('profiles')
     .insert([{
         ...profileData, 
-        // updated_at is often handled by DB trigger or should be set here if not.
-        // If your DB auto-updates updated_at, you might not need to set it here.
-        // For consistency, let's assume it's set here as in updateProfile.
         updated_at: new Date().toISOString(), 
     }])
     .select()
-    .single(); // Assuming you want to return the single created profile
+    .single();
 
   if (error) throw error;
-  return data as Profile | null; // Return single profile or null
+  return data as Profile | null;
 };
 
+// Upsert profile (create or update)
+export const upsertSupabaseProfile = async (profileData: UpsertProfileParams): Promise<Profile> => {
+  try {
+    const profileToUpsert: ProfileInsert = {
+      ...profileData,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert(profileToUpsert, { onConflict: 'id' })
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('Error creating/updating profile in service:', error);
+      throw new Error(error?.message || 'Failed to create or update profile. No data returned.');
+    }
+    return data;
+  } catch (err) {
+    console.error('Catch block error in upsertSupabaseProfile:', err);
+    if (err instanceof Error) throw err;
+    throw new Error('An unexpected error occurred while creating/updating the profile.');
+  }
+};
+
+// Get profile by user ID
 export const getProfile = async (userId: string): Promise<Profile | null> => {
   const { data, error } = await supabase
     .from('profiles')
@@ -38,8 +98,31 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
   return data as Profile | null;
 };
 
-// For updateProfile, id is used in eq, and other fields are in profileData.
-// created_at should not be updatable. updated_at will be set.
+// Fetch profile by user ID (alias for consistency)
+export const fetchProfileByUserId = async (userId: string): Promise<Profile | null> => {
+  if (!userId) {
+    throw new Error('User ID is required to fetch profile.');
+  }
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching profile in service:', error);
+      throw new Error(error.message || 'Failed to fetch profile.');
+    }
+    return data;
+  } catch (err) {
+    console.error('Catch block error in fetchProfileByUserId:', err);
+    if (err instanceof Error) throw err;
+    throw new Error('An unexpected error occurred while fetching profile.');
+  }
+};
+
+// Update profile
 export const updateProfile = async (userId: string, profileData: TablesUpdate<'profiles'>) => {
   const { data, error } = await supabase
     .from('profiles')
@@ -54,5 +137,3 @@ export const updateProfile = async (userId: string, profileData: TablesUpdate<'p
   }
   return data as Profile;
 };
-
-// Add other profile-related service functions here

@@ -3,8 +3,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ThemedText from '../../../components/ui/atoms/ThemedText';
-import ThemedView from '../../../components/ui/atoms/ThemedView';
-import { useAuthStore } from '../../../store/authStore';
+import ThemedCard from '../../../components/ui/atoms/ThemedCard';
+import { useAuthStore } from '../../../stores/authStore';
 import FollowButton from '../components/FollowButton';
 import { getFollowingList, SearchedUserProfile } from '../services/socialService';
 
@@ -47,25 +47,25 @@ export default function FollowingListScreen({ userIdProp }: FollowingListScreenP
 
   if (isError || !following) {
     return (
-      <ThemedView style={styles.centered}>
+      <ThemedCard style={styles.centered}>
         <ThemedText>Error loading following list.</ThemedText>
-      </ThemedView>
+      </ThemedCard>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedCard style={styles.container}>
       <FlatList
         data={following}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         ListEmptyComponent={
-          <ThemedView style={styles.centered}>
+          <ThemedCard style={styles.centered}>
             <ThemedText>Not following anyone yet.</ThemedText>
-          </ThemedView>
+          </ThemedCard>
         }
       />
-    </ThemedView>
+    </ThemedCard>
   );
 }
 

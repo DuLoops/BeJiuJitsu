@@ -1,0 +1,24 @@
+appId: host.exp.Exponent
+---
+# Check if app is already launched - if ExploreScreen is visible, skip launch
+- runFlow:
+    when:
+      visible: "ExploreScreen"
+    commands:
+      - assertVisible: "ExploreScreen"
+
+# Launch app only if not already running
+- runFlow:
+    when:
+      notVisible: "ExploreScreen"
+    commands:
+      - launchApp
+      # Handle Expo Go launcher - tap DoJits if visible
+      - runFlow:
+          when:
+            visible: "DoJits"
+          commands:
+            - tapOn: "DoJits"
+
+# Wait for app to load and verify basic app structure
+- assertVisible: "ExploreScreen"

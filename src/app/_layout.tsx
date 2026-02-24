@@ -5,8 +5,8 @@ import { SplashScreen, Stack, router, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef } from 'react';
 import 'react-native-reanimated';
-import { getProfile } from '../_features/profile/services/profileService';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../stores/authStore';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -40,44 +40,23 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inProtectedGroup = segments[0] === '(protected)';
-    // Simplified root check: if not in auth or protected, assume it's a root-like state or an unhandled path.
-    // Redirection logic will handle if it's a valid logged-in user at such a path.
     const isPotentiallyAtRootOrAppEntry = !inAuthGroup && !inProtectedGroup;
-    const isAtCreateProfile = segments.length > 1 && segments[0] === '(protected)' && segments[1] === 'create-profile';
 
-    const checkProfileAndRedirect = async () => {
-      try {
-        if (session?.user) {
-          const profile = await getProfile(session.user.id);
-          if (!profile) {
-            if (!isAtCreateProfile) {
-              router.replace('/(protected)/create-profile');
-            } else {
-              hideSplashSafely(); 
-            }
-          } else if (inAuthGroup || isPotentiallyAtRootOrAppEntry) { // If logged in with profile, and in auth or at app entry, go to tabs
-            router.replace('/(protected)/(tabs)');
-          } else {
-            hideSplashSafely(); 
-          }
-        } else { // No session
-          if (!inAuthGroup) {
-            router.replace('/(auth)/login');
-          } else {
-            hideSplashSafely(); 
-          }
-        }
-      } catch (error) {
-        console.error("Failed to process auth state or fetch profile:", error);
-        if (inProtectedGroup && !isAtCreateProfile) {
-          router.replace('/(auth)/login');
-        } else {
-          hideSplashSafely();
-        }
+    if (session) {
+      // User is authenticated
+      if (inAuthGroup || isPotentiallyAtRootOrAppEntry) {
+        router.replace('/(protected)/(tabs)');
+      } else {
+        hideSplashSafely();
       }
-    };
-
-    checkProfileAndRedirect();
+    } else {
+      // User is not authenticated
+      if (!inAuthGroup) {
+        router.replace('/(auth)/login');
+      } else {
+        hideSplashSafely();
+      }
+    }
 
   }, [session, loading, isInitialized, segments, initializeAuth]);
 
@@ -86,7 +65,7 @@ function RootLayoutNav() {
   }
 
   return (
-    <Stack>
+    <Stack >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(protected)" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
@@ -94,17 +73,48 @@ function RootLayoutNav() {
   );
 }
 
+import { Colors } from '../constants/Colors';
+import { useColorScheme } from 'react-native';
+
+// ... (imports remain the same)
+
 export default function RootLayout() {
-  // const colorScheme = useColorScheme();
-  const colorScheme = 'light'; // Keep light theme for now
+  const colorScheme = useColorScheme();
+
+  const MyTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: Colors.light.background,
+      text: Colors.light.text,
+      card: Colors.light.card || Colors.light.background,
+      border: Colors.light.border,
+      primary: Colors.light.tint,
+    },
+  };
+
+  const MyDarkTheme = {
+    ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      background: Colors.dark.background,
+      text: Colors.dark.text,
+      card: Colors.dark.card || Colors.dark.background,
+      border: Colors.dark.border,
+      primary: Colors.dark.tint,
+    },
+  };
+
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={colorScheme === 'light' ? DefaultTheme : DarkTheme}>
-        <StatusBar style="auto" />
-        <RootLayoutNav />
-      </ThemeProvider>
-      {/* {__DEV__ && <ReactQueryDevtools client={queryClient} />} */}
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider value={colorScheme === 'light' ? MyTheme : MyDarkTheme}>
+          <StatusBar style={colorScheme === 'light' ? 'dark' : 'light'} />
+          <RootLayoutNav />
+        </ThemeProvider>
+        {/* {__DEV__ && <ReactQueryDevtools client={queryClient} />} */}
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }

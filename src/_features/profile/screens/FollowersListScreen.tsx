@@ -1,6 +1,6 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { useAuthStore } from '@/src/store/authStore';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
+import { useAuthStore } from '@/src/stores/authStore';
 import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
@@ -47,25 +47,25 @@ export default function FollowersListScreen({ userIdProp }: FollowersListScreenP
 
   if (isError || !followers) {
     return (
-      <ThemedView style={styles.centered}>
+      <ThemedCard style={styles.centered}>
         <ThemedText>Error loading followers.</ThemedText>
-      </ThemedView>
+      </ThemedCard>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedCard style={styles.container}>
       <FlatList
         data={followers}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         ListEmptyComponent={
-          <ThemedView style={styles.centered}>
+          <ThemedCard style={styles.centered}>
             <ThemedText>No followers yet.</ThemedText>
-          </ThemedView>
+          </ThemedCard>
         }
       />
-    </ThemedView>
+    </ThemedCard>
   );
 }
 

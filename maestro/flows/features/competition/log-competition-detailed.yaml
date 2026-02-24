@@ -1,0 +1,124 @@
+appId: host.exp.Exponent
+---
+# Test detailed competition logging with 3 matches
+# Tests complete competition flow with matches, outcomes, and scores
+
+# 1. NAVIGATE: Launch app and go to Competition screen
+- runFlow: ../../navigation/navigate-to-competition.yaml
+
+# 2. Enter competition details
+- tapOn:
+    id: "competition-title-input"
+- inputText: "Pan American Championships 2025"
+- waitForAnimationToEnd
+
+# 3. Add first match
+- tapOn:
+    id: "add-match-button"
+- waitForAnimationToEnd
+
+# 4. Configure first match - Win by submission
+- tapOn:
+    id: "match-outcome-dropdown"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 30%" # Win option
+- waitForAnimationToEnd
+- tapOn:
+    id: "match-method-dropdown"  
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 25%" # Submission option
+- waitForAnimationToEnd
+
+# 5. Add scores to first match
+- tapOn:
+    id: "toggle-scores-button"
+- waitForAnimationToEnd
+- tapOn:
+    id: "my-score-input"
+- inputText: "4"
+- tapOn:
+    id: "opponent-score-input"
+- inputText: "0"
+
+# 6. Add note to first match
+- tapOn:
+    id: "toggle-note-button"
+- waitForAnimationToEnd
+- tapOn:
+    id: "match-note-input"
+- inputText: "Great armbar finish from guard"
+
+# 7. Add second match
+- tapOn:
+    id: "add-match-button"
+- waitForAnimationToEnd
+
+# 8. Configure second match - Loss by points
+- tapOn:
+    id: "match-outcome-dropdown"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 50%" # Lose option 
+- waitForAnimationToEnd  
+- tapOn:
+    id: "match-method-dropdown"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 35%" # Points option
+- waitForAnimationToEnd
+
+# 9. Add scores to second match
+- tapOn:
+    id: "toggle-scores-button"
+- waitForAnimationToEnd
+- tapOn:
+    id: "my-score-input"
+- inputText: "2"
+- tapOn:
+    id: "opponent-score-input" 
+- inputText: "7"
+
+# 10. Add third match
+- tapOn:
+    id: "add-match-button"
+- waitForAnimationToEnd
+
+# 11. Configure third match - Win by referee decision
+- tapOn:
+    id: "match-outcome-dropdown"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 30%" # Win option
+- waitForAnimationToEnd
+- tapOn:
+    id: "match-method-dropdown"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 45%" # Referee Decision option
+- waitForAnimationToEnd
+
+# 12. Add note to third match
+- tapOn:
+    id: "toggle-note-button"
+- waitForAnimationToEnd
+- tapOn:
+    id: "match-note-input"
+- inputText: "Close match, dominated pressure and control"
+
+# 13. Save the complete competition
+- tapOn:
+    id: "save-button"
+
+# 14. Handle success alert
+- waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Competition Saved"
+    commands:
+      - tapOn: "OK"
+
+# 15. Verify successful completion
+- waitForAnimationToEnd
+# Success if we complete without errors

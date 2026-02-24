@@ -1,16 +1,16 @@
-import { useAuthStore } from '@/src/store/authStore';
+import { useAuthStore } from '@/src/stores/authStore';
 import { useQuery } from '@tanstack/react-query';
 import React from 'react';
 import {
-  ActivityIndicator,
-  Image,
-  StyleSheet,
+    ActivityIndicator,
+    Image,
+    StyleSheet,
 } from 'react-native'; // Removed View, Text
 // import { Profile } from '@/src/types'; // Removed
 import FollowButton from '@/src/_features/profile/components/FollowButton';
 import { getProfile } from '@/src/_features/profile/services/profileService';
 import ThemedText from '@/src/components/ui/atoms/ThemedText'; // Ensured default import
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useThemeColor } from '@/src/hooks/useThemeColor'; // For themed icon color
 import { Tables } from '@/src/supabase/types';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,56 +34,56 @@ export default function PublicProfileScreen({ userId }: PublicProfileScreenProps
 
   if (isLoading) {
     return (
-      <ThemedView style={styles.centered}>
+      <ThemedCard style={styles.centered}>
         <ActivityIndicator size="large" />
         <ThemedText>Loading profile...</ThemedText>
-      </ThemedView>
+      </ThemedCard>
     );
   }
 
   if (error) {
     return (
-      <ThemedView style={styles.centered}>
+      <ThemedCard style={styles.centered}>
         <ThemedText style={styles.errorText}>Error loading profile: {error.message}</ThemedText>
-      </ThemedView>
+      </ThemedCard>
     );
   }
 
   if (!profile) {
     return (
-      <ThemedView style={styles.centered}>
+      <ThemedCard style={styles.centered}>
         <ThemedText>User profile not found.</ThemedText>
-      </ThemedView>
+      </ThemedCard>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedView style={styles.profileHeader}> {/* Changed View to ThemedView */}
+    <ThemedCard style={styles.container}>
+      <ThemedCard style={styles.profileHeader}> {/* Changed View to ThemedCard */}
         {profile.avatar ? ( // Changed avatar_url to avatar
           <Image source={{ uri: profile.avatar }} style={styles.avatar} />
         ) : (
-          <ThemedView style={styles.avatarPlaceholder}> {/* Changed View to ThemedView */}
+          <ThemedCard style={styles.avatarPlaceholder}> {/* Changed View to ThemedCard */}
             <Ionicons name="person-circle-outline" size={80} color={iconColor} /> {/* Used themed icon color */}
-          </ThemedView>
+          </ThemedCard>
         )}
         <ThemedText type="title" style={styles.username}>{profile.username || 'N/A'}</ThemedText>
         <ThemedText type="subtitle" style={styles.fullName}>{profile.full_name || 'User'}</ThemedText>
         {profile.belt && (
             <ThemedText style={styles.beltInfo}>Belt: {profile.belt} - {profile.stripes || 0} stripe(s)</ThemedText>
         )}
-      </ThemedView>
+      </ThemedCard>
 
-      <ThemedView style={styles.followButtonContainer}> {/* Changed View to ThemedView */}
+      <ThemedCard style={styles.followButtonContainer}> {/* Changed View to ThemedCard */}
         {currentUserId && userId !== currentUserId && (
           <FollowButton targetUserId={userId} />
         )}
-      </ThemedView>
+      </ThemedCard>
 
-      <ThemedView style={styles.contentArea}> {/* Changed View to ThemedView */}
+      <ThemedCard style={styles.contentArea}> {/* Changed View to ThemedCard */}
         <ThemedText style={styles.placeholderText}>More profile details coming soon...</ThemedText>
-      </ThemedView>
-    </ThemedView>
+      </ThemedCard>
+    </ThemedCard>
   );
 }
 
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    // backgroundColor: '#e0e0e0', // ThemedView might handle this or useThemeColor
+    // backgroundColor: '#e0e0e0', // ThemedCard might handle this or useThemeColor
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,

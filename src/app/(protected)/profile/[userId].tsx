@@ -1,5 +1,5 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText'; // Corrected import path
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { StyleSheet } from 'react-native';
@@ -11,9 +11,9 @@ export default function UserProfilePage() {
   if (!userId) {
     // It's good practice to provide a full view for error messages
     return (
-      <ThemedView style={styles.centered}>
+      <ThemedCard style={styles.centered}>
         <ThemedText style={styles.errorText}>User ID is missing or invalid.</ThemedText>
-      </ThemedView>
+      </ThemedCard>
     );
   }
   return <PublicProfileScreen userId={userId} />;

@@ -1,10 +1,12 @@
 import ThemedButton from '@/src/components/ui/atoms/ThemedButton';
+import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
-import { useAuthStore } from '@/src/store/authStore';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
+import { useAuthStore } from '@/src/stores/authStore';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, TextInput } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState('');
@@ -21,25 +23,56 @@ export default function SignUpScreen() {
   };
 
   return (
-    <ThemedView style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
-      <ThemedText type="title" style={{ marginBottom: 16, textAlign: 'center' }}>Sign Up</ThemedText>
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        style={{ borderWidth: 1, padding: 8, marginBottom: 8, borderColor: 'gray' }}
-      />
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={{ borderWidth: 1, padding: 8, marginBottom: 16, borderColor: 'gray' }}
-      />
-      <ThemedButton title={loading ? "Signing Up..." : "Sign Up"} onPress={handleSignUp} disabled={loading} />
-      <ThemedButton title="Go to Login" onPress={() => router.replace('/login')} />
-    </ThemedView>
+    <ThemedCard style={styles.container}>
+      <ThemedText type="title" style={styles.title}>Sign Up</ThemedText>
+
+      <ThemedCard style={styles.inputContainer}>
+        <ThemedInput
+          label="Email"
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          icon={<Ionicons name="mail-outline" size={20} color="#405059" />}
+        />
+      </ThemedCard>
+
+      <ThemedCard style={styles.inputContainer}>
+        <ThemedInput
+          label="Password"
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          icon={<Ionicons name="lock-closed-outline" size={20} color="#405059" />}
+        />
+      </ThemedCard>
+
+      <ThemedCard style={styles.buttonContainer}>
+        <ThemedButton title={loading ? "Signing Up..." : "Sign Up"} onPress={handleSignUp} disabled={loading} />
+      </ThemedCard>
+
+      <ThemedButton title="Go to Login" onPress={() => router.replace('/login')} variant="outline" />
+    </ThemedCard>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  title: {
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  buttonContainer: {
+    marginTop: 10,
+    marginBottom: 16,
+  },
+});

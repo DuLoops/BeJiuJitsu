@@ -1,19 +1,20 @@
 import { UserSkillWithDetails } from '@/src/_features/skill/components/UserSkillList'; // For fetching user skills
 import { supabase } from '@/src/lib/supabase';
-import { Tables } from '@/src/supabase/types';
+import { Database } from '@/src/supabase/types';
 import {
   Competition,
   CompetitionDivision,
   CompetitionFormData,
+  CompetitionMatch,
+  CompetitionResult,
   CompetitionWithDetails,
-  Match,
   TournamentBrand,
 } from '@/src/types/competition';
-import { UserSkillUsage } from '@/src/types/training';
+import { UserSkillUsage, UserSkillUsageFormData } from '@/src/types/training';
 
 // Fetch Tournament Brands
 export const fetchTournamentBrands = async (): Promise<TournamentBrand[]> => {
-  const { data, error } = await supabase.from('TournamentBrand').select('*'); // Ensure table name matches Supabase
+  const { data, error } = await supabase.from('tournament_brands').select('*');
   if (error) {
     console.error('Error fetching tournament brands:', error);
     throw error;
@@ -24,24 +25,24 @@ export const fetchTournamentBrands = async (): Promise<TournamentBrand[]> => {
 // Re-using from trainingService or assuming a similar one exists for fetching user skills for selection
 export const fetchUserSkillsForCompetitionSelection = async (userId: string): Promise<UserSkillWithDetails[]> => {
   const { data, error } = await supabase
-    .from('UserSkill')
+    .from('user_skills')
     .select(`
       id,
-      skill:Skill!inner(id, name, category:Category!inner(id, name))
+      skill:skills!inner(id, name, category)
     `)
-    .eq('userId', userId);
+    .eq('user_id', userId);
 
   if (error) {
     console.error('Error fetching user skills for selection:', error);
     throw error;
   }
-  return data as UserSkillWithDetails[];
+  return data as unknown as UserSkillWithDetails[];
 };
 
 // Create Competition entry
-const createCompetition = async (competitionData: Tables<'Competition'>['Insert']): Promise<Competition> => {
+const createCompetition = async (competitionData: Database['public']['Tables']['competitions']['Insert']): Promise<Competition> => {
   const { data, error } = await supabase
-    .from('Competition') // Ensure table name matches Supabase
+    .from('competitions')
     .insert([{ ...competitionData, updated_at: new Date().toISOString() }])
     .select()
     .single();
@@ -50,37 +51,40 @@ const createCompetition = async (competitionData: Tables<'Competition'>['Insert'
 };
 
 // Batch create CompetitionDivision entries
-const createCompetitionDivisions = async (divisionsData: Tables<'CompetitionDivision'>['Insert'][]): Promise<CompetitionDivision[]> => {
-  const divisionsToInsert = divisionsData.map(div => ({...div, updated_at: new Date().toISOString()})); // matches are handled separately
+const createCompetitionDivisions = async (divisionsData: Database['public']['Tables']['competition_divisions']['Insert'][]): Promise<CompetitionDivision[]> => {
+  const divisionsToInsert = divisionsData.map(div => ({ ...div, updated_at: new Date().toISOString() }));
   const { data, error } = await supabase
-    .from('CompetitionDivision') // Ensure table name matches Supabase
+    .from('competition_divisions')
     .insert(divisionsToInsert)
     .select();
   if (error) throw error;
   return data as CompetitionDivision[];
 };
 
-// Batch create Match entries
-const createMatches = async (matchesData: Tables<'Match'>['Insert'][]): Promise<Match[]> => {
-  const matchesToInsert = matchesData.map(match => ({...match, updated_at: new Date().toISOString()})); // skillUsages are handled separately
+// Batch create CompetitionMatch entries
+const createCompetitionMatches = async (matchesData: Database['public']['Tables']['competition_matches']['Insert'][]): Promise<CompetitionMatch[]> => {
+  const matchesToInsert = matchesData.map(match => ({ ...match, updated_at: new Date().toISOString() }));
   const { data, error } = await supabase
-    .from('Match') // Ensure table name matches Supabase
+    .from('competition_matches')
     .insert(matchesToInsert)
     .select();
   if (error) throw error;
-  return data as Match[];
+  return data as CompetitionMatch[];
 };
 
-// Batch create UserSkillUsage entries
-const createUserSkillUsagesForCompetition = async (usagesData: Tables<'UserSkillUsage'>['Insert'][]): Promise<UserSkillUsage[]> => {
-  const usagesToInsert = usagesData.map(usage => ({ ...usage, usageType: 'COMPETITION' as const, updated_at: new Date().toISOString() }));
+// Batch create CompetitionResult entries
+const createCompetitionResults = async (resultsData: Database['public']['Tables']['competition_results']['Insert'][]): Promise<CompetitionResult[]> => {
+  const resultsToInsert = resultsData.map(result => ({ ...result, updated_at: new Date().toISOString() }));
   const { data, error } = await supabase
-    .from('UserSkillUsage') // Ensure table name matches Supabase
-    .insert(usagesToInsert)
+    .from('competition_results')
+    .insert(resultsToInsert)
     .select();
   if (error) throw error;
-  return data as UserSkillUsage[];
+  return data as CompetitionResult[];
 };
+
+// NOTE: UserSkillUsage functionality disabled - table doesn't exist in current schema
+// Use user_skill_notes or user_skill_videos instead for linking skills to matches
 
 // Comprehensive function to create Competition with all nested data
 export const createFullCompetitionEntry = async (
@@ -89,9 +93,9 @@ export const createFullCompetitionEntry = async (
 ): Promise<Competition> => {
   // 1. Create Competition
   const newCompetition = await createCompetition({
-    userId,
-    name: competitionFormData.name,
-    tournamentBrandId: competitionFormData.tournamentBrandId || null,
+    user_id: userId,
+    title: competitionFormData.title,
+    tournament_brand_id: competitionFormData.tournamentBrandId || null,
     date: competitionFormData.date,
     location: competitionFormData.location || null,
     notes: competitionFormData.notes || null,
@@ -99,58 +103,52 @@ export const createFullCompetitionEntry = async (
 
   if (!newCompetition || !newCompetition.id) throw new Error('Failed to create competition entry.');
 
-  const allSkillUsagesToCreate: Tables<'UserSkillUsage'>['Insert'][] = [];
-
-  // 2. Process Divisions and their Matches
+  // 2. Process Divisions and their Matches/Results
   for (const divisionFormData of competitionFormData.divisions) {
-    const newDivision = await createCompetitionDivisions([{
-      competitionId: newCompetition.id,
-      beltRank: divisionFormData.beltRank,
-      weightClass: divisionFormData.weightClass || null,
-      ageCategory: divisionFormData.ageCategory || null,
-      bjjType: divisionFormData.bjjType,
-      overallResultInDivision: divisionFormData.overallResultInDivision || null,
+    // Create Division
+    const [newDivision] = await createCompetitionDivisions([{
+      competition_id: newCompetition.id,
+      bjj_type: divisionFormData.bjjType,
+      division_weight_type: divisionFormData.divisionWeightType,
+      division_weight_unit: divisionFormData.divisionWeightUnit,
     }]);
-    
-    if (!newDivision || newDivision.length === 0 || !newDivision[0].id) throw new Error('Failed to create competition division.');
-    const createdDivisionId = newDivision[0].id;
 
-    for (const matchFormData of divisionFormData.matches) {
-      const newMatch = await createMatches([{
-        competitionDivisionId: createdDivisionId,
-        matchOrder: matchFormData.matchOrder || null,
-        opponentName: matchFormData.opponentName || null,
-        result: matchFormData.result,
-        endingMethod: matchFormData.endingMethod || null,
-        endingMethodDetail: matchFormData.endingMethodDetail || null,
-        notes: matchFormData.notes || null,
-        videoUrl: matchFormData.videoUrl || null,
+    if (!newDivision) throw new Error('Failed to create competition division.');
+
+    // Create Results for this division
+    if (divisionFormData.overallResultInDivision || divisionFormData.outcome) {
+      await createCompetitionResults([{
+        competition_id: newCompetition.id,
+        competition_division_id: newDivision.id,
+        rank: divisionFormData.overallResultInDivision,
+        outcome: divisionFormData.outcome,
+        notes: null, // Or add notes to divisionFormData if needed
+      }]);
+    }
+
+    // Create Matches for this division
+    for (const matchFormData of divisionFormData.competitionMatches) {
+      const newCompetitionMatch = await createCompetitionMatches([{
+        competition_id: newCompetition.id,
+        competition_division_id: newDivision.id, // Link to created division
+        match_order: matchFormData.matchOrder || 1,
+        name: matchFormData.name,
+        opponent_name: matchFormData.opponentName || null,
+        outcome: matchFormData.outcome,
+        outcome_method: matchFormData.outcomeMethod || null,
+        my_score: matchFormData.myScore || null,
+        opponent_score: matchFormData.opponentScore || null,
+        note: matchFormData.note || null,
+        video_url: matchFormData.videoUrl || null,
       }]);
 
-      if (!newMatch || newMatch.length === 0 || !newMatch[0].id) throw new Error('Failed to create match entry.');
-      const createdMatchId = newMatch[0].id;
+      if (!newCompetitionMatch || newCompetitionMatch.length === 0 || !newCompetitionMatch[0].id) throw new Error('Failed to create competition match entry.');
 
-      // Prepare UserSkillUsage entries for this match
-      if (matchFormData.skillUsages && matchFormData.skillUsages.length > 0) {
-        matchFormData.skillUsages.forEach(usage => {
-          allSkillUsagesToCreate.push({
-            skillId: usage.userSkillId,
-            quantity: parseInt(usage.quantity, 10) || 1, // Ensure quantity is a number
-            success: usage.success,
-            usageType: 'COMPETITION',
-            competitionId: newCompetition.id, // Link to parent competition
-            matchId: createdMatchId, // Link to this specific match
-            trainingId: null, // Not a training usage
-            note: null, // Explicitly set to null
-          });
-        });
-      }
+      // NOTE: Skill usage tracking disabled - use user_skill_notes or user_skill_videos instead
+      // if (matchFormData.skillUsages && matchFormData.skillUsages.length > 0) {
+      //   // Create user_skill_notes or user_skill_videos entries here
+      // }
     }
-  }
-
-  // 3. Batch create all UserSkillUsages
-  if (allSkillUsagesToCreate.length > 0) {
-    await createUserSkillUsagesForCompetition(allSkillUsagesToCreate);
   }
 
   return newCompetition;
@@ -159,18 +157,18 @@ export const createFullCompetitionEntry = async (
 // Fetch Competitions for a user with all related details
 export const fetchCompetitionsForUser = async (userId: string) => {
   const { data, error } = await supabase
-    .from('Competition') 
+    .from('competitions')
     .select(`
       *,
-      tournament_brand:TournamentBrand(*),
-      divisions:CompetitionDivision(*, matches:Match(*, UserSkillUsage(*, user_skill:UserSkill!inner(skill:Skill!inner(name, category:Category!inner(name))))))
+      tournament_brand:tournament_brands(*),
+      competition_divisions:competition_divisions(*, competition_matches:competition_matches(*))
     `)
-    .eq('userId', userId)
+    .eq('user_id', userId)
     .order('date', { ascending: false });
 
   if (error) {
     console.error('Error fetching competitions for user:', error);
     throw error;
   }
-  return data as CompetitionWithDetails[]; 
+  return data as CompetitionWithDetails[];
 };

@@ -2,16 +2,16 @@ import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import ThemedText from '../../../components/ui/atoms/ThemedText';
-import ThemedView from '../../../components/ui/atoms/ThemedView';
-import { useAuthStore } from '../../../store/authStore';
+import ThemedCard from '../../../components/ui/atoms/ThemedCard';
+import { useAuthStore } from '../../../stores/authStore';
 import { SearchedUserProfile, searchProfiles } from '../../social/services/socialService';
 import FollowButton from '../components/FollowButton';
 
@@ -44,7 +44,7 @@ export default function UserSearchScreen() {
   );
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedCard style={styles.container}>
       <TextInput
         style={styles.input}
         placeholder="Search for users..."
@@ -54,9 +54,9 @@ export default function UserSearchScreen() {
       />
       {isLoading && <ActivityIndicator style={styles.centered} />}
       {isError && (
-        <ThemedView style={styles.centered}>
+        <ThemedCard style={styles.centered}>
           <ThemedText>Error searching for users.</ThemedText>
-        </ThemedView>
+        </ThemedCard>
       )}
       {!isLoading && !isError && (
         <FlatList
@@ -65,14 +65,14 @@ export default function UserSearchScreen() {
           keyExtractor={(item) => item.id.toString()}
           ListEmptyComponent={
             query.length > 2 ? (
-              <ThemedView style={styles.centered}>
+              <ThemedCard style={styles.centered}>
                 <ThemedText>No users found.</ThemedText>
-              </ThemedView>
+              </ThemedCard>
             ) : null
           }
         />
       )}
-    </ThemedView>
+    </ThemedCard>
   );
 }
 

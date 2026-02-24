@@ -1,6 +1,6 @@
 import ThemedInput from '@/src/components/ui/atoms/ThemedInput';
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import React, { useState } from 'react';
@@ -39,9 +39,9 @@ export const GoalsList: React.FC<GoalsListProps> = ({
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedCard style={styles.container}>
       <ThemedText type="subtitle" style={styles.title}>{title}</ThemedText>
-      <ThemedView style={styles.inputContainer}>
+      <ThemedCard style={styles.inputContainer}>
         <ThemedInput
           style={styles.input}
           value={newItem}
@@ -52,18 +52,18 @@ export const GoalsList: React.FC<GoalsListProps> = ({
         <TouchableOpacity style={[styles.addButton, { backgroundColor: primaryBtnBg }]} onPress={addItem}>
           <AntDesign name="plus" size={24} color={textOnPrimary} />
         </TouchableOpacity>
-      </ThemedView>
-      <ThemedView style={styles.list}>
+      </ThemedCard>
+      <ThemedCard style={styles.list}>
         {items.map(item => (
-          <ThemedView key={item.id} style={styles.itemContainer}>
+          <ThemedCard key={item.id} style={styles.itemContainer}>
             <ThemedText style={styles.itemText}>{item.text}</ThemedText>
             <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.removeButton}>
               <AntDesign name="close" size={20} color={iconColor} />
             </TouchableOpacity>
-          </ThemedView>
+          </ThemedCard>
         ))}
-      </ThemedView>
-    </ThemedView>
+      </ThemedCard>
+    </ThemedCard>
   );
 };
 

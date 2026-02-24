@@ -1,5 +1,5 @@
 import ThemedText from '@/src/components/ui/atoms/ThemedText';
-import ThemedView from '@/src/components/ui/atoms/ThemedView';
+import ThemedCard from '@/src/components/ui/atoms/ThemedCard';
 import { NumberInput } from '@/src/components/ui/molecules/NumberInput';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 import { Enums } from '@/src/supabase/types';
@@ -32,10 +32,10 @@ export const SelectRank: React.FC<SelectRankProps> = ({
   const selectedBorderColor = useThemeColor({}, 'tint');
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedView style={styles.section}>
+    <ThemedCard style={styles.container}>
+      <ThemedCard style={styles.section}>
         <ThemedText style={styles.label}>Belt Rank</ThemedText>
-        <ThemedView style={styles.beltContainer}>
+        <ThemedCard style={styles.beltContainer}>
           {BELT_DEFINITIONS.map((option) => (
             <Pressable
               key={option.value}
@@ -57,10 +57,10 @@ export const SelectRank: React.FC<SelectRankProps> = ({
               </ThemedText>
             </Pressable>
           ))}
-        </ThemedView>
-      </ThemedView>
+        </ThemedCard>
+      </ThemedCard>
       
-      <ThemedView style={styles.section}>
+      <ThemedCard style={styles.section}>
         <ThemedText style={styles.label}>Stripes</ThemedText>
         <NumberInput
           value={stripes}
@@ -68,8 +68,8 @@ export const SelectRank: React.FC<SelectRankProps> = ({
           minValue={0}
           maxValue={4}
         />
-      </ThemedView>
-    </ThemedView>
+      </ThemedCard>
+    </ThemedCard>
   );
 };
 

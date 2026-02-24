@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useBottomTabOverflow } from '@/src/components/ui/atoms/TabBarBackground';
-import { ThemedView } from '@/src/components/ui/atoms/ThemedView';
+import { ThemedCard } from '@/src/components/ui/atoms/ThemedCard';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 
 const HEADER_HEIGHT = 250;
@@ -45,7 +45,7 @@ export default function ParallaxScrollView({
   });
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedCard style={styles.container}>
       <Animated.ScrollView
         ref={scrollRef}
         scrollEventThrottle={16}
@@ -59,9 +59,9 @@ export default function ParallaxScrollView({
           ]}>
           {headerImage}
         </Animated.View>
-        <ThemedView style={styles.content}>{children}</ThemedView>
+        <ThemedCard style={styles.content}>{children}</ThemedCard>
       </Animated.ScrollView>
-    </ThemedView>
+    </ThemedCard>
   );
 }
 

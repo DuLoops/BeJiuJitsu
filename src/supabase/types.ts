@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -8,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -18,10 +22,10 @@ export type Database = {
     Functions: {
       graphql: {
         Args: {
+          extensions?: Json
           operationName?: string
           query?: string
           variables?: Json
-          extensions?: Json
         }
         Returns: Json
       }
@@ -59,117 +63,309 @@ export type Database = {
         }
         Relationships: []
       }
-      Category: {
+      competition_divisions: {
         Row: {
-          createdAt: string
+          bjj_type: Database["public"]["Enums"]["BjjType"]
+          competition_id: string
+          created_at: string
+          division_weight_type:
+          | Database["public"]["Enums"]["division_weight_type"]
+          | null
+          division_weight_unit: number | null
           id: string
-          isPredefined: boolean
-          name: string
-          updatedAt: string
-          userId: string | null
+          updated_at: string
         }
         Insert: {
-          createdAt?: string
+          bjj_type: Database["public"]["Enums"]["BjjType"]
+          competition_id: string
+          created_at?: string
+          division_weight_type?:
+          | Database["public"]["Enums"]["division_weight_type"]
+          | null
+          division_weight_unit?: number | null
           id?: string
-          isPredefined?: boolean
-          name: string
-          updatedAt?: string
-          userId?: string | null
+          updated_at?: string
         }
         Update: {
-          createdAt?: string
+          bjj_type?: Database["public"]["Enums"]["BjjType"]
+          competition_id?: string
+          created_at?: string
+          division_weight_type?:
+          | Database["public"]["Enums"]["division_weight_type"]
+          | null
+          division_weight_unit?: number | null
           id?: string
-          isPredefined?: boolean
-          name?: string
-          updatedAt?: string
-          userId?: string | null
-        }
-        Relationships: []
-      }
-      Competition: {
-        Row: {
-          createdAt: string
-          date: string | null
-          id: string
-          location: string | null
-          name: string | null
-          notes: string | null
-          tournamentBrandId: string | null
-          updatedAt: string
-          userId: string
-        }
-        Insert: {
-          createdAt?: string
-          date?: string | null
-          id?: string
-          location?: string | null
-          name?: string | null
-          notes?: string | null
-          tournamentBrandId?: string | null
-          updatedAt?: string
-          userId: string
-        }
-        Update: {
-          createdAt?: string
-          date?: string | null
-          id?: string
-          location?: string | null
-          name?: string | null
-          notes?: string | null
-          tournamentBrandId?: string | null
-          updatedAt?: string
-          userId?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "Competition_tournamentBrandId_fkey"
-            columns: ["tournamentBrandId"]
-            isOneToOne: false
-            referencedRelation: "TournamentBrand"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      CompetitionDivision: {
-        Row: {
-          ageCategory: string | null
-          beltRank: Database["public"]["Enums"]["Belts"]
-          bjjType: Database["public"]["Enums"]["BjjType"]
-          competitionId: string
-          createdAt: string
-          id: string
-          overallResultInDivision: string | null
-          updatedAt: string
-          weightClass: string | null
-        }
-        Insert: {
-          ageCategory?: string | null
-          beltRank: Database["public"]["Enums"]["Belts"]
-          bjjType: Database["public"]["Enums"]["BjjType"]
-          competitionId: string
-          createdAt?: string
-          id?: string
-          overallResultInDivision?: string | null
-          updatedAt?: string
-          weightClass?: string | null
-        }
-        Update: {
-          ageCategory?: string | null
-          beltRank?: Database["public"]["Enums"]["Belts"]
-          bjjType?: Database["public"]["Enums"]["BjjType"]
-          competitionId?: string
-          createdAt?: string
-          id?: string
-          overallResultInDivision?: string | null
-          updatedAt?: string
-          weightClass?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "CompetitionDivision_competitionId_fkey"
-            columns: ["competitionId"]
+            columns: ["competition_id"]
             isOneToOne: false
-            referencedRelation: "Competition"
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_matches: {
+        Row: {
+          competition_division_id: string | null
+          competition_id: string | null
+          created_at: string
+          id: string
+          match_order: number
+          my_score: number | null
+          name: string
+          note: string | null
+          opponent_name: string | null
+          opponent_score: number | null
+          outcome: Database["public"]["Enums"]["MatchOutcome"]
+          outcome_method:
+          | Database["public"]["Enums"]["MatchOutcomeMethod"]
+          | null
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          competition_division_id?: string | null
+          competition_id?: string | null
+          created_at?: string
+          id?: string
+          match_order: number
+          my_score?: number | null
+          name: string
+          note?: string | null
+          opponent_name?: string | null
+          opponent_score?: number | null
+          outcome: Database["public"]["Enums"]["MatchOutcome"]
+          outcome_method?:
+          | Database["public"]["Enums"]["MatchOutcomeMethod"]
+          | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          competition_division_id?: string | null
+          competition_id?: string | null
+          created_at?: string
+          id?: string
+          match_order?: number
+          my_score?: number | null
+          name?: string
+          note?: string | null
+          opponent_name?: string | null
+          opponent_score?: number | null
+          outcome?: Database["public"]["Enums"]["MatchOutcome"]
+          outcome_method?:
+          | Database["public"]["Enums"]["MatchOutcomeMethod"]
+          | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "CompetitionMatch_competitionId_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Match_competitionDivisionId_fkey"
+            columns: ["competition_division_id"]
+            isOneToOne: false
+            referencedRelation: "competition_divisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_results: {
+        Row: {
+          competition_division_id: string | null
+          competition_id: string
+          created_at: string | null
+          id: string
+          notes: string | null
+          rank: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          competition_division_id?: string | null
+          competition_id: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          rank?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          competition_division_id?: string | null
+          competition_id?: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          rank?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_results_competition_division_id_fkey"
+            columns: ["competition_division_id"]
+            isOneToOne: false
+            referencedRelation: "competition_divisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_results_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_videos: {
+        Row: {
+          bucket_id: string | null
+          competition_match_id: string | null
+          created_at: string | null
+          id: string
+          note: string | null
+          storage_path: string | null
+          video_url: string
+          visibility: Database["public"]["Enums"]["visibility_type"] | null
+        }
+        Insert: {
+          bucket_id?: string | null
+          competition_match_id?: string | null
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          storage_path?: string | null
+          video_url: string
+          visibility?: Database["public"]["Enums"]["visibility_type"] | null
+        }
+        Update: {
+          bucket_id?: string | null
+          competition_match_id?: string | null
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          storage_path?: string | null
+          video_url?: string
+          visibility?: Database["public"]["Enums"]["visibility_type"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_videos_competition_match_id_fkey"
+            columns: ["competition_match_id"]
+            isOneToOne: false
+            referencedRelation: "competition_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitions: {
+        Row: {
+          competition_level:
+          | Database["public"]["Enums"]["competition_level"]
+          | null
+          created_at: string
+          date: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          title: string | null
+          tournament_brand_id: string | null
+          updated_at: string
+          user_id: string
+          visibility: Database["public"]["Enums"]["visibility"] | null
+        }
+        Insert: {
+          competition_level?:
+          | Database["public"]["Enums"]["competition_level"]
+          | null
+          created_at?: string
+          date?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          title?: string | null
+          tournament_brand_id?: string | null
+          updated_at?: string
+          user_id: string
+          visibility?: Database["public"]["Enums"]["visibility"] | null
+        }
+        Update: {
+          competition_level?:
+          | Database["public"]["Enums"]["competition_level"]
+          | null
+          created_at?: string
+          date?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          title?: string | null
+          tournament_brand_id?: string | null
+          updated_at?: string
+          user_id?: string
+          visibility?: Database["public"]["Enums"]["visibility"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Competition_tournamentBrandId_fkey"
+            columns: ["tournament_brand_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feed: {
+        Row: {
+          created_at: string | null
+          has_seen: boolean | null
+          id: string
+          post_id: string | null
+          poster_id: string | null
+          receiver_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          has_seen?: boolean | null
+          id?: string
+          post_id?: string | null
+          poster_id?: string | null
+          receiver_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          has_seen?: boolean | null
+          id?: string
+          post_id?: string | null
+          poster_id?: string | null
+          receiver_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_poster_id_fkey"
+            columns: ["poster_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -212,52 +408,52 @@ export type Database = {
           },
         ]
       }
-      Match: {
+      posts: {
         Row: {
-          competitionDivisionId: string
-          createdAt: string
-          endingMethod: Database["public"]["Enums"]["MatchMethodType"] | null
-          endingMethodDetail: string | null
+          category: Database["public"]["Enums"]["post_category"]
+          content: string | null
+          created_at: string | null
+          hot_score: number | null
           id: string
-          matchOrder: number | null
-          notes: string | null
-          opponentName: string | null
-          result: Database["public"]["Enums"]["MatchOutcomeType"]
-          updatedAt: string
-          videoUrl: string | null
+          image_url: string | null
+          text_content: string | null
+          updated_at: string | null
+          user_id: string
+          video_url: string | null
+          visibility: Database["public"]["Enums"]["visibility"] | null
         }
         Insert: {
-          competitionDivisionId: string
-          createdAt?: string
-          endingMethod?: Database["public"]["Enums"]["MatchMethodType"] | null
-          endingMethodDetail?: string | null
+          category: Database["public"]["Enums"]["post_category"]
+          content?: string | null
+          created_at?: string | null
+          hot_score?: number | null
           id?: string
-          matchOrder?: number | null
-          notes?: string | null
-          opponentName?: string | null
-          result: Database["public"]["Enums"]["MatchOutcomeType"]
-          updatedAt?: string
-          videoUrl?: string | null
+          image_url?: string | null
+          text_content?: string | null
+          updated_at?: string | null
+          user_id: string
+          video_url?: string | null
+          visibility?: Database["public"]["Enums"]["visibility"] | null
         }
         Update: {
-          competitionDivisionId?: string
-          createdAt?: string
-          endingMethod?: Database["public"]["Enums"]["MatchMethodType"] | null
-          endingMethodDetail?: string | null
+          category?: Database["public"]["Enums"]["post_category"]
+          content?: string | null
+          created_at?: string | null
+          hot_score?: number | null
           id?: string
-          matchOrder?: number | null
-          notes?: string | null
-          opponentName?: string | null
-          result?: Database["public"]["Enums"]["MatchOutcomeType"]
-          updatedAt?: string
-          videoUrl?: string | null
+          image_url?: string | null
+          text_content?: string | null
+          updated_at?: string | null
+          user_id?: string
+          video_url?: string | null
+          visibility?: Database["public"]["Enums"]["visibility"] | null
         }
         Relationships: [
           {
-            foreignKeyName: "Match_competitionDivisionId_fkey"
-            columns: ["competitionDivisionId"]
+            foreignKeyName: "posts_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "CompetitionDivision"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -267,6 +463,7 @@ export type Database = {
           academy_id: number | null
           avatar: string | null
           belt: Database["public"]["Enums"]["Belts"] | null
+          bio: string | null
           created_at: string | null
           full_name: string | null
           id: string
@@ -280,9 +477,10 @@ export type Database = {
           academy_id?: number | null
           avatar?: string | null
           belt?: Database["public"]["Enums"]["Belts"] | null
+          bio?: string | null
           created_at?: string | null
           full_name?: string | null
-          id: string
+          id?: string
           role?: string | null
           stripes?: number | null
           updated_at?: string | null
@@ -293,6 +491,7 @@ export type Database = {
           academy_id?: number | null
           avatar?: string | null
           belt?: Database["public"]["Enums"]["Belts"] | null
+          bio?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
@@ -312,329 +511,341 @@ export type Database = {
           },
         ]
       }
-      SequenceDetail: {
+      skills: {
         Row: {
-          createdAt: string
-          detail: string
+          category: Database["public"]["Enums"]["Category"]
+          created_at: string
+          creator_id: string | null
           id: string
-          sequenceId: string
-        }
-        Insert: {
-          createdAt?: string
-          detail: string
-          id?: string
-          sequenceId: string
-        }
-        Update: {
-          createdAt?: string
-          detail?: string
-          id?: string
-          sequenceId?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "SequenceDetail_sequenceId_fkey"
-            columns: ["sequenceId"]
-            isOneToOne: false
-            referencedRelation: "SkillSequence"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      Skill: {
-        Row: {
-          categoryId: string
-          createdAt: string
-          creatorId: string | null
-          id: string
-          isPublic: boolean
+          is_public: boolean
           name: string
         }
         Insert: {
-          categoryId: string
-          createdAt?: string
-          creatorId?: string | null
+          category: Database["public"]["Enums"]["Category"]
+          created_at?: string
+          creator_id?: string | null
           id?: string
-          isPublic?: boolean
+          is_public?: boolean
           name: string
         }
         Update: {
-          categoryId?: string
-          createdAt?: string
-          creatorId?: string | null
+          category?: Database["public"]["Enums"]["Category"]
+          created_at?: string
+          creator_id?: string | null
           id?: string
-          isPublic?: boolean
+          is_public?: boolean
           name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "Skill_categoryId_fkey"
-            columns: ["categoryId"]
-            isOneToOne: false
-            referencedRelation: "Category"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      SkillSequence: {
-        Row: {
-          createdAt: string
-          id: string
-          intention: string
-          skillId: string
-          stepNumber: number
-        }
-        Insert: {
-          createdAt?: string
-          id?: string
-          intention: string
-          skillId: string
-          stepNumber: number
-        }
-        Update: {
-          createdAt?: string
-          id?: string
-          intention?: string
-          skillId?: string
-          stepNumber?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "SkillSequence_skillId_fkey"
-            columns: ["skillId"]
-            isOneToOne: false
-            referencedRelation: "UserSkill"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      TournamentBrand: {
-        Row: {
-          createdAt: string
-          creatorUserId: string | null
-          id: string
-          isPredefined: boolean
-          name: string
-          updatedAt: string
-        }
-        Insert: {
-          createdAt?: string
-          creatorUserId?: string | null
-          id?: string
-          isPredefined?: boolean
-          name: string
-          updatedAt?: string
-        }
-        Update: {
-          createdAt?: string
-          creatorUserId?: string | null
-          id?: string
-          isPredefined?: boolean
-          name?: string
-          updatedAt?: string
         }
         Relationships: []
       }
-      Training: {
+      tournament_brands: {
         Row: {
-          bjjType: Database["public"]["Enums"]["BjjType"]
-          createdAt: string
-          date: string
-          duration: number
+          created_at: string
+          creator_user_id: string | null
           id: string
-          intensity: Database["public"]["Enums"]["TrainingIntensity"]
+          is_predefined: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_user_id?: string | null
+          id?: string
+          is_predefined?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_user_id?: string | null
+          id?: string
+          is_predefined?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      training_activities: {
+        Row: {
+          activity_order: number
+          created_at: string
+          id: string
+          notes: string | null
+          training_id: string
+          type: Database["public"]["Enums"]["TrainingType"]
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          activity_order: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          training_id: string
+          type: Database["public"]["Enums"]["TrainingType"]
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          activity_order?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          training_id?: string
+          type?: Database["public"]["Enums"]["TrainingType"]
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_activity_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_activity_values: {
+        Row: {
+          created_at: string
+          id: string
+          training_activity_id: string
+          unit: Database["public"]["Enums"]["TrainingUnit"]
+          updated_at: string
+          value: number
+          value_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          training_activity_id: string
+          unit: Database["public"]["Enums"]["TrainingUnit"]
+          updated_at?: string
+          value: number
+          value_order: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          training_activity_id?: string
+          unit?: Database["public"]["Enums"]["TrainingUnit"]
+          updated_at?: string
+          value?: number
+          value_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_activity_value_training_activity_id_fkey"
+            columns: ["training_activity_id"]
+            isOneToOne: false
+            referencedRelation: "training_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_videos: {
+        Row: {
+          bucket_id: string | null
+          created_at: string | null
+          id: string
           note: string | null
-          updatedAt: string
-          userId: string
+          storage_path: string | null
+          training_activity_id: string | null
+          video_url: string
+          visibility: Database["public"]["Enums"]["visibility_type"] | null
         }
         Insert: {
-          bjjType: Database["public"]["Enums"]["BjjType"]
-          createdAt?: string
-          date: string
-          duration: number
+          bucket_id?: string | null
+          created_at?: string | null
           id?: string
-          intensity?: Database["public"]["Enums"]["TrainingIntensity"]
           note?: string | null
-          updatedAt?: string
-          userId: string
+          storage_path?: string | null
+          training_activity_id?: string | null
+          video_url: string
+          visibility?: Database["public"]["Enums"]["visibility_type"] | null
         }
         Update: {
-          bjjType?: Database["public"]["Enums"]["BjjType"]
-          createdAt?: string
-          date?: string
-          duration?: number
+          bucket_id?: string | null
+          created_at?: string | null
           id?: string
-          intensity?: Database["public"]["Enums"]["TrainingIntensity"]
           note?: string | null
-          updatedAt?: string
-          userId?: string
+          storage_path?: string | null
+          training_activity_id?: string | null
+          video_url?: string
+          visibility?: Database["public"]["Enums"]["visibility_type"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_videos_training_activity_id_fkey"
+            columns: ["training_activity_id"]
+            isOneToOne: false
+            referencedRelation: "training_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trainings: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string | null
+          visibility: Database["public"]["Enums"]["visibility"] | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+          visibility?: Database["public"]["Enums"]["visibility"] | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+          visibility?: Database["public"]["Enums"]["visibility"] | null
         }
         Relationships: []
       }
-      UserFollows: {
+      user_follows: {
         Row: {
-          createdAt: string
-          followerId: string
-          followingId: string
+          created_at: string
+          follower_id: string
+          following_id: string
         }
         Insert: {
-          createdAt?: string
-          followerId: string
-          followingId: string
+          created_at?: string
+          follower_id: string
+          following_id: string
         }
         Update: {
-          createdAt?: string
-          followerId?: string
-          followingId?: string
+          created_at?: string
+          follower_id?: string
+          following_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "UserFollows_followerId_fkey"
-            columns: ["followerId"]
+            columns: ["follower_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "UserFollows_followingId_fkey"
-            columns: ["followingId"]
+            columns: ["following_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      UserSkill: {
+      user_skill_notes: {
         Row: {
-          competitionId: string | null
-          createdAt: string
+          created_at: string
           id: string
-          isFavorite: boolean | null
-          note: string | null
-          skillId: string
-          source: Database["public"]["Enums"]["SkillSource"]
-          trainingId: string | null
-          updatedAt: string
-          userId: string
-          videoUrl: string | null
+          note: string
+          note_order: number
+          source: Database["public"]["Enums"]["SkillSource"] | null
+          updated_at: string
+          user_skill_id: string
         }
         Insert: {
-          competitionId?: string | null
-          createdAt?: string
+          created_at?: string
           id?: string
-          isFavorite?: boolean | null
-          note?: string | null
-          skillId: string
-          source?: Database["public"]["Enums"]["SkillSource"]
-          trainingId?: string | null
-          updatedAt?: string
-          userId: string
-          videoUrl?: string | null
+          note: string
+          note_order?: number
+          source?: Database["public"]["Enums"]["SkillSource"] | null
+          updated_at?: string
+          user_skill_id: string
         }
         Update: {
-          competitionId?: string | null
-          createdAt?: string
+          created_at?: string
           id?: string
-          isFavorite?: boolean | null
-          note?: string | null
-          skillId?: string
-          source?: Database["public"]["Enums"]["SkillSource"]
-          trainingId?: string | null
-          updatedAt?: string
-          userId?: string
-          videoUrl?: string | null
+          note?: string
+          note_order?: number
+          source?: Database["public"]["Enums"]["SkillSource"] | null
+          updated_at?: string
+          user_skill_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "UserSkill_competitionId_fkey"
-            columns: ["competitionId"]
+            foreignKeyName: "user_skill_notes_user_skill_id_fkey"
+            columns: ["user_skill_id"]
             isOneToOne: false
-            referencedRelation: "Competition"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "UserSkill_skillId_fkey"
-            columns: ["skillId"]
-            isOneToOne: false
-            referencedRelation: "Skill"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "UserSkill_trainingId_fkey"
-            columns: ["trainingId"]
-            isOneToOne: false
-            referencedRelation: "Training"
+            referencedRelation: "user_skills"
             referencedColumns: ["id"]
           },
         ]
       }
-      UserSkillUsage: {
+      user_skill_videos: {
         Row: {
-          competitionId: string | null
-          createdAt: string
+          created_at: string | null
           id: string
-          matchId: string | null
           note: string | null
-          quantity: number
-          skillId: string
-          success: boolean
-          trainingId: string | null
-          updatedAt: string
-          usageType: Database["public"]["Enums"]["UsageType"]
+          user_skill_id: string | null
+          video_url: string
         }
         Insert: {
-          competitionId?: string | null
-          createdAt?: string
+          created_at?: string | null
           id?: string
-          matchId?: string | null
           note?: string | null
-          quantity?: number
-          skillId: string
-          success?: boolean
-          trainingId?: string | null
-          updatedAt?: string
-          usageType: Database["public"]["Enums"]["UsageType"]
+          user_skill_id?: string | null
+          video_url: string
         }
         Update: {
-          competitionId?: string | null
-          createdAt?: string
+          created_at?: string | null
           id?: string
-          matchId?: string | null
           note?: string | null
-          quantity?: number
-          skillId?: string
-          success?: boolean
-          trainingId?: string | null
-          updatedAt?: string
-          usageType?: Database["public"]["Enums"]["UsageType"]
+          user_skill_id?: string | null
+          video_url?: string
         }
         Relationships: [
           {
-            foreignKeyName: "UserSkillUsage_competitionId_fkey"
-            columns: ["competitionId"]
+            foreignKeyName: "user_skill_videos_user_skill_id_fkey1"
+            columns: ["user_skill_id"]
             isOneToOne: false
-            referencedRelation: "Competition"
+            referencedRelation: "user_skills"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      user_skills: {
+        Row: {
+          created_at: string
+          id: string
+          skill_id: string
+          updated_at: string | null
+          user_id: string
+          visibility: Database["public"]["Enums"]["visibility"] | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          skill_id: string
+          updated_at?: string | null
+          user_id: string
+          visibility?: Database["public"]["Enums"]["visibility"] | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          skill_id?: string
+          updated_at?: string | null
+          user_id?: string
+          visibility?: Database["public"]["Enums"]["visibility"] | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "UserSkillUsage_matchId_fkey"
-            columns: ["matchId"]
+            foreignKeyName: "UserSkill_skillId_fkey"
+            columns: ["skill_id"]
             isOneToOne: false
-            referencedRelation: "Match"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "UserSkillUsage_skillId_fkey"
-            columns: ["skillId"]
-            isOneToOne: false
-            referencedRelation: "UserSkill"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "UserSkillUsage_trainingId_fkey"
-            columns: ["trainingId"]
-            isOneToOne: false
-            referencedRelation: "Training"
+            referencedRelation: "skills"
             referencedColumns: ["id"]
           },
         ]
@@ -648,28 +859,68 @@ export type Database = {
     }
     Enums: {
       Belts:
-        | "WHITE"
-        | "BLUE"
-        | "PURPLE"
-        | "BROWN"
-        | "BLACK"
-        | "GRAY"
-        | "YELLOW"
-        | "ORANGE"
-        | "GREEN"
+      | "WHITE"
+      | "BLUE"
+      | "PURPLE"
+      | "BROWN"
+      | "BLACK"
+      | "GRAY"
+      | "YELLOW"
+      | "ORANGE"
+      | "GREEN"
       BjjType: "GI" | "NOGI" | "BOTH"
-      MatchMethodType:
-        | "SUBMISSION"
-        | "POINTS"
-        | "REFEREE_DECISION"
-        | "DISQUALIFICATION"
-        | "FORFEIT"
-        | "OTHER"
-      MatchOutcomeType: "WIN" | "LOSE" | "DRAW"
+      Category:
+      | "Submission"
+      | "Takedown"
+      | "Pass"
+      | "Control"
+      | "Escape"
+      | "Guard"
+      | "Sweep"
+      | "System"
+      competition_level:
+      | "WHITE"
+      | "BLUE"
+      | "PURPLE"
+      | "BROWN"
+      | "BLACK"
+      | "GRAY"
+      | "YELLOW"
+      | "ORANGE"
+      | "GREEN"
+      | "ABSOLUTE"
+      division_weight_type: "kg_under" | "lbs_under" | "open"
+      MatchOutcome: "WIN" | "LOSE" | "DRAW"
+      MatchOutcomeMethod:
+      | "SUBMISSION"
+      | "POINTS"
+      | "REFEREE_DECISION"
+      | "DISQUALIFICATION"
+      | "FORFEIT"
+      | "OTHER"
+      post_category:
+      | "Training"
+      | "Technique"
+      | "Competition"
+      | "General"
+      | "Achievement"
+      | "Question"
       SkillSource: "TRAINING" | "COMPETITION" | "INDEPENDENT"
-      TrainingIntensity: "LIGHT" | "MEDIUM" | "HARD"
-      UsageType: "TRAINING" | "COMPETITION"
+      TrainingType:
+      | "Gi"
+      | "NoGi"
+      | "Wrestling"
+      | "Roll"
+      | "Drill"
+      | "Skill Learning"
+      | "Game"
+      | "Strength training"
+      | "Cardio training"
+      | "Stretching"
+      TrainingUnit: "Minutes" | "Hours" | "Rounds" | "Reps" | "Submissions"
       UserRole: "PRACTITIONER" | "INSTRUCTOR" | "ADMIN"
+      visibility: "public" | "palsOnly" | "private"
+      visibility_type: "public" | "pals_only" | "private"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -677,110 +928,122 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+  : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-    ? R
-    : never
+  ? R
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
+    DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] &
+    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+  ? R
+  : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+    Insert: infer I
+  }
+  ? I
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Insert: infer I
+  }
+  ? I
+  : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+    Update: infer U
+  }
+  ? U
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Update: infer U
+  }
+  ? U
+  : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+  | keyof DefaultSchema["Enums"]
+  | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+  : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+  | keyof DefaultSchema["CompositeTypes"]
+  | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+  : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
   graphql_public: {
@@ -800,7 +1063,31 @@ export const Constants = {
         "GREEN",
       ],
       BjjType: ["GI", "NOGI", "BOTH"],
-      MatchMethodType: [
+      Category: [
+        "Submission",
+        "Takedown",
+        "Pass",
+        "Control",
+        "Escape",
+        "Guard",
+        "Sweep",
+        "System",
+      ],
+      competition_level: [
+        "WHITE",
+        "BLUE",
+        "PURPLE",
+        "BROWN",
+        "BLACK",
+        "GRAY",
+        "YELLOW",
+        "ORANGE",
+        "GREEN",
+        "ABSOLUTE",
+      ],
+      division_weight_type: ["kg_under", "lbs_under", "open"],
+      MatchOutcome: ["WIN", "LOSE", "DRAW"],
+      MatchOutcomeMethod: [
         "SUBMISSION",
         "POINTS",
         "REFEREE_DECISION",
@@ -808,11 +1095,31 @@ export const Constants = {
         "FORFEIT",
         "OTHER",
       ],
-      MatchOutcomeType: ["WIN", "LOSE", "DRAW"],
+      post_category: [
+        "Training",
+        "Technique",
+        "Competition",
+        "General",
+        "Achievement",
+        "Question",
+      ],
       SkillSource: ["TRAINING", "COMPETITION", "INDEPENDENT"],
-      TrainingIntensity: ["LIGHT", "MEDIUM", "HARD"],
-      UsageType: ["TRAINING", "COMPETITION"],
+      TrainingType: [
+        "Gi",
+        "NoGi",
+        "Wrestling",
+        "Roll",
+        "Drill",
+        "Skill Learning",
+        "Game",
+        "Strength training",
+        "Cardio training",
+        "Stretching",
+      ],
+      TrainingUnit: ["Minutes", "Hours", "Rounds", "Reps", "Submissions"],
       UserRole: ["PRACTITIONER", "INSTRUCTOR", "ADMIN"],
+      visibility: ["public", "palsOnly", "private"],
+      visibility_type: ["public", "pals_only", "private"],
     },
   },
 } as const

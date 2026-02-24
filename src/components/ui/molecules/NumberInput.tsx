@@ -1,12 +1,15 @@
 import React from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet } from 'react-native';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
+import ThemedButton from '../atoms/ThemedButton';
+import ThemedText from '../atoms/ThemedText';
 
 interface NumberInputProps {
   value: number;
   onChange: (value: number) => void;
   minValue?: number;
-  maxValue?: number;  // Add maxValue prop
+  maxValue?: number;
   label?: string;
 }
 
@@ -14,11 +17,15 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   value,
   onChange,
   minValue = 0,
-  maxValue = Infinity,  // Add maxValue default
+  maxValue = Infinity,
   label,
 }) => {
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
+  const backgroundColor = useThemeColor({}, 'background');
+
   const handleIncrement = () => {
-    if (value < maxValue) {  // Add maxValue check
+    if (value < maxValue) {
       onChange(value + 1);
     }
   };
@@ -31,31 +38,42 @@ export const NumberInput: React.FC<NumberInputProps> = ({
 
   const handleTextChange = (text: string) => {
     const num = parseInt(text) || minValue;
-    // Clamp value between min and max
     const clampedNum = Math.min(Math.max(num, minValue), maxValue);
     onChange(clampedNum);
   };
 
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <ThemedText style={styles.label} type="caption">{label}</ThemedText>}
       <View style={styles.inputContainer}>
-        <TouchableOpacity onPress={handleDecrement} style={styles.button}>
-          <Text style={styles.buttonText}><AntDesign name="minus" size={24} color="white" />
-          </Text>
-        </TouchableOpacity>
-        
+        <ThemedButton
+          onPress={handleDecrement}
+          title=""
+          icon={<AntDesign name="minus" size={16} color={useThemeColor({}, 'text')} />}
+          variant="outline"
+          size="sm"
+          style={styles.controlButton}
+        />
+
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            { color: textColor, borderColor, backgroundColor }
+          ]}
           value={value.toString()}
           onChangeText={handleTextChange}
           keyboardType="numeric"
+          editable={false} // Often safer to lock typing for simple counters, but keeping logic
         />
-        
-        <TouchableOpacity onPress={handleIncrement} style={styles.button}>
-          <Text style={styles.buttonText}><AntDesign name="plus" size={24} color="white" />
-          </Text>
-        </TouchableOpacity>
+
+        <ThemedButton
+          onPress={handleIncrement}
+          title=""
+          icon={<AntDesign name="plus" size={16} color={useThemeColor({}, 'text')} />}
+          variant="outline"
+          size="sm"
+          style={styles.controlButton}
+        />
       </View>
     </View>
   );
@@ -63,41 +81,32 @@ export const NumberInput: React.FC<NumberInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: 120,
+    // width: 120, // Check if width constraint is needed
   },
   label: {
     marginBottom: 4,
-    fontSize: 14,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  button: {
-    backgroundColor: '#000',
-    width: 30,
-    height: 30,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 15,
-    textAlign: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
+  controlButton: {
+    minWidth: 32,
+    height: 32,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    borderRadius: 2, // Rectangular
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
+    borderRadius: 2,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    marginHorizontal: 8,
-    width: 40,
+    width: 50,
     textAlign: 'center',
+    height: 32,
+    fontSize: 14,
+    fontFamily: 'System',
   },
 });

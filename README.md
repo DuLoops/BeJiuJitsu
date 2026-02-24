@@ -9,6 +9,9 @@ Whether you're stepping onto the mat for the first time or you're a seasoned bla
 * **ENGAGE THE COMMUNITY:** Jiu-Jitsu is about connection. Engage with a passionate community of practitioners from around the world. Share your progress, ask questions, discuss competition footage, and find training partners in your area.
 
 Stop just doing Jiu-Jitsu. It's time to **BeJiuJitsu**.
+# DoJits: Train, Learn, Compete, Connect
+
+DoJits is a comprehensive mobile application designed specifically for Brazilian Jiu-Jitsu practitioners of all levels. This app seamlessly integrates training management, skill progression tracking, competition results, and community engagement into one intuitive platform.
 
 ## Features
 
@@ -54,106 +57,85 @@ Stop just doing Jiu-Jitsu. It's time to **BeJiuJitsu**.
 - Expo CLI (`npm install -g expo-cli`)
 
 ### Setup
-1.  Clone the repository
-    ```bash
-    git clone [https://github.com/yourusername/bejiujitsu.git](https://github.com/yourusername/bejiujitsu.git)
-    cd bejiujitsu
-    ```
+1. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/dojits.git
+   cd dojits
+   ```
 
-2.  Install backend dependencies
-    ```bash
-    cd backend
-    npm install
-    ```
+2. Install backend dependencies
+   ```bash
+   cd backend
+   npm install
+   ```
 
-3.  Configure environment variables
-    ```bash
-    cp .env.example .env
-    # Edit .env with your database credentials and other settings
-    ```
+3. Configure environment variables
+   ```bash
+   cp .env.example .env
+   # Edit .env with your database credentials and other settings
+   ```
 
-4.  Run database migrations
-    ```bash
-    npx prisma migrate dev
-    ```
+4. Run database migrations
+   ```bash
+   npx prisma migrate dev
+   ```
 
-5.  Install frontend dependencies
-    ```bash
-    cd ../frontend
-    npm install
-    ```
+5. Install frontend dependencies
+   ```bash
+   cd ../frontend
+   npm install
+   ```
 
-6.  Start the development servers
+6. Start the development servers
+   
+   Backend:
+   ```bash
+   cd backend
+   npm run dev
+   ```
+   
+   Frontend:
+   ```bash
+   cd frontend
+   npm start
+   ```
 
-    **Backend:**
-    ```bash
-    cd backend
-    npm run dev
-    ```
-
-    **Frontend:**
-    ```bash
-    cd frontend
-    npm start
-    ```
-
-## 📂 Directory Structure (`src`)
-src
-├── app
-│   ├── (auth)                     # Authentication related screens (e.g., sign-in, sign-up)
-│   ├── (protected)                # Screens requiring authentication
-│   │   ├── (modal)                # Modal screens (e.g., create competition, skill, training)
-│   │   │   └── create
-│   │   │       ├── competition.tsx
-│   │   │       ├── skill.tsx
-│   │   │       └── training.tsx
-│   │   ├── (tabs)                 # Tabbed navigation screens
-│   │   │   ├── _layout.tsx        # Layout for tab navigation
-│   │   │   ├── index.tsx          # Home screen (default tab)
-│   │   │   └── profile            # User profile screen
-│   │   ├── _layout.tsx            # Layout for protected routes
-│   │   └── create-profile.tsx     # Screen for initial user profile creation
-│   ├── +not-found.tsx             # 404 Not Found screen
-│   └── _layout.tsx                # Main app layout (e.g., for global navigation, providers)
-├── assets                         # Static assets (images, fonts, etc.)
-├── components                     # Reusable UI components (our design system)
-│   ├── layout                     # Components for overall page structure and spacing
-│   │   └── ThemedView.tsx         # Themed container view
-│   ├── ui                         # Atomic design system components
-│   │   ├── atoms                  # Smallest, reusable UI elements (e.g., ThemedText, ThemedButton)
-│   │   │   ├── ThemedButton.tsx   # Themed button component
-│   │   │   └── ThemedText.tsx     # Themed text component
-│   │   └── molecules              # Combinations of atoms (e.g., form inputs, navigation items)
-├── constants                      # Application-wide constants
-│   ├── Colors.ts                  # Centralized color definitions for theming
-│   └── Skills.ts                  # Application-specific skill constants
-├── context                        # React Context providers (e.g., AuthContext)
-│   └── AuthContext.tsx
-├── features                       # Domain-specific modules (e.g., 'user-management', 'competitions')
-│   └── 'feature name'             # Encapsulates related components, screens, services, and utils
-│       ├── components             # Feature-specific components
-│       ├── screens                # Feature-specific screens
-│       ├── services               # API calls related to the feature
-│       └── utils                  # Utility functions specific to the feature
-├── hooks                          # Custom React Hooks
-│   └── useThemeColor.ts           # Hook for dynamic theme-aware colors
-├── lib                            # Third-party library configurations/initializations
-│   └── supabase.ts                # Supabase client initialization
-├── services                       # General API services (not tied to a specific feature)
-├── store/                         # Zustand stores
-│   └── authStore.tsx              # Authentication Store,
-└── supabase                       # Supabase related configurations and definitions
-├── constants.ts               # Supabase-specific constants
-└── types.ts                   # Supabase-specific types
+## Project Structure
+```
+dojits/
+├── backend/
+│   ├── prisma/
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── middlewares/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── index.ts
+│   ├── package.json
+│   └── tsconfig.json
+└── frontend/
+    ├── assets/
+    ├── src/
+    │   ├── components/
+    │   ├── navigation/
+    │   ├── screens/
+    │   ├── services/
+    │   ├── types/
+    │   └── App.tsx
+    ├── app.json
+    ├── package.json
+    └── tsconfig.json
+```
 
 
-## Why BeJiuJitsu?
+## Why DoJits?
 
-BeJiuJitsu combines practical training management tools with social features to create a holistic platform for your jiu-jitsu journey. Whether you're a beginner looking to establish consistent training habits, an intermediate practitioner focused on expanding your technical repertoire, or a competitor preparing for tournaments, BeJiuJitsu provides the structure and support to help you achieve your goals while connecting with the broader BJJ community.
+DoJits combines practical training management tools with social features to create a holistic platform for your jiu-jitsu journey. Whether you're a beginner looking to establish consistent training habits, an intermediate practitioner focused on expanding your technical repertoire, or a competitor preparing for tournaments, DoJits provides the structure and support to help you achieve your goals while connecting with the broader BJJ community.
 
-Built by practitioners for practitioners, BeJiuJitsu understands the unique needs and challenges of the Brazilian Jiu-Jitsu lifestyle and offers thoughtful solutions to enhance your development both on and off the mats.
+Built by practitioners for practitioners, DoJits understands the unique needs and challenges of the Brazilian Jiu-Jitsu lifestyle and offers thoughtful solutions to enhance your development both on and off the mats.
 
 *Track. Learn. Compete. Connect. Your complete BJJ companion.*
 
 ---
-© 2025 BeJiuJitsu. All rights reserved.
+
+© 2025 DoJits. All rights reserved.
