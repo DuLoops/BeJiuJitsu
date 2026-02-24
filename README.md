@@ -1,36 +1,34 @@
+# BeJiuJitsu: Learn, Journal, Engage
+
+Unlock your full potential on the mats with BeJiuJitsu, the all-in-one app designed to elevate your Brazilian Jiu-Jitsu journey.
+
+Whether you're stepping onto the mat for the first time or you're a seasoned black belt, BeJiuJitsu provides the tools you need to succeed.
+
+* **LEARN THE ART:** Dive into an ever-growing library of techniques, concepts, and instructional content. From fundamental movements to advanced submissions, our resources are designed to sharpen your skills and deepen your understanding of the gentle art.
+* **JOURNAL YOUR JOURNEY:** Your BJJ path is unique. Log every training session, track your attendance, note the techniques you've drilled, and journal your breakthroughs. Visualize your progress over time and see how far you've come.
+* **ENGAGE THE COMMUNITY:** Jiu-Jitsu is about connection. Engage with a passionate community of practitioners from around the world. Share your progress, ask questions, discuss competition footage, and find training partners in your area.
+
+Stop just doing Jiu-Jitsu. It's time to **BeJiuJitsu**.
 # DoJits: Train, Learn, Compete, Connect
 
 DoJits is a comprehensive mobile application designed specifically for Brazilian Jiu-Jitsu practitioners of all levels. This app seamlessly integrates training management, skill progression tracking, competition results, and community engagement into one intuitive platform.
 
 ## Features
 
-### Training Management
-- Log and track your training sessions with detailed information
-- Record techniques practiced during each session
-- Monitor training frequency, duration, and intensity
-- Set training goals and receive progress updates
-- Injury tracking and recovery management
+### Learn
+- **Technique Library:** Learn from an ever-growing library of techniques, concepts, and instructional content.
+- **Community Knowledge:** Share techniques, ask questions, and learn from the collective experience of the community.
+- **Structured Content:** Access curated content to guide your learning from white belt to black belt.
 
-### Skill Development
-- Create personalized skill trees for different BJJ positions and techniques
-- Track your progress on specific techniques and movements
-- Access skill assessment tools to identify strengths and areas for improvement
-- Set skill-focused goals with achievement tracking
-- Visual progression system to celebrate milestones
+### Journal
+- **Training Log:** Document every training session, including mat time, drilling partners, and specific notes.
+- **Technique & Competition Tracker:** Log the techniques you're working on and record detailed competition results to analyze your performance.
+- **Visual Skill Tree:** Expand your personal skill tree with a comprehensive UI that helps you visualize your strengths and identify areas for improvement.
 
-### Competition Tracker
-- Record and store your competition match results
-- Track detailed information about each match (opponent, weight class, division)
-- Log specific techniques used during matches
-- Document submission types or points scored
-- Keep notes on performance strengths and areas for improvement
-
-### Community Feed
-- Share training insights, techniques, and accomplishments
-- Post questions and receive feedback from the community
-- Follow other BJJ practitioners for inspiration and knowledge exchange
-- Discover local training partners and events
-- Access community-created content and instructional material
+### Engage
+- **Community Feed:** Share your progress, ask questions, and discuss competition footage with practitioners worldwide.
+- **Connect & Collaborate:** Find training partners in your area and exchange knowledge with a passionate BJJ community.
+- **Follow & Inspire:** Follow other practitioners to stay motivated and inspired on your own Jiu-Jitsu journey.
 
 ## Tech Stack
 
@@ -137,7 +135,6 @@ DoJits combines practical training management tools with social features to crea
 Built by practitioners for practitioners, DoJits understands the unique needs and challenges of the Brazilian Jiu-Jitsu lifestyle and offers thoughtful solutions to enhance your development both on and off the mats.
 
 *Track. Learn. Compete. Connect. Your complete BJJ companion.*
-
 
 ---
 
